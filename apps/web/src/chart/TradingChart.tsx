@@ -1,6 +1,6 @@
 'use client';
 // React-обёртка Lightweight Charts v5: свечи + объём, слой разметки на Series Primitive, Pointer Events.
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import {
   CandlestickSeries,
   ColorType,
@@ -119,9 +119,7 @@ export function TradingChart(props: TradingChartProps) {
 
   // Актуальные props для обработчиков (без пересоздания графика).
   const propsRef = useRef(props);
-  propsRef.current = props;
   const tokensRef = useRef(tokens);
-  tokensRef.current = tokens;
 
   const candles = useMemo(() => limitCandles(props.series.candles, props.now), [props.series.candles, props.now]);
 
@@ -144,7 +142,12 @@ export function TradingChart(props: TradingChartProps) {
     });
   };
   const pushStateRef = useRef(pushState);
-  pushStateRef.current = pushState;
+  // Запись ref - в layout-эффекте (до остальных эффектов), не во время рендера.
+  useLayoutEffect(() => {
+    propsRef.current = props;
+    tokensRef.current = tokens;
+    pushStateRef.current = pushState;
+  });
 
   // --- Создание графика (один раз, когда известны токены) ---
   const haveTokens = tokens !== null;
@@ -336,6 +339,15 @@ export function TradingChart(props: TradingChartProps) {
     };
     window.addEventListener('keydown', onKey);
 
+    // Отладочный хук для e2e (только вне production или при явном флаге).
+    const hooks = process.env.NODE_ENV !== 'production' || process.env.NEXT_PUBLIC_ENABLE_ARCHIVE_SOURCE === '1';
+    if (hooks) {
+      (window as unknown as Record<string, unknown>).__tlMarkPoints = () => {
+        const r = el.getBoundingClientRect();
+        return primitive.lastCenters.map((c) => ({ id: c.id, x: r.left + c.x, y: r.top + c.y }));
+      };
+    }
+
     setReady(true);
     return () => {
       window.removeEventListener('keydown', onKey);
@@ -355,7 +367,6 @@ export function TradingChart(props: TradingChartProps) {
       setReady(false);
     };
     // график создаётся один раз при появлении токенов
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [haveTokens]);
 
   // --- Тема / режим свечей ---

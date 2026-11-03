@@ -26,6 +26,10 @@ items.push({ kind: 'klines', period: 'monthly', symbol: 'BTCUSDT', tf: '1d', dat
 for (const symbol of ['ETHUSDT', 'SOLUSDT']) {
   for (const tf of ['1m', '1h']) items.push({ kind: 'klines', period: 'daily', symbol, tf, date: day });
 }
+// M2: фикстуры для golden GS-8/GS-9/GS-10 и htf (ALGORITHMS §20 п.9)
+items.push({ kind: 'klines', period: 'daily', symbol: 'SOLUSDT', tf: '15m', date: '2026-08-09' });
+for (const d of ['2026-08-04', '2026-08-24', '2026-10-19']) items.push({ kind: 'klines', period: 'daily', symbol: 'BTCUSDT', tf: '15m', date: d });
+for (const d of ['2026-08', '2026-09']) items.push({ kind: 'klines', period: 'monthly', symbol: 'BTCUSDT', tf: '1d', date: d });
 items.push({ kind: 'aggTrades', period: 'daily', symbol: 'BTCUSDT', date: day, excerpt: AGG_LINES });
 
 const sha = (buf) => createHash('sha256').update(buf).digest('hex');

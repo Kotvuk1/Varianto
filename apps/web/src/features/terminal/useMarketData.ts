@@ -1,7 +1,7 @@
 'use client';
 // Данные терминала: LiveFeed (REST история + WS, fallback - опрос) или архив Binance (?source=archive, не live).
 // Свечи не подставляются: при ошибке остаётся состояние error без данных.
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { TIMEFRAME_MS, type Candle, type CandleSeries, type Symbol, type Timeframe } from '@tl/core';
 import { LiveFeed, LiveFeedError, findGaps, mergeCandles, type LiveStatus } from '@tl/market-data';
 import { archiveWindow, HISTORY_PAGE, type SourceMode } from './dataSource';
@@ -67,7 +67,9 @@ export function useMarketData(symbol: Symbol, tf: Timeframe, mode: SourceMode) {
   const [reloadKey, setReloadKey] = useState(0);
   const moreBusy = useRef(false);
   const current = useRef({ symbol, tf, mode });
-  current.current = { symbol, tf, mode };
+  useLayoutEffect(() => {
+    current.current = { symbol, tf, mode };
+  });
 
   useEffect(() => {
     let cancelled = false;

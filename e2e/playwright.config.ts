@@ -26,6 +26,8 @@ export default defineConfig({
   webServer: {
     command: `pnpm --filter web build && pnpm --filter web start -p ${PORT}`,
     url: `http://localhost:${PORT}/api/health`,
+    // Режим ?source=archive (реальные свечи архива Binance) в production-сборке e2e.
+    env: { NEXT_PUBLIC_ENABLE_ARCHIVE_SOURCE: '1' },
     reuseExistingServer: !process.env.CI,
     timeout: 240_000,
   },

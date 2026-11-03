@@ -67,6 +67,7 @@ export function errorCopy(code: number | string | undefined): ErrorCopy {
       title: 'Binance недоступен из вашей сети',
       text: 'Binance отклонил запрос (451): доступ ограничен для вашего региона или сети. Включите VPN или откройте Trading Lab в другой сети.',
     };
+  if (code === 400) return { title: 'Пара не найдена', text: 'Проверьте тикер, например BTCUSDT.' };
   if (code === 'network')
     return { title: 'Нет подключения к сети', text: 'Не удалось связаться с Binance. Проверьте интернет и повторите.' };
   if (code === 429)

@@ -43,6 +43,8 @@ export class DrawingPrimitive implements ISeriesPrimitive<Time> {
   private state: PrimitiveState | null = null;
   /** Счётчик отрисованных меток (для тестов производительности/видимости). */
   lastDrawnCount = 0;
+  /** Центры нарисованных меток (CSS px панели): для e2e и отладки. */
+  lastCenters: { id: string; x: number; y: number }[] = [];
 
   constructor(private readonly getIndex: () => TimeIndex) {}
 
@@ -78,6 +80,7 @@ export class DrawingPrimitive implements ISeriesPrimitive<Time> {
         target.useMediaCoordinateSpace(({ context, mediaSize }) => {
           const proj = lwcProjection(chart, series, this.getIndex(), mediaSize.width, mediaSize.height);
           let drawn = 0;
+          const centers: { id: string; x: number; y: number }[] = [];
 
           // Открытая (незакрытая) свеча: пунктирный контур и бейдж «Идёт».
           const oc = st.openCandle;
@@ -125,12 +128,20 @@ export class DrawingPrimitive implements ISeriesPrimitive<Time> {
             if (g.parts.some((p) => Object.values(p).some((v) => typeof v === 'number' && !Number.isFinite(v)))) continue;
             drawGeometry(context, g, { tokens: st.tokens, selected: m.id === st.selectedId, ghost: false });
             drawn++;
+            if (g.handles.length) {
+              centers.push({
+                id: m.id,
+                x: g.handles.reduce((a, h) => a + h.x, 0) / g.handles.length,
+                y: g.handles.reduce((a, h) => a + h.y, 0) / g.handles.length,
+              });
+            }
           }
           if (st.preview) {
             const g = buildGeometry(st.preview, proj);
             drawGeometry(context, g, { tokens: st.tokens, selected: false, ghost: true });
           }
           this.lastDrawnCount = drawn;
+          this.lastCenters = centers;
         });
       },
     }),
