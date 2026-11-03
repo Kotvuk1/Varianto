@@ -1,4 +1,6 @@
 import { expect, type Locator, type Page } from '@playwright/test';
+import { analyzeStructure, msParamsFor, toMarks, findLevels, type Mark } from '../packages/core/src/index';
+
 
 export const TERMINAL_URL = '/terminal?source=archive&symbol=BTCUSDT&tf=1h';
 
@@ -129,4 +131,59 @@ export async function findVisibleFvg(page: Page, box: { x: number; y: number; wi
   }
   if (!best) throw new Error(`нет видимой тройки (${want})`);
   return best;
+}
+
+// ---- Эталон ядра на реальных свечах графика ----
+
+export async function coreMarks(page: Page): Promise<Mark[]> {
+  const cs = (await chartCandles(page)).filter((c) => c.closed) as unknown as Parameters<typeof analyzeStructure>[0];
+  return toMarks(analyzeStructure(cs, msParamsFor('medium'), { tf: '1h' }));
+}
+
+export async function coreLevels(page: Page) {
+  const cs = (await chartCandles(page)) as unknown as Parameters<typeof findLevels>[0];
+  return findLevels(cs).levels;
+}
+
+const TOOL_OF: Record<string, [string, string]> = {
+  'swing-high': ['Swing High', 'Структура'],
+  'swing-low': ['Swing Low', 'Структура'],
+  hh: ['HH', 'Структура'],
+  hl: ['HL', 'Структура'],
+  lh: ['LH', 'Структура'],
+  ll: ['LL', 'Структура'],
+  bos: ['BOS', 'Пробои'],
+  choch: ['CHoCH', 'Пробои'],
+  sweep: ['Sweep', 'Пробои'],
+  'order-block': ['Order Block', 'Зоны'],
+  fvg: ['FVG', 'Зоны'],
+};
+
+type Box = { x: number; y: number; width: number; height: number };
+
+/** Касания, которыми инструмент воспроизводит метку ядра; null - метка вне видимой области. */
+export async function tapsForAlgoMark(page: Page, m: Mark, box: Box): Promise<Pt[] | null> {
+  const cs = await chartCandles(page);
+  const at = (t: number) => cs.find((c) => c.openTime === t);
+  const a = m.anchors;
+  let pts: (Pt | null)[];
+  if (m.kind === 'bos' || m.kind === 'choch') {
+    const brk = at(a[1]!.time);
+    pts = [await project(page, a[0]!.time, a[0]!.price), brk ? await candlePoint(page, brk) : null];
+  } else if (m.kind === 'fvg') {
+    const i = cs.findIndex((c) => c.openTime === a[0]!.time);
+    pts = [i >= 0 && cs[i + 1] ? await candlePoint(page, cs[i + 1]!) : null];
+  } else if (m.kind === 'order-block') {
+    const c = at(a[0]!.time);
+    pts = [c ? await candlePoint(page, c) : null];
+  } else if (m.kind === 'sweep') {
+    pts = [await project(page, a[1]!.time, a[1]!.price)];
+  } else pts = [await project(page, a[0]!.time, a[0]!.price)];
+  return pts.every((p) => inBox(p, box)) ? (pts as Pt[]) : null;
+}
+
+export async function drawAlgoMark(page: Page, m: Mark, pts: Pt[]) {
+  const [tool, group] = TOOL_OF[m.kind]!;
+  await selectTool(page, tool, group);
+  for (const p of pts) await tapAt(page, p);
 }

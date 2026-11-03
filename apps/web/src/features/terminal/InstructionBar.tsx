@@ -18,10 +18,13 @@ export interface InstructionBarProps {
   onCancel: () => void;
   onDelete: () => void;
   onDeselect: () => void;
+  /** Сообщение проверки (например, нечего проверять): приоритетнее подсказки. */
+  message?: string | null;
 }
 
 /** Текст строки-инструкции (без кнопок): выбор метки / предупреждение / инструмент и шаг. */
-export function instructionText(p: Pick<InstructionBarProps, 'tool' | 'step' | 'notice' | 'selected' | 'fmt'>): { text: string; warn: boolean } {
+export function instructionText(p: Pick<InstructionBarProps, 'tool' | 'step' | 'notice' | 'selected' | 'fmt' | 'message'>): { text: string; warn: boolean } {
+  if (p.message) return { text: p.message, warn: true };
   if (p.notice) return { text: tx.notice[p.notice], warn: true };
   if (p.selected) return { text: `${tx.selectedPrefix}: ${describeMark(p.selected, p.fmt)}`, warn: false };
   if (p.tool === 'select') return { text: tx.stripHint, warn: false };

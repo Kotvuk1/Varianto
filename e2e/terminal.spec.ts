@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { chartBox, findVisibleBos, findVisibleFvg, isMobile, markPoints, openTerminal, selectTool, tapAt } from './terminal.helpers';
+import { chartBox, coreMarks, findVisibleBos, findVisibleFvg, isMobile, markPoints, openTerminal, selectTool, tapAt, tapsForAlgoMark } from './terminal.helpers';
 
 // Реальные свечи: архив Binance (data.binance.vision) через /api/history, режим ?source=archive.
 test.setTimeout(120_000);
@@ -110,9 +110,8 @@ test('раскладка: нет постоянной правой панели,
   const vw = page.viewportSize()!.width;
   if (!isMobile(page)) {
     expect(cb.width).toBeGreaterThan(vw - 80); // график на всю ширину за вычетом рейки
-    const check = page.getByTestId('check-button');
-    await expect(check).toHaveAttribute('aria-disabled', 'true');
-    await expect(check).toHaveAttribute('title', /M2/);
+    await expect(page.getByTestId('check-button')).toBeVisible();
+    await expect(page.getByTestId('check-button')).not.toHaveAttribute('aria-disabled', 'true');
     // flyout с названиями и клавишами
     await page.getByRole('button', { name: 'Пробои', exact: true }).click();
     const fly = page.getByTestId('tool-flyout');
@@ -142,4 +141,41 @@ test('раскладка: нет постоянной правой панели,
   await selectTool(page, 'BOS', 'Пробои');
   await page.getByRole('button', { name: 'Отмена', exact: true }).click();
   await expect(chart).toHaveAttribute('data-tool', 'select');
+});
+
+test('«Проверить»: BOS на месте CHoCH ядра - разбор с BOS_CHOCH_CONFUSED, эталон поверх, «Скрыть эталон»', async ({ page }) => {
+  const chart = await openTerminal(page);
+  const box = await chartBox(chart);
+  const check = page.getByTestId(isMobile(page) ? 'check-button-mobile' : 'check-button');
+
+  // пустая разметка: подсказка вместо проверки
+  await check.click();
+  await expect(page.getByTestId('instruction-text')).toContainText('Нечего проверять');
+
+  const algo = await coreMarks(page);
+  let chosen: { pts: { x: number; y: number }[] } | null = null;
+  for (const m of algo.filter((x) => x.kind === 'choch').reverse()) {
+    const pts = await tapsForAlgoMark(page, m, box);
+    if (pts) {
+      chosen = { pts };
+      break;
+    }
+  }
+  expect(chosen, 'нет видимого CHoCH ядра').not.toBeNull();
+  await selectTool(page, 'BOS', 'Пробои');
+  for (const p of chosen!.pts) await tapAt(page, p);
+  await expect(chart).toHaveAttribute('data-mark-count', '1');
+
+  await check.click();
+  const panel = page.getByTestId('check-panel');
+  await expect(panel).toBeVisible();
+  await expect(panel).toHaveAttribute('data-codes', /BOS_CHOCH_CONFUSED/);
+  for (const part of ['verdict', 'understood', 'mistakes', 'why', 'howto', 'principle']) await expect(panel.getByTestId(`fb-fb-${part}`)).toBeVisible();
+  await expect(panel.getByTestId('grade-legend')).toBeVisible();
+  await expect(panel).toContainText('Проверка в терминале не сохраняется');
+
+  // эталон поверх графика (метки algo) и переключатель
+  await expect.poll(async () => (await markPoints(page)).length, { timeout: 5000 }).toBeGreaterThan(1);
+  await page.getByTestId('toggle-ref').click();
+  await expect.poll(async () => (await markPoints(page)).length, { timeout: 5000 }).toBe(1);
 });

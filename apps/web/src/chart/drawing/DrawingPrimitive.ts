@@ -13,7 +13,7 @@ import type {
 import type { Mark } from '@tl/core';
 import type { TimeIndex } from '../geometry/timeIndex';
 import type { ChartTokens } from '../theme/chartTokens';
-import { buildGeometry, isMarkVisible } from './layout';
+import { buildGeometry, isMarkVisible, type MarkState } from './layout';
 import { lwcProjection } from './lwcProjection';
 import { drawGeometry } from './render';
 
@@ -33,6 +33,8 @@ export interface PrimitiveState {
   openCandle: OpenCandleInfo | null;
   openBadge: string;
   fmt: (price: number) => string;
+  /** Состояния меток после проверки (id -> match/missed/extra). */
+  states?: Record<string, MarkState>;
 }
 
 const ZONE_KINDS = new Set(['order-block', 'fvg']);
@@ -125,7 +127,8 @@ export class DrawingPrimitive implements ISeriesPrimitive<Time> {
           // Зоны под линиями и подписями.
           visible.sort((a, b) => Number(ZONE_KINDS.has(b.kind)) - Number(ZONE_KINDS.has(a.kind)));
           for (const m of visible) {
-            const g = buildGeometry(m, proj, { fmt: st.fmt });
+            const state = st.states?.[m.id];
+            const g = buildGeometry(m, proj, { fmt: st.fmt, ...(state ? { state } : {}) });
             if (g.parts.some((p) => Object.values(p).some((v) => typeof v === 'number' && !Number.isFinite(v)))) continue;
             drawGeometry(context, g, { tokens: st.tokens, selected: m.id === st.selectedId, ghost: false });
             drawn++;

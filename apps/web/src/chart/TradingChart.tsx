@@ -62,6 +62,8 @@ export interface TradingChartProps {
   onNotice?: (n: ControllerNotice) => void;
   /** Центрировать график по времени на метке (nonce меняется при каждом запросе). */
   focus?: { time: number; nonce: number } | null;
+  /** Состояния меток после проверки (id -> match/missed/extra): значок в подписи. */
+  markStates?: Record<string, 'match' | 'missed' | 'extra'>;
 }
 
 const LOCALE = 'ru-RU';
@@ -149,6 +151,7 @@ export function TradingChart(props: TradingChartProps) {
       openCandle: last && !last.closed ? { openTime: last.openTime, high: last.high, low: last.low } : null,
       openBadge: p.openCandleLabel ?? 'Идёт',
       fmt: fmtRef.current,
+      ...(p.markStates ? { states: p.markStates } : {}),
     });
   };
   const pushStateRef = useRef(pushState);
@@ -504,7 +507,7 @@ export function TradingChart(props: TradingChartProps) {
   // --- Метки, выбор, инструмент ---
   useEffect(() => {
     pushStateRef.current();
-  }, [props.marks, props.readOnlyMarks, props.selectedId, props.openCandleLabel, tokens, ready]);
+  }, [props.marks, props.readOnlyMarks, props.markStates, props.selectedId, props.openCandleLabel, tokens, ready]);
 
   useEffect(() => {
     controllerRef.current?.reset();

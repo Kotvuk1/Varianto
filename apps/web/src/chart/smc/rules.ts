@@ -178,18 +178,21 @@ export function resolveSweep(candles: readonly Candle[], j: number, side: Side):
  */
 export function resolveWick(candles: readonly Candle[], i: number, price: number, maxDistance: number): Anchor {
   const c0 = clampIdx(candles, i);
-  let best: Anchor | null = null;
-  let bestD = Infinity;
-  for (let k = Math.max(0, c0 - 1); k <= Math.min(candles.length - 1, c0 + 1); k++) {
-    const c = candles[k]!;
-    for (const p of [c.high, c.low]) {
-      const d = Math.abs(p - price);
-      if (d < bestD || (d === bestD && k === c0)) {
-        bestD = d;
-        best = { time: c.openTime, price: p };
+  const nearest = (lo: number, hi: number): { a: Anchor; d: number } | null => {
+    let best: { a: Anchor; d: number } | null = null;
+    for (let k = Math.max(0, lo); k <= Math.min(candles.length - 1, hi); k++) {
+      const c = candles[k]!;
+      for (const p of [c.high, c.low]) {
+        const d = Math.abs(p - price);
+        if (!best || d < best.d) best = { a: { time: c.openTime, price: p }, d };
       }
     }
-  }
-  if (best && bestD <= maxDistance) return best;
+    return best;
+  };
+  // Касаемая свеча приоритетнее: её фитиль выбирается, если он в радиусе; соседи - только если собственный далеко.
+  const own = nearest(c0, c0);
+  if (own && own.d <= maxDistance) return own.a;
+  const around = nearest(c0 - 1, c0 + 1);
+  if (around && around.d <= maxDistance) return around.a;
   return { time: candles[c0]!.openTime, price };
 }

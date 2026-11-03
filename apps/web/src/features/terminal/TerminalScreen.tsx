@@ -12,6 +12,8 @@ import { DesktopTabs } from '@/shell';
 import { NAV_ITEMS } from '@/shell/routes';
 import { Badge, BottomSheet, Button, IconButton, Segmented } from '@/ui';
 import { normalizeSymbolInput, resolveSourceMode, TERMINAL_TIMEFRAMES, TF_LABEL } from './dataSource';
+import { CheckPanel } from './check/CheckPanel';
+import { runCheck, type CheckResult } from './check/runCheck';
 import { InstructionBar } from './InstructionBar';
 import { MarksSheet } from './MarksSheet';
 import { PairPicker } from './PairPicker';
@@ -66,12 +68,34 @@ export function TerminalScreen() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [marksOpen, setMarksOpen] = useState(false);
   const [notice, setNotice] = useState<ControllerNotice>({ step: 0, code: null });
+  const [checked, setChecked] = useState<{ result: CheckResult; marks: Mark[]; key: string } | null>(null);
+  const [checkOpen, setCheckOpen] = useState(false);
+  const [showRef, setShowRef] = useState(true);
+  const [messageState, setMessageState] = useState<{ text: string; marks: Mark[] } | null>(null);
   const [focus, setFocus] = useState<{ time: number; nonce: number } | null>(null);
 
   const data = useMarketData(symbol, tf, mode);
   const shownSymbol = data.series?.symbol ?? null;
   const { marks, setMarks } = useTerminalMarks(shownSymbol);
   const fmt = useMemo(() => makePriceFormatter(tickSizeFor(shownSymbol ?? symbol)), [shownSymbol, symbol]);
+
+  // Результат проверки относится к конкретной разметке и ряду: любое изменение его обнуляет.
+  const seriesKey = data.series ? `${data.series.symbol}|${data.series.tf}` : '';
+  const check = checked && checked.marks === marks && checked.key === seriesKey ? checked.result : null;
+  const message = messageState && messageState.marks === marks ? messageState.text : null;
+
+  const runCheckNow = () => {
+    if (!data.series) return;
+    const o = runCheck(data.series.candles, data.series.tf, marks);
+    if (!o.ok) {
+      setMessageState({ text: o.reason === 'no-candles' ? tx.checkNoCandles : tx.checkEmpty, marks });
+      return;
+    }
+    setMessageState(null);
+    setChecked({ result: o.result, marks, key: seriesKey });
+    setShowRef(true);
+    setCheckOpen(true);
+  };
 
   const changeTool = useCallback((t: TerminalTool) => {
     setTool(t);
@@ -162,11 +186,10 @@ export function TerminalScreen() {
           <Button
             variant="primary"
             size="sm"
-            disabled
             icon={<ScanSearch size={20} strokeWidth={1.75} />}
-            title={tx.checkDisabled}
+            title={tx.checkHint}
             data-testid="check-button"
-            className="aria-disabled:border-accent aria-disabled:text-text-1"
+            onClick={runCheckNow}
           >
             {tx.checkFull}
           </Button>
@@ -189,6 +212,7 @@ export function TerminalScreen() {
               onCancel={() => changeTool('select')}
               onDelete={() => selected && deleteMark(selected.id)}
               onDeselect={() => setSelectedId(null)}
+              message={message}
             />
             <button
               type="button"
@@ -216,6 +240,8 @@ export function TerminalScreen() {
                 ariaLabel={`${data.series.symbol} ${TF_LABEL[data.series.tf]}`}
                 onNotice={setNotice}
                 focus={focus}
+                readOnlyMarks={check && showRef ? check.algoMarks : undefined}
+                markStates={check?.states}
               />
             )}
             <div className="pointer-events-none absolute top-2 right-14 z-10 lg:hidden">{statusBadge}</div>
@@ -229,12 +255,24 @@ export function TerminalScreen() {
                 {tx.loading}
               </div>
             )}
+            <CheckPanel
+              result={check}
+              open={checkOpen}
+              onClose={() => setCheckOpen(false)}
+              showRef={showRef}
+              onToggleRef={() => setShowRef((v) => !v)}
+              fmt={fmt}
+              onFocusMarks={(ids) => {
+                const m = [...marks, ...(check?.algoMarks ?? [])].find((x) => ids.includes(x.id));
+                if (m) setFocus((f) => ({ time: (m.anchors[0]!.time + m.anchors[m.anchors.length - 1]!.time) / 2, nonce: (f?.nonce ?? 0) + 1 }));
+              }}
+            />
             {blocking && data.error && <ErrorBlock {...data.error} onRetry={data.reload} />}
           </div>
         </section>
       </div>
 
-      <MobileToolbar tool={tool} onTool={changeTool} />
+      <MobileToolbar tool={tool} onTool={changeTool} onCheck={runCheckNow} />
 
       <MarksSheet open={marksOpen} onClose={() => setMarksOpen(false)} marks={marks} selectedId={selectedId} fmt={fmt} onFocus={focusMark} onDelete={deleteMark} />
 

@@ -9,6 +9,8 @@ import { GROUPS, groupOf, HOTKEY_OF, MOBILE_GROUPS, TOOL_ICON, type GroupId, typ
 export interface ToolPaletteProps {
   tool: ToolId | null;
   onTool: (t: TerminalTool) => void;
+  /** Запуск проверки разметки (кнопка «Проверить»). */
+  onCheck?: () => void;
 }
 
 const name = (t: TerminalTool) => tx.tools_[t];
@@ -55,7 +57,7 @@ function Cell({ label, icon, selected = false, group = false, expanded, onClick,
 }
 
 /** Мобильная нижняя панель: 5 групп, Ластик и «Проверить» в одну строку (360 px, без прокрутки): ширина по подписи (11 px) плюс равная доля остатка, минимум 44 px. */
-export function MobileToolbar({ tool, onTool }: ToolPaletteProps) {
+export function MobileToolbar({ tool, onTool, onCheck }: ToolPaletteProps) {
   const [fan, setFan] = useState<GroupId | null>(null);
   const active = groupOf(tool, MOBILE_GROUPS);
   const fanGroup = MOBILE_GROUPS.find((g) => g.id === fan);
@@ -100,10 +102,11 @@ export function MobileToolbar({ tool, onTool }: ToolPaletteProps) {
         <Cell label={tx.tools_.eraser} icon={TOOL_ICON.eraser} selected={tool === 'eraser'} onClick={() => pick('eraser')} className="h-14 min-w-11 flex-auto" />
         <button
           type="button"
-          aria-disabled="true"
-          title={tx.checkDisabled}
-          aria-label={`${tx.checkFull}. ${tx.checkDisabled}`}
-          className="flex h-14 min-w-11 flex-auto cursor-not-allowed flex-col items-center justify-center gap-0.5 rounded-md px-0.5 text-text-3"
+          title={tx.checkHint}
+          aria-label={tx.checkFull}
+          data-testid="check-button-mobile"
+          onClick={onCheck}
+          className="flex h-14 min-w-11 flex-auto cursor-pointer flex-col items-center justify-center gap-0.5 rounded-md px-0.5 text-text-1 hover:bg-surface-2"
         >
           <ScanSearch size={24} strokeWidth={1.75} aria-hidden />
           <span aria-hidden className="max-w-full text-[11px] leading-[14px] font-medium whitespace-nowrap">

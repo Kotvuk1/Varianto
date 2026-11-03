@@ -33,7 +33,12 @@ export const PILL_H = 18;
 /** Форматер по умолчанию (если tickSize неизвестен): 2 знака, пробел-разделитель, запятая. */
 export const formatPrice = makePriceFormatter(0.01);
 
+/** Состояние метки после проверки: подпись получает значок (галочка / вопрос / крест), форма сохраняется. */
+export type MarkState = 'match' | 'missed' | 'extra';
+export const STATE_PREFIX: Record<MarkState, string> = { match: '✓ ', missed: '? ', extra: '✕ ' };
+
 export interface GeometryOptions {
+  state?: MarkState;
   /** Единый форматер цен символа (priceFormat.ts). */
   fmt?: (price: number) => string;
 }
@@ -73,7 +78,8 @@ export function buildGeometry(mark: Mark, proj: Projection, opts: GeometryOption
   const parts: Part[] = [];
   const p0 = pts[0];
   const p1 = pts[1];
-  const label = kind in TOOL_DEFS ? TOOL_DEFS[kind as DrawKind].label : (String(mark.meta?.patternType ?? 'Pattern'));
+  const baseLabel = kind in TOOL_DEFS ? TOOL_DEFS[kind as DrawKind].label : (String(mark.meta?.patternType ?? 'Pattern'));
+  const label = (opts.state ? STATE_PREFIX[opts.state] : '') + baseLabel;
 
   if (!p0) return { mark, parts, handles };
 

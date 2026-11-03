@@ -241,8 +241,18 @@ describe('Level/hline/trendline: снап к ближайшему фитилю',
     expect(resolveWick(cs, 1, 104.6, 1)).toEqual({ time: T0 + H, price: 105 });
     expect(resolveWick(cs, 1, 98.4, 1)).toEqual({ time: T0 + H, price: 98 });
   });
+  it('фитиль касаемой свечи приоритетнее более близкого фитиля соседа, если он в радиусе', () => {
+    // касание свечи 1 у цены 104.4: её high=105 (d=0.6) в радиусе 1, хотя high соседней свечи 2 (106) не ближе, а low 103 - дальше
+    const near = build([
+      [100, 101, 99, 100],
+      [100, 105, 98, 104],
+      [104, 104.6, 103, 104.5],
+    ]);
+    // у соседа high=104.6 ближе к 104.4 (d=0.2), но свеча под касанием имеет фитиль в радиусе 1 - берётся её high
+    expect(resolveWick(near, 1, 104.4, 1)).toEqual({ time: T0 + H, price: 105 });
+  });
   it('соседняя свеча, если её фитиль ближе', () => {
-    expect(resolveWick(cs, 1, 106.2, 1)).toEqual({ time: T0 + 2 * H, price: 106 });
+    expect(resolveWick(cs, 1, 106.2, 1)).toEqual({ time: T0 + 2 * H, price: 106 }); // свой фитиль вне радиуса
   });
   it('дальше радиуса - цена не меняется, время к openTime', () => {
     expect(resolveWick(cs, 1, 101.6, 0.5)).toEqual({ time: T0 + H, price: 101.6 });
