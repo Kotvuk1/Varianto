@@ -18,9 +18,9 @@
     "semantic_hash": ""
   },
   "apps/web/app/api/health/route.test.ts": {
-    "mtime": 1793676704.0926325,
-    "seen": 1793676752.097505,
-    "ast_hash": "19c929306f071757da9c1e9937b3e9d1",
+    "mtime": 1793679136.8214796,
+    "seen": 1793679140.3316636,
+    "ast_hash": "15e15c5f2f8be0c4fba5c75e1ecbaa3c",
     "semantic_hash": ""
   },
   "apps/web/app/api/health/route.ts": {
@@ -84,9 +84,9 @@
     "semantic_hash": ""
   },
   "e2e/smoke.spec.ts": {
-    "mtime": 1793677766.159262,
-    "seen": 1793677917.5679495,
-    "ast_hash": "52d4a3c02a2e2e53e85f1cb4e717dfb7",
+    "mtime": 1793679136.82181,
+    "seen": 1793679140.331754,
+    "ast_hash": "141af8f3a52fc6dd8308cd063e44bac7",
     "semantic_hash": ""
   },
   "e2e/tsconfig.json": {
@@ -114,15 +114,15 @@
     "semantic_hash": ""
   },
   "packages/core/src/index.test.ts": {
-    "mtime": 1793676681.1430476,
-    "seen": 1793676752.097521,
-    "ast_hash": "7e3106853b211e1ad1ba8c5f8ed9157a",
+    "mtime": 1793678953.2628305,
+    "seen": 1793679058.2537684,
+    "ast_hash": "157299ba1134c6a1df74b94ac45488d4",
     "semantic_hash": ""
   },
   "packages/core/src/index.ts": {
-    "mtime": 1793678356.7371547,
-    "seen": 1793678479.7439046,
-    "ast_hash": "71fafe2d2320f4d55b817f89ded7d96f",
+    "mtime": 1793679037.4298754,
+    "seen": 1793679058.2537692,
+    "ast_hash": "565831f4fcaba8e5b2e4f1a4460979fd",
     "semantic_hash": ""
   },
   "packages/core/tsconfig.json": {
@@ -144,9 +144,9 @@
     "semantic_hash": ""
   },
   "packages/market-data/src/index.test.ts": {
-    "mtime": 1793676681.1500063,
-    "seen": 1793676752.0975254,
-    "ast_hash": "cff541c0bc06b751830cc2fe5f8d095d",
+    "mtime": 1793679136.8192832,
+    "seen": 1793679140.3318362,
+    "ast_hash": "676e1e3bc71be2112473a6a7cd00d211",
     "semantic_hash": ""
   },
   "packages/market-data/src/index.ts": {
@@ -390,20 +390,20 @@
     "semantic_hash": ""
   },
   "fixtures/recorded/rest-klines-BTCUSDT-1h-2026-10-20.json": {
-    "mtime": 1793678144.0579157,
-    "seen": 1793678479.7438943,
+    "mtime": 1793679002.557877,
+    "seen": 1793679058.253749,
     "ast_hash": "c26fc8837ede626e92b13a8edac16e27",
     "semantic_hash": ""
   },
   "fixtures/recorded/rest-klines-BTCUSDT-1m-2026-10-20-first120.json": {
-    "mtime": 1793678144.0579157,
-    "seen": 1793678479.7438953,
+    "mtime": 1793679002.557877,
+    "seen": 1793679058.25375,
     "ast_hash": "839b784d71b2d34637ebcd6268ea3a4c",
     "semantic_hash": ""
   },
   "fixtures/recorded/ws-kline-BTCUSDT-1m-2026-10-20.json": {
-    "mtime": 1793678144.0619156,
-    "seen": 1793678479.743896,
+    "mtime": 1793679002.561877,
+    "seen": 1793679058.2537513,
     "ast_hash": "464d79d851a79ae1dc5f320a627922ee",
     "semantic_hash": ""
   },
@@ -420,9 +420,9 @@
     "semantic_hash": ""
   },
   "packages/market-data/scripts/fetch-fixtures.mjs": {
-    "mtime": 1793678125.5722816,
-    "seen": 1793678479.7439225,
-    "ast_hash": "4082b9ce5d36e5a104ea644fc409c9c6",
+    "mtime": 1793679002.1149998,
+    "seen": 1793679058.253804,
+    "ast_hash": "eba5f008a856f195a9595b60985a35d5",
     "semantic_hash": ""
   },
   "packages/market-data/src/aggregate.invariant.test.ts": {
@@ -510,9 +510,9 @@
     "semantic_hash": ""
   },
   "fixtures/README.md": {
-    "mtime": 1793678144.0619156,
-    "seen": 1793678479.7439744,
-    "ast_hash": "67e52e436a7c4b6fc9ca45b783b57b2a",
+    "mtime": 1793679002.561877,
+    "seen": 1793679058.2538538,
+    "ast_hash": "6530103cc42e1da529c05da1fddf5a64",
     "semantic_hash": ""
   },
   "apps/web/app/progress/page.tsx": {
@@ -1038,20 +1038,20 @@
     "semantic_hash": ""
   },
   "e2e/terminal.spec.ts": {
-    "mtime": 1793678351.1971161,
-    "seen": 1793678479.7438898,
-    "ast_hash": "914d77e7aab46f3f7e5b27bcf8d0a2e7",
+    "mtime": 1793678820.914979,
+    "seen": 1793679058.253735,
+    "ast_hash": "2660af948ceab942d4e952c6209bbca8",
     "semantic_hash": ""
   },
   "fixtures/golden/GS-1.BTCUSDT-4h-2026-09.external-n5.golden.json": {
-    "mtime": 1793678373.5761123,
-    "seen": 1793678479.7438924,
+    "mtime": 1793678991.9920754,
+    "seen": 1793679058.2537382,
     "ast_hash": "cf4f5da2dd52d87ab4665cb1666ca038",
     "semantic_hash": ""
   },
   "fixtures/golden/GS-2.BTCUSDT-4h-2026-09.external-n7.golden.json": {
-    "mtime": 1793678373.576274,
-    "seen": 1793678479.7438934,
+    "mtime": 1793678991.9923859,
+    "seen": 1793679058.2537394,
     "ast_hash": "ba9d534b57c97f218e43bd23a09528f7",
     "semantic_hash": ""
   },
@@ -1062,15 +1062,15 @@
     "semantic_hash": ""
   },
   "packages/core/src/challenge/resolve.ts": {
-    "mtime": 1793678297.5527902,
-    "seen": 1793678479.743902,
-    "ast_hash": "5853e9ec006456ccf9ee44c8d17d28fa",
+    "mtime": 1793679093.6193516,
+    "seen": 1793679140.3317857,
+    "ast_hash": "0d991a70d0d353252810660ef3b74165",
     "semantic_hash": ""
   },
   "packages/core/src/feedback/templates.ru.ts": {
-    "mtime": 1793678439.0604653,
-    "seen": 1793678479.7439027,
-    "ast_hash": "f9253f7123a49b630eed7f799d2b35e6",
+    "mtime": 1793679019.8677747,
+    "seen": 1793679058.2537649,
+    "ast_hash": "09cba71e37ecdcb29fa1d882c0d1003e",
     "semantic_hash": ""
   },
   "packages/core/src/pa/types.ts": {
@@ -1128,9 +1128,9 @@
     "semantic_hash": ""
   },
   "packages/core/src/smc/analyze.ts": {
-    "mtime": 1793678459.9179015,
-    "seen": 1793678479.7439122,
-    "ast_hash": "69097bd6fda9fa880e159eb9e945e570",
+    "mtime": 1793678481.6045513,
+    "seen": 1793679058.2537854,
+    "ast_hash": "8ff2b4d41da004cfcbf338268891d76a",
     "semantic_hash": ""
   },
   "packages/core/src/smc/fvg.ts": {
@@ -1176,9 +1176,9 @@
     "semantic_hash": ""
   },
   "packages/core/src/types.ts": {
-    "mtime": 1793678459.9165416,
-    "seen": 1793678479.7439182,
-    "ast_hash": "0475fd022074d9721dcadaaecbfd3f0d",
+    "mtime": 1793678481.6043622,
+    "seen": 1793679058.2537997,
+    "ast_hash": "ee4bb24c846435ae4f6df9851561b37c",
     "semantic_hash": ""
   },
   "packages/core/src/version.ts": {
@@ -1197,6 +1197,270 @@
     "mtime": 1793678055.7674472,
     "seen": 1793678479.7439735,
     "ast_hash": "01455ac53e7db56f761b2ebf5f9e126c",
+    "semantic_hash": ""
+  },
+  "fixtures/golden/GS-3.BTCUSDT-4h-2026-09.internal.golden.json": {
+    "mtime": 1793678991.9927304,
+    "seen": 1793679058.2537405,
+    "ast_hash": "303c3a76a07178e46e58fe6c0f5ee2ee",
+    "semantic_hash": ""
+  },
+  "fixtures/golden/GS-4.BTCUSDT-4h-2026-09.sweep-ob-fvg.golden.json": {
+    "mtime": 1793678991.993343,
+    "seen": 1793679058.2537415,
+    "ast_hash": "20660dd90972b4e7a13b670ecd2bd540",
+    "semantic_hash": ""
+  },
+  "fixtures/golden/GS-4b.BTCUSDT-4h-2026-07_08.cross-month.golden.json": {
+    "mtime": 1793678991.9942558,
+    "seen": 1793679058.2537422,
+    "ast_hash": "a0336f9a0ce02ab74425d6ce3dd1bb18",
+    "semantic_hash": ""
+  },
+  "fixtures/golden/GS-7.BTCUSDT-15m-2026-10-20_21.trend.golden.json": {
+    "mtime": 1793678991.993666,
+    "seen": 1793679058.2537432,
+    "ast_hash": "4a56430d34161989aed2e8341f443034",
+    "semantic_hash": ""
+  },
+  "fixtures/golden/GS-8.SOLUSDT-15m-2026-08-09.close-equals-level.golden.json": {
+    "mtime": 1793678991.9938693,
+    "seen": 1793679058.2537441,
+    "ast_hash": "92f4d3dd5b13a196a6242862e09868e6",
+    "semantic_hash": ""
+  },
+  "fixtures/golden/GS-9.BTCUSDT-15m-2026-08-24_04.equal-highs.golden.json": {
+    "mtime": 1793678991.994075,
+    "seen": 1793679058.2537448,
+    "ast_hash": "066b49b45f056ac036261d4c9d02d1bc",
+    "semantic_hash": ""
+  },
+  "fixtures/golden/challenge_CH-1.BTCUSDT-4h-2026-09.refside.golden.json": {
+    "mtime": 1793679056.1098747,
+    "seen": 1793679058.2537456,
+    "ast_hash": "d736708e7cdb5e790a2b7ef38d196b27",
+    "semantic_hash": ""
+  },
+  "fixtures/golden/pa_CTX-1.BTCUSDT-4h-2026-09.context.golden.json": {
+    "mtime": 1793679056.1058745,
+    "seen": 1793679058.2537465,
+    "ast_hash": "a47876db337886b14beaea36f7141d9a",
+    "semantic_hash": ""
+  },
+  "fixtures/golden/pa_GS-5.BTCUSDT-4h-2026-09.patterns.golden.json": {
+    "mtime": 1793679056.0978746,
+    "seen": 1793679058.2537472,
+    "ast_hash": "35bdda26e3f02a5bc8245d646cdb66a3",
+    "semantic_hash": ""
+  },
+  "fixtures/golden/pa_GS-6.BTCUSDT-4h-2026-09.levels.golden.json": {
+    "mtime": 1793679056.0978746,
+    "seen": 1793679058.253748,
+    "ast_hash": "53fa8062875d1441cee7b14998ba9a72",
+    "semantic_hash": ""
+  },
+  "packages/core/src/challenge/facts.ts": {
+    "mtime": 1793678778.2991254,
+    "seen": 1793679058.2537556,
+    "ast_hash": "d0bcfef599027a13760022239dde275f",
+    "semantic_hash": ""
+  },
+  "packages/core/src/challenge/generate.test.ts": {
+    "mtime": 1793678931.6858802,
+    "seen": 1793679058.2537565,
+    "ast_hash": "de8070be53774ff0c455510222f7ceb1",
+    "semantic_hash": ""
+  },
+  "packages/core/src/challenge/generate.ts": {
+    "mtime": 1793678977.416147,
+    "seen": 1793679058.2537572,
+    "ast_hash": "8e6e43d1275a1d3226e43e45f166a5a9",
+    "semantic_hash": ""
+  },
+  "packages/core/src/challenge/index.ts": {
+    "mtime": 1793679019.8759313,
+    "seen": 1793679058.253758,
+    "ast_hash": "607c21e6159993a97fed30b07f497de3",
+    "semantic_hash": ""
+  },
+  "packages/core/src/challenge/quality.test.ts": {
+    "mtime": 1793678878.307068,
+    "seen": 1793679058.2537584,
+    "ast_hash": "6fb70d142dde3aed260871ec632b81de",
+    "semantic_hash": ""
+  },
+  "packages/core/src/challenge/quality.ts": {
+    "mtime": 1793678873.913095,
+    "seen": 1793679058.2537591,
+    "ast_hash": "fa55949400f92019f3833c786e604110",
+    "semantic_hash": ""
+  },
+  "packages/core/src/feedback/build.test.ts": {
+    "mtime": 1793679026.2568543,
+    "seen": 1793679058.2537618,
+    "ast_hash": "de9ca30a90d5fa6a57127c8aef8a21b7",
+    "semantic_hash": ""
+  },
+  "packages/core/src/feedback/build.ts": {
+    "mtime": 1793679019.873549,
+    "seen": 1793679058.2537625,
+    "ast_hash": "f04c3641d144631d1cb17a131e1c4aa4",
+    "semantic_hash": ""
+  },
+  "packages/core/src/feedback/index.ts": {
+    "mtime": 1793679019.874698,
+    "seen": 1793679058.2537637,
+    "ast_hash": "ff9a6497f3a8dfc658c7b8cc909c392a",
+    "semantic_hash": ""
+  },
+  "packages/core/src/feedback/types.ts": {
+    "mtime": 1793679019.8709846,
+    "seen": 1793679058.2537656,
+    "ast_hash": "6883ed8c6ea80de232495432e88e8e6d",
+    "semantic_hash": ""
+  },
+  "packages/core/src/grading/grade.test.ts": {
+    "mtime": 1793678733.4670336,
+    "seen": 1793679058.2537663,
+    "ast_hash": "1c318da47b37019ee00e69369dc64ff5",
+    "semantic_hash": ""
+  },
+  "packages/core/src/grading/grade.ts": {
+    "mtime": 1793679013.0431924,
+    "seen": 1793679058.253767,
+    "ast_hash": "62242623fe9fc2ca8eec4d8876032155",
+    "semantic_hash": ""
+  },
+  "packages/core/src/grading/index.ts": {
+    "mtime": 1793678645.872838,
+    "seen": 1793679058.2537677,
+    "ast_hash": "20ece69bf0450013636e8c38033f42a0",
+    "semantic_hash": ""
+  },
+  "packages/core/src/pa/context.test.ts": {
+    "mtime": 1793678640.7507868,
+    "seen": 1793679058.2537704,
+    "ast_hash": "52bf008bcda1c2c47eea445b7993c4ca",
+    "semantic_hash": ""
+  },
+  "packages/core/src/pa/context.ts": {
+    "mtime": 1793678636.3532982,
+    "seen": 1793679058.2537708,
+    "ast_hash": "233c5051d128dd8eef0aba48613f9014",
+    "semantic_hash": ""
+  },
+  "packages/core/src/pa/generate.test.ts": {
+    "mtime": 1793678693.5512977,
+    "seen": 1793679058.2537718,
+    "ast_hash": "b07b90823195d9559e9918e8bb01e246",
+    "semantic_hash": ""
+  },
+  "packages/core/src/pa/generate.ts": {
+    "mtime": 1793678693.5543942,
+    "seen": 1793679058.2537727,
+    "ast_hash": "0e8975a1f73798ff429da7de45028ca3",
+    "semantic_hash": ""
+  },
+  "packages/core/src/pa/index.ts": {
+    "mtime": 1793678749.4708173,
+    "seen": 1793679058.2537735,
+    "ast_hash": "c2ba3091a2450efe89f5af7baa45dbdd",
+    "semantic_hash": ""
+  },
+  "packages/core/src/pa/levels.test.ts": {
+    "mtime": 1793678526.3151827,
+    "seen": 1793679058.2537744,
+    "ast_hash": "829b5fd58292423b84772c78f014ee3c",
+    "semantic_hash": ""
+  },
+  "packages/core/src/pa/levels.ts": {
+    "mtime": 1793678526.31651,
+    "seen": 1793679058.2537751,
+    "ast_hash": "71cbcf0cb283fe1dd04fb35b38139160",
+    "semantic_hash": ""
+  },
+  "packages/core/src/pa/patterns.test.ts": {
+    "mtime": 1793678479.3030105,
+    "seen": 1793679058.2537758,
+    "ast_hash": "f591442552a9b736f560a1a6e826f4ab",
+    "semantic_hash": ""
+  },
+  "packages/core/src/pa/patterns.ts": {
+    "mtime": 1793678479.3044074,
+    "seen": 1793679058.2537766,
+    "ast_hash": "23f84403961a16d985bebe0c70e4405f",
+    "semantic_hash": ""
+  },
+  "packages/core/src/smc/golden.gs1.test.ts": {
+    "mtime": 1793678494.8698997,
+    "seen": 1793679058.2537868,
+    "ast_hash": "e489beb682e02c58c59e6359ccce2d19",
+    "semantic_hash": ""
+  },
+  "packages/core/src/smc/golden.smc.test.ts": {
+    "mtime": 1793678986.7618778,
+    "seen": 1793679058.2537878,
+    "ast_hash": "b2b637a0223a2ace775497556c3516ed",
+    "semantic_hash": ""
+  },
+  "packages/core/src/smc/index.ts": {
+    "mtime": 1793678494.8658998,
+    "seen": 1793679058.2537885,
+    "ast_hash": "a0ca41f29f2208f75b6afd399875559b",
+    "semantic_hash": ""
+  },
+  "packages/core/src/smc/marks.ts": {
+    "mtime": 1793678481.5859003,
+    "seen": 1793679058.2537892,
+    "ast_hash": "74a05859e4f0712a2f9adc65f314a665",
+    "semantic_hash": ""
+  },
+  "packages/core/src/smc/smc.test.ts": {
+    "mtime": 1793678953.2590034,
+    "seen": 1793679058.2537918,
+    "ast_hash": "3584cb9a43584d3a2b893a0501405530",
+    "semantic_hash": ""
+  },
+  "packages/core/src/tasks/index.ts": {
+    "mtime": 1793678836.6867666,
+    "seen": 1793679058.2537956,
+    "ast_hash": "582b1783d81d88239453455a6787265e",
+    "semantic_hash": ""
+  },
+  "packages/core/src/tasks/market-structure.test.ts": {
+    "mtime": 1793678884.6994183,
+    "seen": 1793679058.2537963,
+    "ast_hash": "70d54260ededebf4e8fb851fe9283ad2",
+    "semantic_hash": ""
+  },
+  "packages/core/src/tasks/market-structure.ts": {
+    "mtime": 1793678841.7590325,
+    "seen": 1793679058.253797,
+    "ast_hash": "00c5f0bfc2cf6b67baf9bd26ea1e1259",
+    "semantic_hash": ""
+  },
+  "packages/core/src/testing/klines.ts": {
+    "mtime": 1793678494.8696954,
+    "seen": 1793679058.253799,
+    "ast_hash": "45fd550d1dc3444798a5f05768acdc8b",
+    "semantic_hash": ""
+  },
+  "fixtures/golden/challenge_GS-10.BTCUSDT-15m-2026-10-20.resolve-trade.golden.json": {
+    "mtime": 1793679089.629873,
+    "seen": 1793679140.3317688,
+    "ast_hash": "09d85ac91242292b2fd26ce825785afa",
+    "semantic_hash": ""
+  },
+  "packages/core/src/challenge/reasons.test.ts": {
+    "mtime": 1793679119.8632324,
+    "seen": 1793679140.3317838,
+    "ast_hash": "75e17e381339ab097ad0accaa2248068",
+    "semantic_hash": ""
+  },
+  "packages/core/src/golden.pa-challenge.test.ts": {
+    "mtime": 1793679089.6329877,
+    "seen": 1793679140.3317919,
+    "ast_hash": "ec592928e72ccc4c88807215a004e0d7",
     "semantic_hash": ""
   },
   "pnpm-lock.yaml": {
