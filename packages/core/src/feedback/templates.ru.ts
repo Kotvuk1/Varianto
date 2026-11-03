@@ -13,10 +13,18 @@ export interface ErrorTemplate {
   principle: string;
 }
 
+/** Основная формулировка: «N из M совпало» ({matched}, {total}), процент — вторично. */
 export const VERDICT_TEMPLATES_RU: Record<Verdict, string> = {
-  correct: 'Верно: {score}% совпадения с эталоном.',
-  partial: 'Частично верно: {score}% совпадения, есть ошибки ниже.',
-  incorrect: 'Неверно: {score}% совпадения. Разберём, что пошло не так.',
+  correct: 'Верно: {matched} из {total} совпало ({score}%).',
+  partial: 'Частично верно: {matched} из {total} совпало ({score}%), есть ошибки ниже.',
+  incorrect: 'Неверно: {matched} из {total} совпало ({score}%). Разберём, что пошло не так.',
+};
+
+/** Запасная формулировка, когда счёт по элементам неизвестен (нет исходов навыков). */
+export const VERDICT_PLAIN_TEMPLATES_RU: Record<Verdict, string> = {
+  correct: 'Верно: оценка {score}%.',
+  partial: 'Частично верно: оценка {score}%, есть ошибки ниже.',
+  incorrect: 'Неверно: оценка {score}%. Разберём, что пошло не так.',
 };
 
 /** Challenge: вердикт по качеству решения (ALGORITHMS §14.3-14.4), без формулировки «совпадения с эталоном» (она для разметки). */
@@ -116,7 +124,7 @@ export const ERROR_SKILLS: Record<ErrorCode, SkillId | null> = {
 
 export const ERROR_TEMPLATES_RU: Record<ErrorCode, ErrorTemplate> = {
   SWING_MISSED: {
-    mistake: 'Пропущен Swing {side} на {time} ({price}).',
+    mistake: 'Пропущен Swing {side} на {time} ({price}).{labelNote}',
     why: 'Свеча имеет {n} свечей слева с более низким (высоким) экстремумом и {n} справа — это фрактал.',
     howTo: 'Ищите экстремум, который не перекрыт {n} свечами с каждой стороны.',
     principle: 'Swing — подтверждённый экстремум, а не любой изгиб цены.',
@@ -128,7 +136,7 @@ export const ERROR_TEMPLATES_RU: Record<ErrorCode, ErrorTemplate> = {
     principle: 'Меньше точек, но подтверждённых — структура чище.',
   },
   SWING_OFF_TOLERANCE: {
-    mistake: 'Swing отмечен на {time}, эталон — на {refTime} (смещение {offset} свечей при допуске ±{tol}).',
+    mistake: 'Swing отмечен на {time}, эталон — на {refTime} (смещение {offset} свечей при допуске ±{tol}).{labelNote}',
     why: 'Метка стоит рядом, но не на экстремальной свече.',
     howTo: 'Ставьте метку на свечу с самым высоким high (самым низким low) в окрестности.',
     principle: 'Уровень структуры — это конкретная цена экстремума.',
@@ -463,6 +471,7 @@ export const ERROR_TEMPLATES_RU: Record<ErrorCode, ErrorTemplate> = {
 export function flattenTemplates(): Record<string, string> {
   const out: Record<string, string> = {};
   for (const [k, v] of Object.entries(VERDICT_TEMPLATES_RU)) out[`feedback.verdict.${k}`] = v;
+  for (const [k, v] of Object.entries(VERDICT_PLAIN_TEMPLATES_RU)) out[`feedback.verdict.plain.${k}`] = v;
   for (const [k, v] of Object.entries(CHALLENGE_VERDICT_TEMPLATES_RU)) out[`feedback.verdict.challenge.${k}`] = v;
   for (const [k, v] of Object.entries(PRINCIPLE_TEMPLATES_RU)) out[`feedback.principle.${k}`] = v;
   for (const [k, v] of Object.entries(OK_TEMPLATES_RU)) out[`feedback.ok.${k}`] = v;
@@ -521,11 +530,11 @@ export const REASON_WHY_RU: Record<string, string> = {
 
 /** Русские названия моделей для `OK_PATTERN` ({pattern}) по навыку. */
 export const PATTERN_NAMES_RU: Record<string, string> = {
-  'pa-engulfing': 'Поглощение',
-  'pa-pin-bar': 'Пин-бар',
-  'pa-inside-bar': 'Внутренний бар',
-  'pa-doji': 'Доджи',
-  'pa-star': 'Утренняя/вечерняя звезда',
+  'pa-engulfing': 'Engulfing (поглощение)',
+  'pa-pin-bar': 'Pin bar (пин-бар)',
+  'pa-inside-bar': 'Inside bar (внутренний бар)',
+  'pa-doji': 'Doji (доджи)',
+  'pa-star': 'Morning/Evening star (утренняя/вечерняя звезда)',
 };
 
 /** Отображаемые имена типов меток: подстановки {kind}/{given}/{expected}/{kindName} выводятся только через этот словарь. */
@@ -541,6 +550,12 @@ export const KIND_NAMES_RU: Record<string, string> = {
   sweep: 'Liquidity sweep',
   'order-block': 'Order Block',
   fvg: 'FVG',
+  engulfing: 'Engulfing (поглощение)',
+  'pin-bar': 'Pin bar (пин-бар)',
+  'inside-bar': 'Inside bar (внутренний бар)',
+  doji: 'Doji (доджи)',
+  'morning-star': 'Morning star (утренняя звезда)',
+  'evening-star': 'Evening star (вечерняя звезда)',
   level: 'Уровень',
   hline: 'Горизонталь',
   trendline: 'Трендовая',

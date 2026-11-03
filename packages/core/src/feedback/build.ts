@@ -55,17 +55,31 @@ function block(e: GradeError, part: 'mistake' | 'why' | 'howTo'): FeedbackBlock 
   return b;
 }
 
+/** «N из M»: сумма исходов навыков (internal-external - производный счёт по тем же меткам, не суммируется). */
+function matchedOf(outcomes: readonly SkillOutcome[] | undefined): { matched: number; total: number } | null {
+  let matched = 0;
+  let total = 0;
+  for (const o of outcomes ?? []) {
+    if (o.skill === 'internal-external') continue;
+    matched += o.correct;
+    total += o.total;
+  }
+  return total > 0 ? { matched, total } : null;
+}
+
 export function buildFeedback(input: FeedbackInput): Feedback {
   const ok = input.ok ?? okFromOutcomes(input.skillOutcomes ?? [], input.toleranceCandles ?? 2);
   const errors = [...input.errors];
   const worst = errors.find((e) => e.severity === 'major') ?? errors[0];
+  const score = Math.round(input.score * 100);
+  const mt = input.module === 'challenge' ? null : matchedOf(input.skillOutcomes);
+  const verdict: FeedbackBlock = input.module === 'challenge'
+    ? { templateKey: `feedback.verdict.challenge.${input.verdict}`, code: null, params: { score }, glyph: 'info' }
+    : mt
+      ? { templateKey: `feedback.verdict.${input.verdict}`, code: null, params: { matched: mt.matched, total: mt.total, score }, glyph: 'info' }
+      : { templateKey: `feedback.verdict.plain.${input.verdict}`, code: null, params: { score }, glyph: 'info' };
   return {
-    verdict: {
-      templateKey: input.module === 'challenge' ? `feedback.verdict.challenge.${input.verdict}` : `feedback.verdict.${input.verdict}`,
-      code: null,
-      params: { score: Math.round(input.score * 100) },
-      glyph: 'info',
-    },
+    verdict,
     understood: ok.map((o) => {
       const b: FeedbackBlock = { templateKey: `feedback.ok.${o.code}`, code: o.code, glyph: 'match' };
       if (o.params) b.params = o.params;
