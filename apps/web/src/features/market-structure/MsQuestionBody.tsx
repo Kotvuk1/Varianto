@@ -30,17 +30,18 @@ export function MsQuestionBody({ envelope, flow, base }: { envelope: TaskEnvelop
   const highlight = useMemo(() => highlightMarks(p.highlight), [p.highlight]);
   const prompt = msQuestionText(p.promptKey, p.promptParams);
   const result = flow.phase === 'graded' ? flow.result : null;
+  const d = result?.detail;
   const extra =
-    result && result.detail.kind === 'ms-question' ? (
+    d && d.kind === 'ms-question' ? (
       <ul data-testid="question-detail" className="mb-2 space-y-1 text-sm">
         <li className="flex items-start gap-2">
-          <GradeGlyph kind={result.detail.chosenOptionId === result.detail.correctOptionId ? 'match' : 'extra'} />
-          <span>Ваш ответ: {options.find((o) => o.id === result.detail.chosenOptionId)?.label}</span>
+          <GradeGlyph kind={d.chosenOptionId === d.correctOptionId ? 'match' : 'extra'} />
+          <span>Ваш ответ: {options.find((o) => o.id === d.chosenOptionId)?.label}</span>
         </li>
-        {result.detail.chosenOptionId !== result.detail.correctOptionId && (
+        {d.chosenOptionId !== d.correctOptionId && (
           <li className="flex items-start gap-2">
             <GradeGlyph kind="match" />
-            <span>Верный ответ: {options.find((o) => o.id === (result.detail as { correctOptionId: string }).correctOptionId)?.label}</span>
+            <span>Верный ответ: {options.find((o) => o.id === d.correctOptionId)?.label}</span>
           </li>
         )}
       </ul>

@@ -12,6 +12,7 @@ export const ss = {
   resultTitle: 'Разбор',
   showRef: 'Показать эталон',
   hideRef: 'Скрыть эталон',
+  referenceToggle: 'Справка по заданию',
   expandSheet: 'Развернуть разбор',
   collapseSheet: 'Свернуть разбор',
   closeSheet: 'Закрыть разбор',

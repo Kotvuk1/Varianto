@@ -20,9 +20,6 @@ import { createSessionStore } from './sessionStore';
 import { TF_LABEL, TASK_TFS, isTaskTf } from './tf';
 import { BottomSheet } from '@/ui';
 
-// ОБХОД ошибки TradingChart (зона Chart Developer): при добавлении свечи хвостовое обновление вызывает
-// candle.update() для предпоследней свечи -> «Cannot update oldest data» (TradingChart.tsx, tailUpdate: from = length - 2,
-// нужно length - 1). Пока не исправлено, на каждом шаге проигрывания график пересоздаётся (ключ) и следует за последней свечой.
 const POS_ID = 'challenge-position';
 const EXIT_ID = 'challenge-exit';
 const BASE_TICK_MS = 700;
@@ -249,7 +246,7 @@ export function ChallengeSession() {
           <div className="relative min-h-0 flex-1">
             {task && (
               <TradingChart
-                key={`${task.taskId}:${replayActive ? s.played : 0}`}
+                key={task.taskId}
                 series={series}
                 marks={positionMarks}
                 tool={interactive ? 'select' : null}

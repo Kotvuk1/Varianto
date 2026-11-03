@@ -16,6 +16,7 @@ export function MsSessionScreen() {
   const loading = params.symbol ? ss.loadingChart(params.symbol, TF_LABEL[params.tf]) : ss.loadingChartAny(TF_LABEL[params.tf]);
   return (
     <TaskSession
+      key={JSON.stringify(msBody(params))}
       module="market-structure"
       body={msBody(params)}
       base={{ backHref: '/learn/market-structure', title: msTx.title, subtitle: msTx.sessionTitle[params.mode] }}
