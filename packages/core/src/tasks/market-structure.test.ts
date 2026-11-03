@@ -194,7 +194,9 @@ describe('вопросы режима «Вопрос»', () => {
       const bad = gradeMsQuestion(q, wrongId);
       expect(bad.verdict).toBe('incorrect');
       expect(bad.errors[0]).toMatchObject({ code: 'QUESTION_WRONG', skill: q.skill, severity: 'major' });
-      expect(bad.errors[0]!.params).toMatchObject({ template, given: wrongId, expected: q.correctOptionId });
+      expect(bad.errors[0]!.params).toMatchObject({ template, givenId: wrongId, expectedId: q.correctOptionId })
+      expect(typeof bad.errors[0]!.params!['given']).toMatch(/string|number/)
+      expect(String(bad.errors[0]!.params!['explain'])).not.toMatch(/\{/);
       expect(bad.detail).toEqual({ kind: 'ms-question', chosenOptionId: wrongId, correctOptionId: q.correctOptionId });
     });
   }

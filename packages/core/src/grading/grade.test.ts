@@ -354,3 +354,36 @@ describe('gradeMarks: вердикт и детерминизм', () => {
     for (const m of algoOf(ALL).required) expect(ids.has(m.id)).toBe(true);
   });
 });
+
+describe('gradeMarks: одна ошибка на точку (swing + подпись), модели без кодов в тексте', () => {
+  const concepts: SkillId[] = ['swing', 'structure-labels'];
+  const algo = algoOf(concepts);
+  const labels = algo.required.filter((m) => m.kind === 'hh' || m.kind === 'hl' || m.kind === 'lh' || m.kind === 'll');
+  const label = labels[2]!;
+  const swing = algo.required.find((m) => m.kind.startsWith('swing') && m.anchors[0]!.time === label.anchors[0]!.time)!;
+
+  it('swing пропущен целиком -> только SWING_MISSED с ожидаемой подписью, без STRUCTURE_LABEL_MISSED', () => {
+    const user = algo.required.filter((m) => m.id !== swing.id && m.id !== label.id).map((m) => asUser(m));
+    const res = gradeMarks(user, algo, ctxOf(concepts, false));
+    const here = res.errors.filter((e) => e.params?.['time'] === label.anchors[0]!.time);
+    expect(here.map((e) => e.code)).toEqual(['SWING_MISSED']);
+    expect(here[0]!.params!['labelNote']).toContain(label.kind.toUpperCase());
+  });
+
+  it('swing поставлен, подпись нет -> только STRUCTURE_LABEL_MISSED', () => {
+    const user = algo.required.filter((m) => m.id !== label.id).map((m) => asUser(m));
+    const res = gradeMarks(user, algo, ctxOf(concepts, false));
+    const here = res.errors.filter((e) => e.params?.['time'] === label.anchors[0]!.time);
+    expect(here.map((e) => e.code)).toEqual(['STRUCTURE_LABEL_MISSED']);
+  });
+
+  it('ни одной пары swing/подпись на одной свече с двумя ошибками (пустая разметка)', () => {
+    const res = gradeMarks([], algo, ctxOf(concepts, false));
+    const byTime = new Map<string, string[]>();
+    for (const e of res.errors) {
+      const t = `${e.params?.['time']}:${e.params?.['side'] ?? (['HH', 'LH'].includes(String(e.params?.['expected'])) ? 'high' : 'low')}`;
+      byTime.set(t, [...(byTime.get(t) ?? []), e.code]);
+    }
+    expect([...byTime].filter(([, c]) => c.length > 1)).toEqual([]);
+  });
+});

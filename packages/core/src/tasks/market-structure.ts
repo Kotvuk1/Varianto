@@ -486,10 +486,9 @@ export function msQuestionTexts(q: Pick<MsQuestion, 'template' | 'explain'>): { 
     }
     case 'wick-or-body':
       return {
-        explain:
-          q.explain['close'] !== undefined && q.explain['level'] !== undefined && Number(q.explain['close']) !== Number(q.explain['level']) && isBodyBreak(q)
-            ? 'Тело свечи закрылось за уровнем - уровень пробит.'
-            : 'Уровень пробит только фитилём: закрытие осталось по эту сторону уровня.',
+        explain: isBodyBreak(q)
+          ? 'Тело свечи закрылось за уровнем - уровень пробит.'
+          : 'Уровень пробит только фитилём: закрытие осталось по эту сторону уровня.',
         howTo: 'Смотрите на закрытие свечи, а не на экстремум: пробой засчитывается только по закрытию тела.',
         principle: 'BOS и CHoCH - только по закрытию тела.',
       };
@@ -507,6 +506,25 @@ const isBodyBreak = (q: Pick<MsQuestion, 'explain'>): boolean => {
   return !((high! > level! && close! <= level!) || (low! < level! && close! >= level!));
 };
 
+const OPTION_TEXT_RU: Record<string, string> = {
+  up: 'восходящий тренд',
+  down: 'нисходящий тренд',
+  range: 'диапазон (тренда нет)',
+  bos: 'BOS',
+  choch: 'CHoCH',
+  sweep: 'Liquidity sweep',
+  body: 'пробит по закрытию тела',
+  wick: 'пробит только фитилём',
+};
+
+/** Отображаемое значение варианта: цена (UI форматирует число) или название ответа. */
+function optionDisplay(q: MsQuestion, id: string): string | number {
+  const o = q.options.find((x) => x.id === id);
+  const price = o?.labelParams?.['price'];
+  if (typeof price === 'number') return price;
+  return OPTION_TEXT_RU[id] ?? id;
+}
+
 export function gradeMsQuestion(q: MsQuestion, chosenOptionId: string): MsQuestionGrade {
   const ok = chosenOptionId === q.correctOptionId;
   const errors: GradeError[] = ok
@@ -516,7 +534,15 @@ export function gradeMsQuestion(q: MsQuestion, chosenOptionId: string): MsQuesti
           code: 'QUESTION_WRONG',
           skill: q.skill,
           severity: 'major',
-          params: { ...q.explain, template: q.template, given: chosenOptionId, expected: q.correctOptionId, ...msQuestionTexts(q) },
+          params: {
+            ...q.explain,
+            template: q.template,
+            givenId: chosenOptionId,
+            expectedId: q.correctOptionId,
+            given: optionDisplay(q, chosenOptionId),
+            expected: optionDisplay(q, q.correctOptionId),
+            ...msQuestionTexts(q),
+          },
         },
       ];
   return {
