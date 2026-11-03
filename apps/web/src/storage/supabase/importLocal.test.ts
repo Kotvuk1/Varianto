@@ -34,8 +34,8 @@ describe('импорт локальных данных', () => {
     expect(await repo.getTerminalMarks('BTCUSDT')).toEqual([contractMark]);
     expect((await repo.getSettings()).dailyGoal).toBe(12);
     expect(await repo.getDailyActivity('2026-11-03', '2026-11-04')).toEqual([
-      { day: '2026-11-03', tasksDone: 1, goal: 10 },
-      { day: '2026-11-04', tasksDone: 1, goal: 10 },
+      { day: '2026-11-03', tasksDone: 1, goal: 12 },
+      { day: '2026-11-04', tasksDone: 1, goal: 12 },
     ]);
     expect((await repo.getSkillStats())[0]).toMatchObject({ skill: 'bos', attempts: 2 });
     expect(fake.rows('profiles')[0]?.local_import_at).toBeTruthy();
@@ -85,7 +85,7 @@ describe('импорт локальных данных', () => {
     await seedLocal();
     await runFirstSignInImport(local, fake.asClient(), U1);
     expect(await other.listAttempts({})).toHaveLength(3);
-    expect(await other.getDailyActivity('2026-11-03', '2026-11-03')).toEqual([{ day: '2026-11-03', tasksDone: 2, goal: 10 }]);
+    expect(await other.getDailyActivity('2026-11-03', '2026-11-03')).toEqual([{ day: '2026-11-03', tasksDone: 2, goal: 12 }]);
   });
 
   it('локальные данные другого пользователя не импортируются; пусто — пропуск', async () => {

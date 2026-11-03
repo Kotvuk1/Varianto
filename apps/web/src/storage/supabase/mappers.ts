@@ -63,7 +63,9 @@ export function defaultSettingsData(): Omit<Settings, 'id' | 'updatedAt'> {
 }
 
 export function settingsToData(s: Settings): Row {
-  const { id: _id, updatedAt: _u, ...data } = s;
+  const data: Row = { ...s };
+  delete data.id;
+  delete data.updatedAt;
   return data;
 }
 

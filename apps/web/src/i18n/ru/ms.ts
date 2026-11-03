@@ -1,5 +1,6 @@
 // Тексты Market Structure (COPY.md §7, ALGORITHMS §13). Термины SMC на английском с расшифровкой.
 import type { SkillId } from '@tl/core';
+import { plural } from '@/i18n/format';
 
 export const msTx = {
   title: 'Market Structure',
@@ -36,10 +37,11 @@ export const msConceptShort: Partial<Record<SkillId, string>> = {
   fvg: 'FVG',
 };
 
-export function msFocusTask(focus: readonly SkillId[]): string {
+export function msFocusTask(focus: readonly SkillId[], required?: number): string {
   const names = focus.map((c) => msConceptShort[c]).filter((x): x is string => !!x);
   const list = names.length > 1 ? `${names.slice(0, -1).join(', ')} и ${names[names.length - 1]}` : (names[0] ?? '');
-  return `Отметьте ${list} в подсвеченной области.`;
+  const n = required ? `: ожидается ${required} ${plural(required, ['метка', 'метки', 'меток'])}` : '';
+  return `Отметьте ${list} в подсвеченной области${n}.`;
 }
 
 export const msConceptTask: Partial<Record<SkillId, { name: string; task: string; term: string }>> = {
