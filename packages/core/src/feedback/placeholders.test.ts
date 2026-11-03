@@ -6,8 +6,8 @@ import { mulberry32 } from '../rng';
 import { readKlines } from '../testing/klines';
 import { ERROR_TEMPLATES_RU, fillTemplate, flattenTemplates, OK_TEMPLATES_RU } from './templates.ru';
 import { gradeLevel, findLevels, computeContext, gradeContext, detectPatterns, patternToMark, htfClosedAt, buildPatternAlgoMarkSet, patternGradeContext } from '../pa';
-import { buildMsQuestion, gradeMsQuestion, MS_QUESTION_TEMPLATES, msConceptsFor, selectMsMarkTask } from '../tasks';
-import type { Candle, PatternType } from '../types';
+import { buildMsQuestion, gradeMsQuestion, MS_QUESTION_TEMPLATES, selectMsMarkTask } from '../tasks';
+import type { PatternType } from '../types';
 import { buildFeedback } from './build';
 import type { ErrorCode, GradeError, Mark, SkillId, StructureParams } from '../types';
 
