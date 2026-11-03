@@ -1,0 +1,36 @@
+# fixtures
+
+Все свечи в этой папке - реальные данные data.binance.vision (USDⓈ-M futures). Синтетики нет.
+Генерируется скриптом `node packages/market-data/scripts/fetch-fixtures.mjs <scratchDir>` (скачивает каждый архив в отдельную папку, сверяет .CHECKSUM, распаковывает CSV, пересобирает `recorded/` и этот файл).
+
+## Архивные CSV
+
+SHA-256 CSV - хэш файла в этой папке; SHA-256 zip - хэш исходного архива (совпадает с .CHECKSUM Binance).
+Особенности: `BTCUSDT-1d-2020-01.csv` - старый месяц **без строки заголовка** (проверено: формат без заголовка встречается до 2021-12 включительно, с заголовком - с 2022-03).
+`aggTrades/*.csv` - только начало реального дневного файла (экономия размера, исходный zip около 14 МБ).
+
+| Файл | URL | Symbol | ТФ | Период | Скачано | SHA-256 CSV | SHA-256 zip |
+|---|---|---|---|---|---|---|---|
+| `klines/BTCUSDT/1m/BTCUSDT-1m-2026-10-20.csv` | https://data.binance.vision/data/futures/um/daily/klines/BTCUSDT/1m/BTCUSDT-1m-2026-10-20.zip | BTCUSDT | 1m | 2026-10-20 | 2026-11-03 | `e6243875c4ee2ed5863b637995752f3f7b1381047c6358158096ae9d3d7a1b1f` | `8646ea9d58275dafb15c47bc907defe955ca0664a99291f533ab6bee3a97d941` |
+| `klines/BTCUSDT/15m/BTCUSDT-15m-2026-10-20.csv` | https://data.binance.vision/data/futures/um/daily/klines/BTCUSDT/15m/BTCUSDT-15m-2026-10-20.zip | BTCUSDT | 15m | 2026-10-20 | 2026-11-03 | `eb9928cba154bfbdd0bf1a28ca068c47ea3c608605fcc8efc8dfa965cff86235` | `a04d08f321ab7491a527f63955b8b36adb0c94bf51772b1ea717f68aa4b60f56` |
+| `klines/BTCUSDT/1h/BTCUSDT-1h-2026-10-20.csv` | https://data.binance.vision/data/futures/um/daily/klines/BTCUSDT/1h/BTCUSDT-1h-2026-10-20.zip | BTCUSDT | 1h | 2026-10-20 | 2026-11-03 | `4c9a7d5e0e38aca0bdab36d17bbf00d19047e23b084acd95988dcb00ccbd4257` | `a0736ddfd8207bb34d5f413710d467b8012e38701f682708d425aefc4f373071` |
+| `klines/BTCUSDT/4h/BTCUSDT-4h-2026-10-20.csv` | https://data.binance.vision/data/futures/um/daily/klines/BTCUSDT/4h/BTCUSDT-4h-2026-10-20.zip | BTCUSDT | 4h | 2026-10-20 | 2026-11-03 | `bd4bfc4a53ca9a770c1bd27aec348ae2dc0fb89276dc66488df363a927c24699` | `c12766e18837928e50df99d11a4407b292a93b1e0459004407fc4288e4423257` |
+| `klines/BTCUSDT/1m/BTCUSDT-1m-2026-10-21.csv` | https://data.binance.vision/data/futures/um/daily/klines/BTCUSDT/1m/BTCUSDT-1m-2026-10-21.zip | BTCUSDT | 1m | 2026-10-21 | 2026-11-03 | `e5a98e8e7dd694389214c92b77db09b93721addf4f2206f3f7bb6b93a8439461` | `cb628c9dde0fc509b7ef76db29a7570fefe78a1cde1ef43551ece1034566d667` |
+| `klines/BTCUSDT/15m/BTCUSDT-15m-2026-10-21.csv` | https://data.binance.vision/data/futures/um/daily/klines/BTCUSDT/15m/BTCUSDT-15m-2026-10-21.zip | BTCUSDT | 15m | 2026-10-21 | 2026-11-03 | `8eea9a9b1c1ab34efe11fd56c00161c320a334d6fc4128257bfcb531288d8fcd` | `d4bd618b305467f62230241458bd18416da5a73aa7912ea8f95f4c6467f087fc` |
+| `klines/BTCUSDT/1h/BTCUSDT-1h-2026-10-21.csv` | https://data.binance.vision/data/futures/um/daily/klines/BTCUSDT/1h/BTCUSDT-1h-2026-10-21.zip | BTCUSDT | 1h | 2026-10-21 | 2026-11-03 | `331a86eaba4d674fba4f0bb90af31212a0b6785a9955416f9610eb119647b252` | `6ad0b6f4268ceea67245f466532f6aca403d08becc1b630aab5369caa504f69d` |
+| `klines/BTCUSDT/4h/BTCUSDT-4h-2026-10-21.csv` | https://data.binance.vision/data/futures/um/daily/klines/BTCUSDT/4h/BTCUSDT-4h-2026-10-21.zip | BTCUSDT | 4h | 2026-10-21 | 2026-11-03 | `b48b3d5deec3598961689358e3f431b7c5f90a40cdf67a9bd63e26ee5581b0eb` | `0592242cf222fa92e6c769fe2c6e0817135baec8845030d918a47d3eea251f2f` |
+| `klines/BTCUSDT/1d/BTCUSDT-1d-2026-10.csv` | https://data.binance.vision/data/futures/um/monthly/klines/BTCUSDT/1d/BTCUSDT-1d-2026-10.zip | BTCUSDT | 1d | 2026-10 | 2026-11-03 | `226f29fcd292ead04633d758dd1e739c7502c109cebe1e7b2038da60b5c494dc` | `38026e964abf291f7718a0c7ef27984cf36df21aa8b38b8a2c1fc144e08f1d4d` |
+| `klines/BTCUSDT/4h/BTCUSDT-4h-2026-09.csv` | https://data.binance.vision/data/futures/um/monthly/klines/BTCUSDT/4h/BTCUSDT-4h-2026-09.zip | BTCUSDT | 4h | 2026-09 | 2026-11-03 | `83ab0cd5a285a747946fcc17684ecafe368a6d982f000f1890e76136e8b3b92a` | `0c34fc07983af9550f4e630c30aac040b288fea22e0572ed06fb44b114cb52e4` |
+| `klines/BTCUSDT/1d/BTCUSDT-1d-2020-01.csv` | https://data.binance.vision/data/futures/um/monthly/klines/BTCUSDT/1d/BTCUSDT-1d-2020-01.zip | BTCUSDT | 1d | 2020-01 | 2026-11-03 | `04b339d77b84fb3ed7cef946d79d56813483ca91d08ad5b17b7a733761a3e986` | `83f80bb879d556dc26e10bd8dca5d6a1d4484247dd1a536431fad767f7978268` |
+| `klines/ETHUSDT/1m/ETHUSDT-1m-2026-10-20.csv` | https://data.binance.vision/data/futures/um/daily/klines/ETHUSDT/1m/ETHUSDT-1m-2026-10-20.zip | ETHUSDT | 1m | 2026-10-20 | 2026-11-03 | `efa9966cc8cc69ce84f184f7f3c569718762dedbfaad68d6df0e552627a0b44c` | `1731f7d8fe5f7973b3fc84d1591b4df42321d005f4e8295a5db33a54e5eb7975` |
+| `klines/ETHUSDT/1h/ETHUSDT-1h-2026-10-20.csv` | https://data.binance.vision/data/futures/um/daily/klines/ETHUSDT/1h/ETHUSDT-1h-2026-10-20.zip | ETHUSDT | 1h | 2026-10-20 | 2026-11-03 | `1e1209fa05d8a6418906724b60dbfcd3d8f3142e8ebb9d297780dab561a3fb88` | `8032d917ae9388ca3c4f103ce537981da39b43b4799c4a24d586506e12b7fe48` |
+| `klines/SOLUSDT/1m/SOLUSDT-1m-2026-10-20.csv` | https://data.binance.vision/data/futures/um/daily/klines/SOLUSDT/1m/SOLUSDT-1m-2026-10-20.zip | SOLUSDT | 1m | 2026-10-20 | 2026-11-03 | `e100d990e10dbd6940fdaff86f449e28e11d9cc6fa0d067e34ea58934c365950` | `61ac0364d18655fd83db6c3fceb4e97d799eb0cc68c8155cd8d7a9a6d2038536` |
+| `klines/SOLUSDT/1h/SOLUSDT-1h-2026-10-20.csv` | https://data.binance.vision/data/futures/um/daily/klines/SOLUSDT/1h/SOLUSDT-1h-2026-10-20.zip | SOLUSDT | 1h | 2026-10-20 | 2026-11-03 | `b87bd504f93b9d1127e4e3746c59a7a5a6ddb61a2d2ceb098f18b0f60e282b8d` | `32e468363a966b845ddfb711450fa0a4e44c4a6f07fa778517209c25fa3e2b15` |
+| `aggTrades/BTCUSDT-aggTrades-2026-10-20.csv` | https://data.binance.vision/data/futures/um/daily/aggTrades/BTCUSDT/BTCUSDT-aggTrades-2026-10-20.zip | BTCUSDT | - | 2026-10-20 (первые 3000 строк данных) | 2026-11-03 | `f7a871e1f1d3c0ff73c351f1d81f2210255c15aa05be5d9b6bcbd10e7d401242` | `28a1c6f3b30e389ff5028311feb8b709d8ba85cb7c0731e301bd3e5b7a900fbf` |
+
+## recorded/ - записанные форматы API (fapi/fstream недоступны из облака, 451)
+
+Это **реальные архивные свечи**, переупакованные в точный формат ответов Binance; выдуманных цен нет.
+
+- `rest-klines-BTCUSDT-1h-2026-10-20.json`, `rest-klines-BTCUSDT-1m-2026-10-20-first120.json` - формат `GET /fapi/v1/klines`: массив массивов (время числом, цены/объёмы строками) из CSV `BTCUSDT-1h-2026-10-20` и `BTCUSDT-1m-2026-10-20`.
+- `ws-kline-BTCUSDT-1m-2026-10-20.json` - массив из 4 событий `kline` (первые 4 минуты дня). Первые три с `x:true`; четвёртое - с `x:false` (значения финальной свечи используются как снимок незакрытой; реальные промежуточные снимки в архиве не хранятся). Поля `f`/`L` (id сделок) отсутствуют в архиве и опущены; `E` = `closeTime + 1` (условно).

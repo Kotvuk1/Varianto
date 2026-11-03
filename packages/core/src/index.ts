@@ -71,3 +71,5 @@ export interface Mark {
   meta?: Record<string, unknown>;
   author: 'user' | 'algo';
 }
+
+export { aggregate, sliceAt, type SeriesByTf } from './candles/aggregate';
