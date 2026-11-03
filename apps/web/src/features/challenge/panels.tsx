@@ -79,18 +79,16 @@ export function ErrorBlock({
 function PriceField({
   label,
   value,
-  fmt,
   onCommit,
   testId,
 }: {
   label: string;
   value: number | null;
-  fmt: (p: number) => string;
   onCommit: (v: number) => void;
   testId: string;
 }) {
   const [draft, setDraft] = useState<string | null>(null);
-  const shown = draft ?? (value === null ? '' : fmt(value).replace(/\s/g, ''));
+  const shown = draft ?? (value === null ? '' : String(value));
   const commit = () => {
     if (draft === null) return;
     const v = Number(draft.replace(',', '.'));
@@ -147,8 +145,8 @@ export function DecisionPanel(p: {
       {p.side && p.side !== 'WAIT' && p.sl !== null && p.tp !== null ? (
         <div data-testid="challenge-summary" className="flex flex-col gap-1">
           <div className="flex items-end gap-2">
-            <PriceField label={ch.decision.slFieldLabel} value={p.sl} fmt={p.fmt} onCommit={(v) => p.onLevels(v, p.tp!)} testId="challenge-sl" />
-            <PriceField label={ch.decision.tpFieldLabel} value={p.tp} fmt={p.fmt} onCommit={(v) => p.onLevels(p.sl!, v)} testId="challenge-tp" />
+            <PriceField label={ch.decision.slFieldLabel} value={p.sl} onCommit={(v) => p.onLevels(v, p.tp!)} testId="challenge-sl" />
+            <PriceField label={ch.decision.tpFieldLabel} value={p.tp} onCommit={(v) => p.onLevels(p.sl!, v)} testId="challenge-tp" />
             <div className="flex h-11 shrink-0 flex-col justify-center text-xs text-text-2">
               <span>{ch.decision.entry}</span>
               <span className="tnum text-sm text-text-1" data-testid="challenge-entry">
@@ -256,23 +254,22 @@ export function ReplayBar(p: {
       <p role="status" aria-live="polite" data-testid="replay-status" className="tnum text-sm text-text-1">
         {ch.replay.status(p.played, p.limit)}
       </p>
+      <Segmented
+        label={ch.replay.speed}
+        value={String(p.speed) as `${Speed}`}
+        onChange={(v) => p.onSpeed(Number(v) as Speed)}
+        options={SPEEDS.map((s) => ({ value: String(s) as `${Speed}`, label: `×${s}` }))}
+      />
       <div className="flex items-center gap-2">
         <Button
           icon={p.paused ? <Play size={20} strokeWidth={1.75} /> : <Pause size={20} strokeWidth={1.75} />}
           onClick={() => p.onPause(!p.paused)}
           data-testid="replay-pause"
-          className="min-w-[56px] shrink-0"
+          className="flex-1"
         >
           {p.paused ? ch.replay.resume : ch.replay.pause}
         </Button>
-        <Segmented
-          label={ch.replay.speed}
-          value={String(p.speed) as `${Speed}`}
-          onChange={(v) => p.onSpeed(Number(v) as Speed)}
-          options={SPEEDS.map((s) => ({ value: String(s) as `${Speed}`, label: `×${s}` }))}
-          className="min-w-0 flex-1"
-        />
-        <Button icon={<SkipForward size={20} strokeWidth={1.75} />} onClick={p.onSkip} data-testid="replay-skip" className="shrink-0">
+        <Button icon={<SkipForward size={20} strokeWidth={1.75} />} onClick={p.onSkip} data-testid="replay-skip" className="flex-1">
           {ch.replay.skip}
         </Button>
       </div>

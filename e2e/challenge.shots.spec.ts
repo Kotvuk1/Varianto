@@ -15,13 +15,16 @@ test('скриншоты: решение, проигрывание, итог', a
 
   await submitDecision(page, 'trend-continuation');
   await waitResult(page);
-  await page.getByRole('radio', { name: '×1' }).click();
-  await expect(page.getByTestId('replay-status')).toContainText(/свеча ([5-9]|\d\d) из/, { timeout: 30_000 });
-  await page.getByTestId('replay-pause').click();
+  await page.getByRole('radio', { name: '×1', exact: true }).click();
+  // Сделка может закрыться раньше 5-й свечи: тогда снимок проигрывания берётся на ближайшей доступной.
+  await expect(page.getByTestId('replay-status')).toContainText(/свеча ([3-9]|\d\d) из/, { timeout: 30_000 }).catch(() => undefined);
+  if (await page.getByTestId('replay-pause').isVisible()) await page.getByTestId('replay-pause').click();
   await page.screenshot({ path: `${dir}/${name}-2-replay.png` });
 
-  await page.getByTestId('replay-pause').click();
-  await page.getByTestId('replay-skip').click();
+  if (await page.getByTestId('replay-pause').isVisible()) {
+    await page.getByTestId('replay-pause').click();
+    await page.getByTestId('replay-skip').click();
+  }
   await expect(page.getByTestId('challenge-result')).toBeVisible({ timeout: 30_000 });
   await page.screenshot({ path: `${dir}/${name}-3-result.png` });
 });

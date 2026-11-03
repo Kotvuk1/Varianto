@@ -466,7 +466,9 @@ export function TradingChart(props: TradingChartProps) {
 
     if (tailUpdate) {
       indexRef.current = newIndex;
-      const from = Math.max(0, prev.candles.length - 2);
+      // LWC update() accepts only the last bar or a newer one; start from the
+      // previous last bar (it may have changed while unclosed), then append.
+      const from = Math.max(0, prev.candles.length - 1);
       for (let i = from; i < candles.length; i++) {
         candle.update(toCandleData(candles[i]!, tokens));
         volume.update(toVolumeData(candles[i]!, tokens));

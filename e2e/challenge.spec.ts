@@ -20,7 +20,7 @@ test('LONG: SL/TP перетаскиванием -> проигрывание -> 
   await page.getByRole('radio', { name: 'LONG' }).click();
   const sl = page.getByTestId('challenge-sl');
   const tp = page.getByTestId('challenge-tp');
-  const entry = Number((await page.getByTestId('challenge-entry').innerText()).replace(/\s/g, ''));
+  const entry = Number((await page.getByTestId('challenge-entry').innerText()).replace(/\s/g, '').replace(',', '.'));
   const sl0 = await num(sl);
   const tp0 = await num(tp);
   expect(sl0).toBeLessThan(entry);
@@ -58,7 +58,7 @@ test('LONG: SL/TP перетаскиванием -> проигрывание -> 
   await expect(page.getByTestId('result-date')).toHaveText(/20(1[7-9]|2[0-6])/);
   await expect(page.getByTestId('result-pair')).toHaveText(/(BTC|ETH|SOL)USDT/);
   await expect(page.getByTestId('result-outcome-sub')).toContainText(/позиция закрыта|закрыта по лимиту/);
-  await expect(res).toContainText(/[+\-]?\d+\.\d\s*R/);
+  await expect(res).toContainText(/[-+\u2212]?\d+\.\d\s*R/);
   await expect(page.getByTestId('result-quality')).toContainText(/из 100/);
   await expect(page.getByTestId('quality-htf')).toBeVisible();
   for (const id of ['fb-fb-verdict', 'fb-fb-understood', 'fb-fb-mistakes', 'fb-fb-why', 'fb-fb-howto', 'fb-fb-principle']) {
@@ -75,7 +75,7 @@ test('LONG: SL/TP перетаскиванием -> проигрывание -> 
 test('SHORT: SL с неверной стороны блокирует подтверждение мягким сообщением', async ({ page }) => {
   await startSession(page, 'medium');
   await page.getByRole('radio', { name: 'SHORT' }).click();
-  const entry = Number((await page.getByTestId('challenge-entry').innerText()).replace(/\s/g, ''));
+  const entry = Number((await page.getByTestId('challenge-entry').innerText()).replace(/\s/g, '').replace(',', '.'));
   await page.getByTestId('challenge-sl').fill(String(entry * 0.99));
   await page.getByTestId('challenge-sl').press('Enter');
   await expect(page.getByTestId('challenge-blocker')).toHaveText('Поставьте SL выше входа для SHORT');
