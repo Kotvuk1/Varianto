@@ -18,7 +18,7 @@ test('экран выбора: режим, сложность, пара, ТФ в
 
 test('MS «Разметка»: метка, проверка, разбор, следующее задание, главная', async ({ page }) => {
   await openSession(page, `${MS}/session?mode=mark&difficulty=easy&tf=1h&symbol=BTCUSDT`);
-  await expect(page.getByTestId('task-text')).toContainText('в подсвеченной области');
+  await expect(page.getByTestId('task-text')).toContainText('в подсвеченной области: ожидается');
   await shot(page, 'ms-mark-before');
   // набор инструментов ограничен понятиями задания (лёгкий: без Sweep, FVG, Order Block)
   await expect(page.getByRole('button', { name: 'Зоны', exact: true })).toHaveCount(0);

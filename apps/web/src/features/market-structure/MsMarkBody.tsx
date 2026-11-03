@@ -22,7 +22,7 @@ export function MsMarkBody({ envelope, flow, base }: { envelope: TaskEnvelope<Ms
     const byFocus = new Set<string>(msToolsFor(concepts));
     return msToolGroups(p.tools.filter((t) => byFocus.has(t)));
   }, [p.tools, concepts]);
-  const windowBars = Math.round((p.window.toTime - p.window.fromTime) / TIMEFRAME_MS[p.tf]) + 1;
+  const windowBars = p.windowCandles ?? Math.round((p.window.toTime - p.window.fromTime) / TIMEFRAME_MS[p.tf]) + 1;
   const details = (
     <>
       <ul className="space-y-2">
@@ -47,7 +47,7 @@ export function MsMarkBody({ envelope, flow, base }: { envelope: TaskEnvelope<Ms
       base={base}
       groups={groups}
       initialTool="select"
-      hintText={msFocusTask(concepts)}
+      hintText={msFocusTask(concepts, p.requiredCount)}
       hintDetails={details}
       candles={candles}
       highlightRange={p.window}

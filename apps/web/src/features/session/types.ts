@@ -24,6 +24,10 @@ export interface MsMarkPayload extends TaskPayloadBase {
   concepts: string[];
   /** Явный набор проверяемых понятий (ALGO 1.1.0); у старых заданий нет. */
   focus?: string[];
+  windowCandles?: number;
+  requiredCount?: number;
+  /** Показывать выбор internal/external (только при scoped). */
+  scoped?: boolean;
   tools: string[];
   referenceKey: string;
   window: { fromTime: number; toTime: number };
