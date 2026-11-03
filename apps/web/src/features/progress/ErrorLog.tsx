@@ -3,7 +3,7 @@
 import type { Feedback } from '@tl/core';
 import { useState } from 'react';
 import { FeedbackView, renderBlock } from '@/features/feedback';
-import { formatDayShort, formatTime } from '@/i18n/format';
+import { formatDayShort, formatTime, plural } from '@/i18n/format';
 import { ru } from '@/i18n/ru';
 import { pr } from '@/i18n/ru/progress';
 import type { Attempt } from '@/storage';
@@ -43,7 +43,7 @@ export function ErrorLog({ attempts }: { attempts: readonly Attempt[] }) {
                     className="flex min-h-14 w-full cursor-pointer items-center justify-between gap-3 py-2 text-left"
                   >
                     <span className="text-sm font-medium">{textOf(g.examples[0]!)}</span>
-                    <span className="tnum shrink-0 text-xs text-text-2">{pr.errorCount(g.count)}</span>
+                    <span className="tnum shrink-0 text-xs text-text-2">{pr.errorCount(g.count, plural(g.count, pr.caseForms))}</span>
                   </button>
                   {expanded && (
                     <ul aria-label={pr.examples} className="pb-2">

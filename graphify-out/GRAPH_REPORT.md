@@ -1,7 +1,7 @@
 # Graph Report - Varianto  (2026-11-03)
 
 ## Corpus Check
-- 387 files · ~199,140 words
+- 387 files · ~199,549 words
 - Verdict: corpus is large enough that graph structure adds value.
 - Unclassified: 32 file(s) not represented in the graph (top: .csv 26, (none) 4, .example 1)
 
@@ -11,7 +11,7 @@
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `ac4331a2`
+- Built from commit: `def12be3`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -164,7 +164,7 @@
 - vercel.json
 
 ## God Nodes (most connected - your core abstractions)
-1. `Candle` - 91 edges
+1. `Candle` - 90 edges
 2. `Mark` - 83 edges
 3. `UtcMs` - 79 edges
 4. `react` - 71 edges
@@ -745,15 +745,15 @@ Nodes (5): 1.1 Что это, 1.2 Цель, 1.3 Целевой пользова�
 _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `Mark` connect `Mark` to `market-structure.ts`, `terminal.helpers.ts`, `UtcMs`, `hit.ts`, `adapters.ts`, `Candle`, `grade.test.ts`, `src/types.ts`, `handlers.test.ts`, `rules.ts`, `build.ts`, `TradingChart.tsx`, `pa/index.ts`, `TimeIndex`, `TradingChart`, `marks.ts`, `params.ts`, `tasks.ts`, `controller.ts`, `MarkSession.tsx`, `SupabaseRepository.ts`, `grade.ts`, `fetch-fixtures.mjs`, `facts.ts`, `TaskSession.tsx`, `3. Внешняя и внутренняя структура`, `ChallengeSession.tsx`, `1. Общие соглашения`, `DrawingPrimitive.ts`, `ref_vitest`, `serialize.ts`, `PaContextBody.tsx`, `TerminalScreen.tsx`, `SupabaseRepository`, `runCheck.ts`, `InstructionBar.tsx`?**
-  _High betweenness centrality (0.065) - this node is a cross-community bridge._
+  _High betweenness centrality (0.066) - this node is a cross-community bridge._
 - **Are the 5 inferred relationships involving `Mark` (e.g. with `Контекст` and `Последствия`) actually correct?**
   _`Mark` has 5 INFERRED edges - model-reasoned connections that need verification._
 - **What connects `ADR-0008`, `ADR-0007`, `ADR-0006` to the rest of the system?**
   _13 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `market-structure.ts` be split into smaller, more focused modules?**
-  _Cohesion score 0.06810035842293907 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.06758832565284179 - nodes in this community are weakly interconnected._
 - **Why does `Candle` connect `UtcMs` to `market-structure.ts`, `API Contracts — Trading Lab`, `Mark`, `resolve.ts`, `Candle`, `grade.test.ts`, `src/types.ts`, `handlers.test.ts`, `rules.ts`, `build.ts`, `TradingChart.tsx`, `pa/index.ts`, `TimeIndex`, `TradingChart`, `useMarketData.ts`, `params.ts`, `tasks.ts`, `controller.ts`, `MarkSession.tsx`, `archive.ts`, `core/src/index.ts`, `normalize.ts`, `fetch-fixtures.mjs`, `live.test.ts`, `Candle`, `facts.ts`, `golden.pa-challenge.test.ts`, `TaskSession.tsx`, `patterns.ts`, `criteria.ts`, `runCheck.ts`?**
-  _High betweenness centrality (0.052) - this node is a cross-community bridge._
+  _High betweenness centrality (0.051) - this node is a cross-community bridge._
 - **Are the 2 inferred relationships involving `UtcMs` (e.g. with `1. Общие соглашения` and `4.1 Шкала задания`) actually correct?**
   _`UtcMs` has 2 INFERRED edges - model-reasoned connections that need verification._
 - **Should `Repository` be split into smaller, more focused modules?**

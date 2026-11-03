@@ -34,7 +34,7 @@ describe('ProgressScreen с данными', () => {
     expect(row.getAttribute('data-skill')).toBe('swing');
     expect(screen.getByTestId('train-skill').getAttribute('href')).toContain('focus=swing');
     const group = await screen.findByTestId('error-group');
-    expect(group.textContent).toContain('4 случаев');
+    expect(group.textContent).toContain('4 случая');
     await userEvent.click(group.querySelector('button')!);
     await userEvent.click((await screen.findAllByTestId('error-example'))[0]!);
     await waitFor(() => expect(screen.getByTestId('error-review')).toBeTruthy());
