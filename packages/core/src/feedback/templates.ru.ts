@@ -519,3 +519,28 @@ export const PATTERN_NAMES_RU: Record<string, string> = {
   'pa-doji': 'Доджи',
   'pa-star': 'Утренняя/вечерняя звезда',
 };
+
+/** Отображаемые имена типов меток: подстановки {kind}/{given}/{expected}/{kindName} выводятся только через этот словарь. */
+export const KIND_NAMES_RU: Record<string, string> = {
+  'swing-high': 'Swing High',
+  'swing-low': 'Swing Low',
+  hh: 'HH',
+  hl: 'HL',
+  lh: 'LH',
+  ll: 'LL',
+  bos: 'BOS',
+  choch: 'CHoCH',
+  sweep: 'Liquidity sweep',
+  'order-block': 'Order Block',
+  fvg: 'FVG',
+  level: 'Уровень',
+  hline: 'Горизонталь',
+  trendline: 'Трендовая',
+  position: 'Позиция',
+};
+
+/** Имя типа по id или по подписи в любом регистре (HH, bos, order-block). */
+export function kindName(v: string | number): string {
+  const k = String(v);
+  return KIND_NAMES_RU[k] ?? KIND_NAMES_RU[k.toLowerCase()] ?? k;
+}

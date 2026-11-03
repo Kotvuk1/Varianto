@@ -68,9 +68,12 @@ export function InstructionBar(props: InstructionBarProps) {
         <button
           type="button"
           onClick={props.onCancel}
-          className="h-11 shrink-0 cursor-pointer rounded-md border border-border-strong px-3 text-sm font-medium text-text-1 hover:bg-surface-2"
+          aria-label={tx.cancel}
+          title={tx.cancel}
+          className="inline-flex h-11 shrink-0 cursor-pointer items-center justify-center gap-1 rounded-md border border-border-strong px-3 text-sm font-medium text-text-1 hover:bg-surface-2 max-lg:w-11 max-lg:px-0"
         >
-          {tx.cancel}
+          <X size={20} strokeWidth={1.75} aria-hidden />
+          <span className="max-lg:hidden">{tx.cancel}</span>
         </button>
       )}
     </div>

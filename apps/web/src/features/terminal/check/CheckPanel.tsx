@@ -37,7 +37,7 @@ export function CheckPanel({ result, open, onClose, showRef, onToggleRef, fmt, o
   const body = (
     <>
       <GradeLegend className="mb-2 border-b border-border pb-2" />
-      <FeedbackView feedback={result.feedback} fmtPrice={fmt} onFocusMarks={onFocusMarks} />
+      <FeedbackView feedback={result.feedback} fmtPrice={fmt} onFocusMarks={onFocusMarks} summary={result.summary} />
       <p className="mt-2 text-xs text-text-2">{tx.checkNote}</p>
     </>
   );

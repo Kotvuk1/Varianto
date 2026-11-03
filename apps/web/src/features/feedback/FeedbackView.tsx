@@ -2,7 +2,7 @@ import type { Feedback, FeedbackBlock } from '@tl/core';
 import { fb } from '@/i18n/ru/feedback';
 import { makePriceFormatter } from '@/chart/priceFormat';
 import { GradeGlyph } from './GradeGlyph';
-import { renderBlock } from './format';
+import { placeOf, renderBlock } from './format';
 
 export interface FeedbackViewProps {
   feedback: Feedback;
@@ -10,6 +10,8 @@ export interface FeedbackViewProps {
   fmtPrice?: (p: number) => string;
   /** Нажатие на ошибку с привязкой к меткам (например, показать на графике). */
   onFocusMarks?: (ids: string[]) => void;
+  /** «N из M совпало»: число верных меток и размер эталона. */
+  summary?: { matched: number; total: number };
   className?: string;
 }
 
@@ -27,7 +29,7 @@ function Section({ id, title, children }: { id: string; title: string; children:
 }
 
 /** Разбор из 6 частей: итог, понято верно, ошибки, почему, как правильно, принцип (ALGORITHMS §17.1). */
-export function FeedbackView({ feedback, fmtPrice = defaultFmt, onFocusMarks, className }: FeedbackViewProps) {
+export function FeedbackView({ feedback, fmtPrice = defaultFmt, onFocusMarks, summary, className }: FeedbackViewProps) {
   const text = (b: FeedbackBlock) => renderBlock(b.templateKey, b.params, fmtPrice);
   const list = (blocks: FeedbackBlock[], testId: string) => (
     <ul data-testid={testId} className="space-y-2">
@@ -45,22 +47,51 @@ export function FeedbackView({ feedback, fmtPrice = defaultFmt, onFocusMarks, cl
       ))}
     </ul>
   );
+  /** Одинаковые объяснения (по тексту) показываются один раз со списком мест. */
+  const dedup = (blocks: FeedbackBlock[], testId: string) => {
+    const groups = new Map<string, { block: FeedbackBlock; places: string[] }>();
+    for (const b of blocks) {
+      const t = text(b);
+      const g = groups.get(t) ?? { block: b, places: [] };
+      const pl = placeOf(b.params);
+      if (pl && !g.places.includes(pl)) g.places.push(pl);
+      groups.set(t, g);
+    }
+    return (
+      <ul data-testid={testId} className="space-y-2">
+        {[...groups.entries()].map(([t, g]) => (
+          <li key={t} className="flex items-start gap-2 text-sm">
+            <GradeGlyph kind="info" />
+            <span>
+              {t}
+              {g.places.length > 0 && <span className="text-text-2"> {fb.where}: {g.places.join(', ')}.</span>}
+            </span>
+          </li>
+        ))}
+      </ul>
+    );
+  };
   return (
     <div className={className} data-testid="feedback-view">
       <Section id="fb-verdict" title={fb.verdict}>
         <p className="text-sm font-medium">{text(feedback.verdict)}</p>
+        {summary && (
+          <p className="text-sm text-text-2" data-testid="fb-summary">
+            {fb.summary(summary.matched, summary.total)}
+          </p>
+        )}
       </Section>
       <Section id="fb-understood" title={fb.understood}>
-        {feedback.understood.length ? list(feedback.understood, 'fb-understood-list') : <p className="text-sm text-text-2">—</p>}
+        {feedback.understood.length ? list(feedback.understood, 'fb-understood-list') : <p className="text-sm text-text-2">{fb.noMatches}</p>}
       </Section>
       <Section id="fb-mistakes" title={fb.mistakes}>
         {feedback.mistakes.length ? list(feedback.mistakes, 'fb-mistakes-list') : <p className="text-sm text-text-2">{fb.noMistakes}</p>}
       </Section>
       <Section id="fb-why" title={fb.why}>
-        {feedback.why.length ? list(feedback.why, 'fb-why-list') : <p className="text-sm text-text-2">—</p>}
+        {feedback.why.length ? dedup(feedback.why, 'fb-why-list') : <p className="text-sm text-text-2">—</p>}
       </Section>
       <Section id="fb-howto" title={fb.howTo}>
-        {feedback.howTo.length ? list(feedback.howTo, 'fb-howto-list') : <p className="text-sm text-text-2">—</p>}
+        {feedback.howTo.length ? dedup(feedback.howTo, 'fb-howto-list') : <p className="text-sm text-text-2">—</p>}
       </Section>
       <Section id="fb-principle" title={fb.principle}>
         <p className="text-sm">{text(feedback.principle)}</p>

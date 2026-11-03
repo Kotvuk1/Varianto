@@ -2,6 +2,8 @@ export { buildFeedback, okFromOutcomes } from './build';
 export type { Feedback, FeedbackBlock, FeedbackInput, OkItem } from './types';
 export {
   ERROR_SKILLS,
+  KIND_NAMES_RU,
+  kindName,
   ERROR_TEMPLATES_RU,
   OK_TEMPLATES_RU,
   PRINCIPLE_TEMPLATES_RU,

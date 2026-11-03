@@ -16,4 +16,7 @@ export const fb = {
   extra: 'Лишнее',
   extraHelp: 'ваша метка, которой нет в эталоне',
   info: 'Пояснение',
+  where: 'Где',
+  noMatches: 'Пока нет совпадений',
+  summary: (m: number, t: number) => `${m} из ${t} совпало`,
 } as const;

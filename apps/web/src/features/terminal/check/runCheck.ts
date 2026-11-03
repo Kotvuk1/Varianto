@@ -24,6 +24,8 @@ export interface CheckResult {
   algoMarks: Mark[];
   /** Состояние каждой метки: id метки пользователя или эталона -> match/missed/extra. */
   states: Record<string, CheckState>;
+  /** Верных меток и размер эталона для «N из M совпало». */
+  summary: { matched: number; total: number };
   /** Окно оценки (индексы закрытых свечей). */
   window: { fromIndex: number; toIndex: number };
 }
@@ -123,5 +125,10 @@ export function runCheck(candles: readonly Candle[], tf: Timeframe, userMarks: r
     const a = [...algo.required, ...algo.tolerated].find((x) => x.id === m.algoMarkId);
     if (a) shown.set(a.id, a);
   }
-  return { ok: true, result: { grade, feedback, algoMarks: [...shown.values()], states, window } };
+  return { ok: true, result: { grade, feedback,
+      algoMarks: [...shown.values()],
+      states,
+      summary: { matched: grade.okPairs.length, total: algo.required.length },
+      window,
+    } };
 }

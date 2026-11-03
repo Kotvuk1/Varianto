@@ -1,5 +1,6 @@
 // gradeMarks (ALGORITHMS §12): сопоставление разметки пользователя с эталоном. Чистая детерминированная функция.
 import { TIMEFRAME_MS } from '../types';
+import { kindName } from '../feedback/templates.ru';
 import type {
   AlgoMarkSet,
   ErrorCode,
@@ -201,6 +202,15 @@ export function gradeMarks(user: readonly Mark[], algo: AlgoMarkSet, ctx: GradeC
   const compat = (u: Entry, a: Entry) =>
     u.group.startsWith('PATTERN:') ? u.lo <= a.hi && a.lo <= u.hi : Math.abs(u.lo - a.lo) <= tol;
 
+  /** Цена предыдущего swing той же стороны перед эталонной меткой a (для разбора HH/HL/LH/LL). */
+  const prevSwingPrice = (a: Entry, tm: number): number => {
+    const kind = a.group === 'LABEL_H' ? 'swing-high' : 'swing-low';
+    const prev = [...algo.required, ...algo.tolerated]
+      .filter((m) => m.kind === kind && m.anchors[0]!.time < tm)
+      .sort((x, y) => y.anchors[0]!.time - x.anchors[0]!.time)[0];
+    return prev?.anchors[0]?.price ?? a.mark.anchors[0]!.price;
+  };
+
   // ---- штрафы пары ----
   const penalties = (u: Entry, a: Entry): Penalty[] => {
     const out: Penalty[] = [];
@@ -224,7 +234,14 @@ export function gradeMarks(user: readonly Mark[], algo: AlgoMarkSet, ctx: GradeC
         code: 'STRUCTURE_LABEL_WRONG',
         cost: 3,
         skill: 'structure-labels',
-        params: { time: tm, given: um.kind.toUpperCase(), expected: am.kind.toUpperCase(), price: am.anchors[0]!.price },
+        params: {
+          time: tm,
+          given: um.kind.toUpperCase(),
+          expected: am.kind.toUpperCase(),
+          price: am.anchors[0]!.price,
+          side: a.group === 'LABEL_H' ? 'high' : 'low',
+          prevPrice: prevSwingPrice(a, tm),
+        },
       });
     }
     if (a.group === 'BREAK' && um.kind !== am.kind) {
@@ -261,7 +278,7 @@ export function gradeMarks(user: readonly Mark[], algo: AlgoMarkSet, ctx: GradeC
         code,
         cost: 5,
         skill: a.skill,
-        params: { time: tm, given: um.direction ?? 'none', expected: am.direction ?? 'none', kind: am.kind },
+        params: { time: tm, given: um.direction ?? 'none', expected: am.direction ?? 'none', kind: am.kind, kindName: kindName(am.kind) },
       });
     }
     if (a.group === 'BREAK' && um.anchors.length > 0) {
@@ -407,6 +424,8 @@ export function gradeMarks(user: readonly Mark[], algo: AlgoMarkSet, ctx: GradeC
       time: timeOf(u.lo),
       refTime: timeOf(a.lo),
       dir: a.mark.direction ?? 'none',
+      oppColor: a.mark.direction === 'bear' ? 'бычью' : 'медвежью',
+      extreme: a.mark.direction === 'bear' ? 'максимумом' : 'минимумом',
       eventKind: String(a.mark.meta?.['eventKind'] ?? ''),
       eventTime: Number(a.mark.meta?.['eventTime'] ?? 0),
     }),
@@ -470,7 +489,11 @@ export function gradeMarks(user: readonly Mark[], algo: AlgoMarkSet, ctx: GradeC
           wickOnlyKeys.add(u.lo);
           addErr('BOS_WICK_ONLY', u.skill, u.lo, ids, { kind: um.kind, time: tm, close: c?.close ?? 0, level: wick.level });
         } else {
-          addErr(um.kind === 'bos' ? 'BOS_EXTRA' : 'CHOCH_EXTRA', u.skill, u.lo, ids, { kind: um.kind, time: tm });
+          const refs = algo.aux.refsAt(u.lo);
+          const wantHigh = um.direction ? um.direction === 'bull' : (um.anchors[0]?.price ?? 0) >= (candles[u.lo]?.close ?? 0);
+          const ref = refs.filter((s) => s.type === (wantHigh ? 'high' : 'low')).sort((x, y) => y.index - x.index)[0];
+          const level = ref?.price ?? um.anchors[0]?.price ?? candles[u.lo]?.close ?? 0;
+          addErr(um.kind === 'bos' ? 'BOS_EXTRA' : 'CHOCH_EXTRA', u.skill, u.lo, ids, { kind: um.kind, time: tm, level, protected: level });
         }
         break;
       }

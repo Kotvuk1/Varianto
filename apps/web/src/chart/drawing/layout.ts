@@ -79,6 +79,8 @@ export function buildGeometry(mark: Mark, proj: Projection, opts: GeometryOption
   const p0 = pts[0];
   const p1 = pts[1];
   const baseLabel = kind in TOOL_DEFS ? TOOL_DEFS[kind as DrawKind].label : (String(mark.meta?.patternType ?? 'Pattern'));
+  // Метка эталона может лежать ровно на метке пользователя: её подпись уходит на другую сторону, чтобы не накладываться.
+  const algo = mark.author === 'algo';
   const label = (opts.state ? STATE_PREFIX[opts.state] : '') + baseLabel;
 
   if (!p0) return { mark, parts, handles };
@@ -89,19 +91,19 @@ export function buildGeometry(mark: Mark, proj: Projection, opts: GeometryOption
     case 'lh':
       // маркер над high, подпись ещё выше: свечи не перекрываются
       parts.push({ t: 'glyph', g: 'tri-down', x: p0.x, y: p0.y - GLYPH_OFFSET });
-      parts.push({ t: 'text', text: label, x: p0.x, y: p0.y - GLYPH_OFFSET - 16 });
+      parts.push({ t: 'text', text: label, x: p0.x, y: p0.y - GLYPH_OFFSET - 16 - (algo ? 20 : 0) });
       break;
     case 'swing-low':
     case 'hl':
     case 'll':
       parts.push({ t: 'glyph', g: 'tri-up', x: p0.x, y: p0.y + GLYPH_OFFSET });
-      parts.push({ t: 'text', text: label, x: p0.x, y: p0.y + GLYPH_OFFSET + 16 });
+      parts.push({ t: 'text', text: label, x: p0.x, y: p0.y + GLYPH_OFFSET + 16 + (algo ? 20 : 0) });
       break;
     case 'bos':
     case 'choch': {
       if (!p1) break;
       const dash: Dash = kind === 'bos' ? 'solid' : 'dashed';
-      const below = mark.direction === 'bear';
+      const below = (mark.direction === 'bear') !== algo;
       parts.push({ t: 'seg', x1: p0.x, y1: p0.y, x2: p1.x, y2: p0.y, dash });
       parts.push({ t: 'text', text: label, x: (p0.x + p1.x) / 2, y: p0.y + (below ? 12 : -12) });
       break;
@@ -120,7 +122,7 @@ export function buildGeometry(mark: Mark, proj: Projection, opts: GeometryOption
       const r = norm(p0.x, p0.y, p1.x, p1.y);
       parts.push({ t: 'rect', ...r, dash: kind === 'fvg' ? 'dashed' : 'solid', hatch: kind === 'fvg' });
       // подпись над верхней границей зоны, у левого края
-      parts.push({ t: 'text', text: label, x: Math.min(r.x1 + textWidth(label) / 2, proj.width - textWidth(label) / 2 - 2), y: r.y1 - PILL_H / 2 - 2 });
+      parts.push({ t: 'text', text: label, x: Math.min(r.x1 + textWidth(label) / 2, proj.width - textWidth(label) / 2 - 2), y: algo ? r.y2 + PILL_H / 2 + 2 : r.y1 - PILL_H / 2 - 2 });
       break;
     }
     case 'level':
