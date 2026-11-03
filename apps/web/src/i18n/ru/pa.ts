@@ -39,7 +39,7 @@ export const paTx = {
     typeLabel: { support: 'Поддержка', resistance: 'Сопротивление' },
   },
   context: {
-    task: (name: string, dir: string) => `Подсвечена модель ${name} (${dir}). Значима ли она в этом контексте?`,
+    task: (name: string, dir: string) => `Подсвечена модель ${name}, ${dir}. Значима ли она в этом контексте?`,
     taskShort: 'Определите контекст свечной модели: сбор ликвидности, ближайший Order Block, уровень и старший тренд.',
     dirBull: 'бычья',
     dirBear: 'медвежья',

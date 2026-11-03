@@ -61,7 +61,7 @@ export function buildFeedback(input: FeedbackInput): Feedback {
   const worst = errors.find((e) => e.severity === 'major') ?? errors[0];
   return {
     verdict: {
-      templateKey: `feedback.verdict.${input.verdict}`,
+      templateKey: input.module === 'challenge' ? `feedback.verdict.challenge.${input.verdict}` : `feedback.verdict.${input.verdict}`,
       code: null,
       params: { score: Math.round(input.score * 100) },
       glyph: 'info',

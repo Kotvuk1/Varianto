@@ -528,9 +528,9 @@
     "semantic_hash": ""
   },
   "apps/web/src/chart/TradingChart.tsx": {
-    "mtime": 1793680775.4448862,
-    "seen": 1793681123.0533323,
-    "ast_hash": "eba65df58dbe5e1a604aa6386bfc16e6",
+    "mtime": 1793746926.9083934,
+    "seen": 1793747038.7090018,
+    "ast_hash": "8ae73cec2c7cbe73b4b2b94152ddd609",
     "semantic_hash": ""
   },
   "apps/web/src/chart/drawing/DrawingPrimitive.ts": {
@@ -1062,9 +1062,9 @@
     "semantic_hash": ""
   },
   "packages/core/src/feedback/templates.ru.ts": {
-    "mtime": 1793681221.47173,
-    "seen": 1793746898.7425373,
-    "ast_hash": "82dcb0a9efce3e7b05c73ba455b79dd0",
+    "mtime": 1793746990.6774976,
+    "seen": 1793747038.7093036,
+    "ast_hash": "1c28c096af99952f8c3a0307f6bf8e83",
     "semantic_hash": ""
   },
   "packages/core/src/pa/types.ts": {
@@ -1290,15 +1290,15 @@
     "semantic_hash": ""
   },
   "packages/core/src/feedback/build.test.ts": {
-    "mtime": 1793679026.2568543,
-    "seen": 1793679058.2537618,
-    "ast_hash": "de9ca30a90d5fa6a57127c8aef8a21b7",
+    "mtime": 1793747002.7815483,
+    "seen": 1793747038.7092965,
+    "ast_hash": "46557f02b75c5a401ced908e29158dc1",
     "semantic_hash": ""
   },
   "packages/core/src/feedback/build.ts": {
-    "mtime": 1793679019.873549,
-    "seen": 1793679058.2537625,
-    "ast_hash": "f04c3641d144631d1cb17a131e1c4aa4",
+    "mtime": 1793746990.6777167,
+    "seen": 1793747038.7092977,
+    "ast_hash": "d8b342e50c868f9ec5a144821f8a51fc",
     "semantic_hash": ""
   },
   "packages/core/src/feedback/index.ts": {
@@ -1716,9 +1716,9 @@
     "semantic_hash": ""
   },
   "apps/web/src/features/challenge/ChallengeSession.tsx": {
-    "mtime": 1793746828.407333,
-    "seen": 1793746898.7423356,
-    "ast_hash": "68cd6824e37e066ec4bf27d3453c4e7a",
+    "mtime": 1793747027.2414813,
+    "seen": 1793747038.7090485,
+    "ast_hash": "92ea42ca23eeaa9a751ef32b344815a4",
     "semantic_hash": ""
   },
   "apps/web/src/features/challenge/RCurve.tsx": {
@@ -1758,27 +1758,27 @@
     "semantic_hash": ""
   },
   "apps/web/src/features/challenge/panels.tsx": {
-    "mtime": 1793746828.4070098,
-    "seen": 1793746898.7423422,
-    "ast_hash": "0d11a4beea5aea4c77f2bfe7937fee82",
+    "mtime": 1793747027.241144,
+    "seen": 1793747038.7090614,
+    "ast_hash": "705beaf936f1be13ceb01efefb388fc4",
     "semantic_hash": ""
   },
   "apps/web/src/features/challenge/position.test.ts": {
-    "mtime": 1793681383.2351897,
-    "seen": 1793746898.7423432,
-    "ast_hash": "b3ff89d9c1c509bce41f579421d8c808",
+    "mtime": 1793747027.2408948,
+    "seen": 1793747038.7090626,
+    "ast_hash": "167a692af0966a61dd80344e336774b4",
     "semantic_hash": ""
   },
   "apps/web/src/features/challenge/position.ts": {
-    "mtime": 1793681383.231243,
-    "seen": 1793746898.742344,
-    "ast_hash": "54c9cda351e134fda388ddc0dd7cb585",
+    "mtime": 1793747027.2407205,
+    "seen": 1793747038.709064,
+    "ast_hash": "721ab48d82844084a36c31d8e57ac6ca",
     "semantic_hash": ""
   },
   "apps/web/src/features/challenge/reveal.ts": {
-    "mtime": 1793681409.2552261,
-    "seen": 1793746898.7423449,
-    "ast_hash": "488e6dba62f2193529c9c9a01aae40b8",
+    "mtime": 1793747038.130578,
+    "seen": 1793747038.7090652,
+    "ast_hash": "cfe4741bee707489f4519c76cb691e83",
     "semantic_hash": ""
   },
   "apps/web/src/features/challenge/sessionStore.test.ts": {
@@ -2010,9 +2010,9 @@
     "semantic_hash": ""
   },
   "apps/web/src/i18n/ru/challenge.ts": {
-    "mtime": 1793681575.7162542,
-    "seen": 1793746898.7424202,
-    "ast_hash": "a1482b3dade46b9ca25152b8f13ef842",
+    "mtime": 1793747027.2413,
+    "seen": 1793747038.7091615,
+    "ast_hash": "b21dca2ba9b265ab3cea58513256b932",
     "semantic_hash": ""
   },
   "apps/web/src/i18n/ru/ms.ts": {
@@ -2022,9 +2022,9 @@
     "semantic_hash": ""
   },
   "apps/web/src/i18n/ru/pa.ts": {
-    "mtime": 1793681439.1361573,
-    "seen": 1793746898.7424247,
-    "ast_hash": "50a0a9ca4eaceb0dd238848f87db2168",
+    "mtime": 1793747018.2612417,
+    "seen": 1793747038.709167,
+    "ast_hash": "89962b347b8d76900c8394f118631037",
     "semantic_hash": ""
   },
   "apps/web/src/i18n/ru/session.ts": {
@@ -2073,6 +2073,18 @@
     "mtime": 1793681194.444523,
     "seen": 1793746898.7425363,
     "ast_hash": "4a2a60bddec0ced56ed50e00dd5a4d30",
+    "semantic_hash": ""
+  },
+  "apps/web/src/features/challenge/hints.test.ts": {
+    "mtime": 1793747027.2263305,
+    "seen": 1793747038.7090583,
+    "ast_hash": "02b0fc7134e2b5e5dbab2dc1c4004b21",
+    "semantic_hash": ""
+  },
+  "apps/web/src/features/challenge/hints.ts": {
+    "mtime": 1793747027.225047,
+    "seen": 1793747038.7090602,
+    "ast_hash": "20e8e5452d4b14d488f20666473abc99",
     "semantic_hash": ""
   },
   "pnpm-lock.yaml": {

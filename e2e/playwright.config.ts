@@ -27,7 +27,13 @@ export default defineConfig({
     command: `pnpm --filter web build && pnpm --filter web start -p ${PORT}`,
     url: `http://localhost:${PORT}/api/health`,
     // Режим ?source=archive (реальные свечи архива Binance) в production-сборке e2e.
-    env: { NEXT_PUBLIC_ENABLE_ARCHIVE_SOURCE: '1' },
+    env: {
+      NEXT_PUBLIC_ENABLE_ARCHIVE_SOURCE: '1',
+      // Test-only signing secret for task tokens; never used in production.
+      TASK_SIGNING_SECRET: process.env.TASK_SIGNING_SECRET ?? 'e2e-only-task-signing-secret-not-for-production',
+      // Route server-side archive fetches through the container proxy when present.
+      NODE_USE_ENV_PROXY: '1',
+    },
     reuseExistingServer: !process.env.CI,
     timeout: 240_000,
   },

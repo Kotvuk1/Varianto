@@ -64,7 +64,10 @@ test('LONG: SL/TP перетаскиванием -> проигрывание -> 
   for (const id of ['fb-fb-verdict', 'fb-fb-understood', 'fb-fb-mistakes', 'fb-fb-why', 'fb-fb-howto', 'fb-fb-principle']) {
     await expect(page.getByTestId(id)).toBeVisible();
   }
-  expect(await bodyText(page)).not.toMatch(/Предупреждение: красн/);
+  // Один вердикт: «Решение» и первая часть разбора согласованы, формулировки разметки не используются.
+  await expect(page.getByTestId('fb-fb-verdict')).toContainText(/Решение (верное|частично верное|неверное): качество \d+ из 100/);
+  await expect(page.getByTestId('fb-fb-verdict')).not.toContainText('эталон');
+  await expect(res).not.toContainText(/\b(up|down)\b/);
 
   // Попытка сохранена в IndexedDB и попадает в статистику.
   await page.goto('/learn/challenge');

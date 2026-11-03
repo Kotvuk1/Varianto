@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { ChallengeAnswerSchema } from '@/server/schemas';
-import { buildAnswer, defaultLevels, formatRR, reasonsFor, riskReward, roundToTick, validatePosition } from './position';
+import { parsePrice, buildAnswer, defaultLevels, formatRR, reasonsFor, riskReward, roundToTick, validatePosition } from './position';
 
 describe('validatePosition (SL_WRONG_SIDE до отправки)', () => {
   it('LONG: SL ниже, TP выше входа', () => {
@@ -66,5 +66,17 @@ describe('reasonsFor', () => {
   it('для WAIT только две причины', () => {
     expect(reasonsFor('WAIT', all)).toEqual(['range-no-edge', 'unclear-structure']);
     expect(reasonsFor('LONG', all)).toHaveLength(4);
+  });
+});
+
+describe('parsePrice', () => {
+  it('точка, запятая, группировка пробелами', () => {
+    expect(parsePrice('3033.28')).toBe(3033.28);
+    expect(parsePrice('3033,28')).toBe(3033.28);
+    expect(parsePrice('3\u00a0033,28')).toBe(3033.28);
+    expect(parsePrice('64,380.5')).toBe(64380.5);
+    expect(parsePrice('64.380,5')).toBe(64380.5);
+    expect(parsePrice('abc')).toBeNull();
+    expect(parsePrice('-5')).toBeNull();
   });
 });

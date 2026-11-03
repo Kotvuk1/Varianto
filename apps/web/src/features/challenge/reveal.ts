@@ -6,10 +6,26 @@ import type { ChallengeGradeResult } from './types';
 
 const TIME_KEYS = new Set(['time', 'refTime', 'eventTime', 'fromTime', 'toTime']);
 
+const TREND_KEYS = new Set(['trend', 'trendTf', 'htfTrend']);
+const TREND_RU: Record<string, string> = { up: 'восходящий', down: 'нисходящий', none: 'не определён' };
+const DIR_RU: Record<string, string> = { up: 'вверх', down: 'вниз', bull: 'вверх', bear: 'вниз' };
+const POI_RU: Record<string, string> = { OB: 'Order Block', FVG: 'FVG', protected: 'защищённый уровень' };
+const TF_RU: Record<string, string> = { '15m': '15m', '1h': '1H', '4h': '4H', '1d': '1D' };
+
+/** Значения параметров шаблонов Challenge приходят из ядра кодами (up/down/4h): переводим в читаемый вид. */
+export function localizeParam(key: string, v: string | number): string | number {
+  if (typeof v !== 'string') return v;
+  if (TREND_KEYS.has(key)) return TREND_RU[v] ?? v;
+  if (key === 'htfTf') return TF_RU[v] ?? v;
+  if (key === 'poi') return POI_RU[v] ?? v;
+  if (key === 'lastEvent') return v.replace(/ (up|down|bull|bear)$/, (_m, d: string) => ` ${DIR_RU[d]}`);
+  return v;
+}
+
 const shiftBlock = (b: FeedbackBlock, shift: number): FeedbackBlock => {
   if (!b.params) return b;
   const params: Record<string, string | number> = {};
-  for (const [k, v] of Object.entries(b.params)) params[k] = typeof v === 'number' && TIME_KEYS.has(k) ? v + shift : v;
+  for (const [k, v] of Object.entries(b.params)) params[k] = typeof v === 'number' && TIME_KEYS.has(k) ? v + shift : localizeParam(k, v);
   return { ...b, params };
 };
 

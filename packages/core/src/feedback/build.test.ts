@@ -42,7 +42,7 @@ describe('buildFeedback: 6 частей (FR-FB-02)', () => {
       const fb = buildFeedback({ module: m, verdict: 'correct', score: 1, errors: [], ok: [{ code: 'OK_WAIT' }] });
       expect(fb.principle).toEqual({ templateKey: `feedback.principle.${m}`, code: null, glyph: 'info' });
       expect(fb.mistakes).toEqual([]);
-      expect(fb.verdict.templateKey).toBe('feedback.verdict.correct');
+      expect(fb.verdict.templateKey).toBe(m === 'challenge' ? 'feedback.verdict.challenge.correct' : 'feedback.verdict.correct');
       expect(fb.understood[0]!.code).toBe('OK_WAIT');
     }
   });
@@ -90,7 +90,7 @@ describe('шаблоны (ALGORITHMS §17)', () => {
     expect(Object.keys(VERDICT_TEMPLATES_RU)).toHaveLength(3);
     expect(Object.keys(PRINCIPLE_TEMPLATES_RU)).toHaveLength(3);
     expect(flat['feedback.BOS_WICK_ONLY.mistake']).toContain('{kind}');
-    expect(Object.keys(flat)).toHaveLength(3 + 3 + 15 + 57 * 4);
+    expect(Object.keys(flat)).toHaveLength(3 + 3 + 3 + 15 + 57 * 4);
   });
   it('каждый ключ buildFeedback существует в словаре', () => {
     const codes = Object.keys(ERROR_TEMPLATES_RU) as ErrorCode[];
@@ -107,6 +107,13 @@ describe('шаблоны (ALGORITHMS §17)', () => {
     expect(fillTemplate(flat['feedback.verdict.correct']!, { score: 91 })).toBe('Верно: 91% совпадения с эталоном.');
     expect(fillTemplate('Пропущен {a} и {b}', { a: 1 })).toBe('Пропущен 1 и {b}');
     expect(fillTemplate('{a}')).toBe('{a}');
+  });
+  it('Challenge: вердикт по качеству, без «совпадения с эталоном»', () => {
+    const fb = buildFeedback({ module: 'challenge', verdict: 'correct', score: 0.8, errors: [] });
+    expect(fb.verdict.templateKey).toBe('feedback.verdict.challenge.correct');
+    const text = fillTemplate(flat[fb.verdict.templateKey]!, fb.verdict.params);
+    expect(text).toBe('Решение верное: качество 80 из 100.');
+    expect(text).not.toMatch(/эталон/);
   });
   it('skillForError: фиксированные и параметрические навыки', () => {
     expect(skillForError('BOS_WICK_ONLY')).toBe('bos');

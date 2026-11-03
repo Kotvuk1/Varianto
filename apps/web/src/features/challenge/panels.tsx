@@ -11,7 +11,7 @@ import { FeedbackView, GradeLegend } from '../feedback';
 import { ChallengeApiError } from './api';
 import { relativeDuration } from './axis';
 import { TF_LABEL } from './tf';
-import { formatRR, reasonsFor, riskReward, validatePosition, type Side } from './position';
+import { formatRR, parsePrice, reasonsFor, riskReward, validatePosition, type Side } from './position';
 import { revealFeedback, formatScenarioDate, resolutionNote } from './reveal';
 import { SPEEDS, type Speed } from './sessionStore';
 import type { ChallengeGradeResult } from './types';
@@ -79,20 +79,22 @@ export function ErrorBlock({
 function PriceField({
   label,
   value,
+  fmt,
   onCommit,
   testId,
 }: {
   label: string;
   value: number | null;
+  fmt: (p: number) => string;
   onCommit: (v: number) => void;
   testId: string;
 }) {
   const [draft, setDraft] = useState<string | null>(null);
-  const shown = draft ?? (value === null ? '' : String(value));
+  const shown = draft ?? (value === null ? '' : fmt(value));
   const commit = () => {
     if (draft === null) return;
-    const v = Number(draft.replace(',', '.'));
-    if (Number.isFinite(v) && v > 0) onCommit(v);
+    const v = parsePrice(draft);
+    if (v !== null) onCommit(v);
     setDraft(null);
   };
   return (
@@ -145,8 +147,8 @@ export function DecisionPanel(p: {
       {p.side && p.side !== 'WAIT' && p.sl !== null && p.tp !== null ? (
         <div data-testid="challenge-summary" className="flex flex-col gap-1">
           <div className="flex items-end gap-2">
-            <PriceField label={ch.decision.slFieldLabel} value={p.sl} onCommit={(v) => p.onLevels(v, p.tp!)} testId="challenge-sl" />
-            <PriceField label={ch.decision.tpFieldLabel} value={p.tp} onCommit={(v) => p.onLevels(p.sl!, v)} testId="challenge-tp" />
+            <PriceField label={ch.decision.slFieldLabel} value={p.sl} fmt={p.fmt} onCommit={(v) => p.onLevels(v, p.tp!)} testId="challenge-sl" />
+            <PriceField label={ch.decision.tpFieldLabel} value={p.tp} fmt={p.fmt} onCommit={(v) => p.onLevels(p.sl!, v)} testId="challenge-tp" />
             <div className="flex h-11 shrink-0 flex-col justify-center text-xs text-text-2">
               <span>{ch.decision.entry}</span>
               <span className="tnum text-sm text-text-1" data-testid="challenge-entry">
@@ -310,7 +312,7 @@ export function ResultView({ grade, fmt }: { grade: ChallengeGradeResult; fmt: (
             {outcomeSub}
           </p>
         </div>
-        <Stat label={ch.result.decision} value={d.decisionCorrect ? ch.result.decisionOk : ch.result.decisionBad} className="[&>span:first-child]:text-xl" />
+        <Stat label={ch.result.decision} value={ch.result.verdicts[grade.verdict]} className="[&>span:first-child]:text-xl" />
       </div>
       <p className="text-xs text-text-2">{ch.result.separate}</p>
       {note && (

@@ -11,6 +11,7 @@ import { makePriceFormatter, tickSizeFor } from '@/chart/priceFormat';
 import { ch } from '@/i18n/ru/challenge';
 import { useRepository } from '@/storage';
 import { Button, Segmented } from '@/ui';
+import { selectHints } from './hints';
 import { buildAttempt } from './attempt';
 import { ChallengeApiError, fetchNext, gradeChallenge } from './api';
 import { buildAnswer } from './position';
@@ -127,7 +128,7 @@ export function ChallengeSession() {
   const finished = s.phase === 'result' || (s.phase === 'replay' && g !== null && s.played >= g.replay.candles.length);
   const readOnly = useMemo<Mark[]>(() => {
     if (!task) return [];
-    if (s.phase === 'decide' || s.phase === 'grading') return task.payload.hints ?? [];
+    if (s.phase === 'decide' || s.phase === 'grading') return selectHints(task.payload.hints);
     if (!g) return [];
     const out: Mark[] = [];
     if (s.phase === 'result') out.push(...g.reference);
@@ -220,8 +221,11 @@ export function ChallengeSession() {
         <Link href="/learn/challenge" aria-label={ch.back} className="flex size-11 shrink-0 items-center justify-center rounded-md hover:bg-surface-2">
           <ChevronLeft size={24} strokeWidth={1.75} aria-hidden />
         </Link>
-        <h1 className="min-w-0 flex-1 truncate text-base font-semibold">{ch.session.title(ch.difficulties[difficulty].label)}</h1>
-        <div className="w-[184px] shrink-0 lg:w-60" title={locked ? ch.session.tfLockedReplay : undefined}>
+        <h1 className="min-w-0 flex-1 truncate text-base font-semibold">
+          <span className="lg:hidden">{ch.session.titleShort(ch.difficulties[difficulty].label)}</span>
+          <span className="hidden lg:inline">{ch.session.title(ch.difficulties[difficulty].label)}</span>
+        </h1>
+        <div className="w-[164px] shrink-0 lg:w-60 [&_button]:px-1 lg:[&_button]:px-3" title={locked ? ch.session.tfLockedReplay : undefined}>
           <Segmented
             label={ch.session.timeframe}
             value={s.tf}

@@ -84,3 +84,17 @@ export function buildAnswer(i: AnswerInput): ChallengeAnswerBody {
 export function reasonsFor(side: Side, all: readonly ReasonCode[]): ReasonCode[] {
   return side === 'WAIT' ? all.filter((r) => r === 'range-no-edge' || r === 'unclear-structure') : [...all];
 }
+
+/** Разбор цены из поля: принимает точку и запятую, пробелы/неразрывные пробелы как группировку. */
+export function parsePrice(text: string): number | null {
+  let t = text.replace(/[\s\u00a0\u202f]/g, '');
+  if (!t) return null;
+  const lastDot = t.lastIndexOf('.');
+  const lastComma = t.lastIndexOf(',');
+  if (lastDot >= 0 && lastComma >= 0) {
+    const dec = lastDot > lastComma ? '.' : ',';
+    t = dec === '.' ? t.replace(/,/g, '') : t.replace(/\./g, '').replace(',', '.');
+  } else t = t.replace(',', '.');
+  const v = Number(t);
+  return Number.isFinite(v) && v > 0 ? v : null;
+}

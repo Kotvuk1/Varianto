@@ -49,11 +49,11 @@ describe('taskFlow', () => {
   it('следующее задание исключает уже выданные', async () => {
     const repo = new LocalRepository(`flow-${Math.random()}`);
     let i = 0;
-    const next = vi.fn(async (_m: string, _b: unknown) => envelope(`t${++i}`));
+    const next = vi.fn(async () => envelope(`t${++i}`));
     const flow = createTaskFlow({ api: { next: next as unknown as TaskApi["next"], grade: vi.fn() }, repo, module: 'market-structure', body: () => ({ difficulty: 'easy', mode: 'mark', tf: '1h' }) });
     await flow.getState().load();
     await flow.getState().load();
-    expect(next.mock.calls[1]![1]).toMatchObject({ exclude: ['t1'] });
+    expect((next.mock.calls as unknown as [string, unknown][])[1]![1]).toMatchObject({ exclude: ['t1'] });
   });
 
   it('404 и 429 при next -> failed с типом ошибки; ошибка grade не теряет задание', async () => {

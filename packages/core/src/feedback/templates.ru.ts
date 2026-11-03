@@ -19,6 +19,13 @@ export const VERDICT_TEMPLATES_RU: Record<Verdict, string> = {
   incorrect: 'Неверно: {score}% совпадения. Разберём, что пошло не так.',
 };
 
+/** Challenge: вердикт по качеству решения (ALGORITHMS §14.3-14.4), без формулировки «совпадения с эталоном» (она для разметки). */
+export const CHALLENGE_VERDICT_TEMPLATES_RU: Record<Verdict, string> = {
+  correct: 'Решение верное: качество {score} из 100.',
+  partial: 'Решение частично верное: качество {score} из 100, есть ошибки ниже.',
+  incorrect: 'Решение неверное: качество {score} из 100. Разберём, что пошло не так.',
+};
+
 export const PRINCIPLE_TEMPLATES_RU: Record<ModuleId, string> = {
   'market-structure':
     'Структура читается по закрытиям тел и подтверждённым swing: фитиль показывает ликвидность, тело — решение рынка.',
@@ -440,7 +447,7 @@ export const ERROR_TEMPLATES_RU: Record<ErrorCode, ErrorTemplate> = {
   },
   WAIT_MISSED_SETUP: {
     mistake: 'Выбран WAIT, но был сетап {refSide}.',
-    why: 'Тренд {trendTf} совпадал с {htfTrend}, цена была в зоне интереса ({poi}), RR ≥ 2.',
+    why: 'Тренд рабочего ТФ ({trendTf}) совпадал со старшим ({htfTrend}), цена была в зоне интереса ({poi}), RR ≥ 2.',
     howTo: 'Когда тренд, зона и RR совпадают — это вход.',
     principle: 'Ожидание тоже решение и имеет цену упущенной возможности.',
   },
@@ -456,6 +463,7 @@ export const ERROR_TEMPLATES_RU: Record<ErrorCode, ErrorTemplate> = {
 export function flattenTemplates(): Record<string, string> {
   const out: Record<string, string> = {};
   for (const [k, v] of Object.entries(VERDICT_TEMPLATES_RU)) out[`feedback.verdict.${k}`] = v;
+  for (const [k, v] of Object.entries(CHALLENGE_VERDICT_TEMPLATES_RU)) out[`feedback.verdict.challenge.${k}`] = v;
   for (const [k, v] of Object.entries(PRINCIPLE_TEMPLATES_RU)) out[`feedback.principle.${k}`] = v;
   for (const [k, v] of Object.entries(OK_TEMPLATES_RU)) out[`feedback.ok.${k}`] = v;
   for (const [code, t] of Object.entries(ERROR_TEMPLATES_RU)) {

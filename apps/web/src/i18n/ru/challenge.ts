@@ -33,6 +33,7 @@ export const ch = {
   },
   session: {
     title: (difficulty: string) => `Challenge · ${difficulty}`,
+    titleShort: (difficulty: string) => difficulty,
     timeframe: 'Таймфрейм',
     pairHidden: (pair: string) => `${pair} · дата скрыта`,
     loading: 'Подбираю сценарий…',
@@ -118,8 +119,7 @@ export const ch = {
     waitOk: 'WAIT был верным',
     waitBad: 'WAIT не был верным',
     waitNoR: 'R для WAIT не считается',
-    decisionOk: 'верное',
-    decisionBad: 'неверное',
+    verdicts: { correct: 'верное', partial: 'частично верное', incorrect: 'неверное' },
     date: 'Дата сценария',
     pair: 'Пара',
     parts: 'Разбор оценки',

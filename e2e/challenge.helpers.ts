@@ -26,7 +26,7 @@ export async function lastCandleTime(page: Page): Promise<number> {
   });
 }
 
-export const num = async (loc: ReturnType<Page['getByTestId']>) => Number(await loc.inputValue());
+export const num = async (loc: ReturnType<Page['getByTestId']>) => Number((await loc.inputValue()).replace(/\s/g, '').replace(',', '.'));
 
 export async function openReasons(page: Page) {
   await page.getByTestId('challenge-open-reasons').click();
