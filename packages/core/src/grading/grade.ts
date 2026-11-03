@@ -232,7 +232,14 @@ export function gradeMarks(user: readonly Mark[], algo: AlgoMarkSet, ctx: GradeC
         code: 'BOS_CHOCH_CONFUSED',
         cost: 3,
         skill: 'choch',
-        params: { time: tm, given: um.kind, expected: am.kind },
+        params: {
+          time: tm,
+          given: um.kind,
+          expected: am.kind,
+          // тренд на момент события: BOS идёт по тренду, CHoCH - против него
+          trend: (am.kind === 'bos') === (am.direction === 'bull') ? 'бычий' : 'медвежий',
+          protected: am.anchors[0]!.price,
+        },
       });
     }
     const dirApplies =
