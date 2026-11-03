@@ -120,13 +120,15 @@ export class DrawingPrimitive implements ISeriesPrimitive<Time> {
               context.font = `600 11px ${st.tokens.fontSans}`;
               const lw = context.measureText(label).width + 10;
               const lx = Math.min(Math.max(left + 4, 4), Math.max(4, mediaSize.width - lw - 4));
+              // внизу панели: сверху живёт легенда OHLC
+              const ly = mediaSize.height - 24;
               context.fillStyle = st.tokens.bg;
-              context.fillRect(lx, 4, lw, 16);
-              context.strokeRect(lx + 0.5, 4.5, lw - 1, 15);
+              context.fillRect(lx, ly, lw, 16);
+              context.strokeRect(lx + 0.5, ly + 0.5, lw - 1, 15);
               context.fillStyle = st.tokens.text1;
               context.textAlign = 'left';
               context.textBaseline = 'middle';
-              context.fillText(label, lx + 5, 12.5);
+              context.fillText(label, lx + 5, ly + 8.5);
               context.restore();
             }
           }

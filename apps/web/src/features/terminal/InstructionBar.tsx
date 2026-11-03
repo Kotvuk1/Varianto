@@ -63,7 +63,7 @@ export function InstructionBar(props: InstructionBarProps) {
         </span>
       </button>
       {props.allowScope && props.onScope && !props.selected && isScopedKind(props.tool) && (
-        <div className="w-[176px] shrink-0 lg:w-56" data-testid="scope-switch">
+        <div className="w-[208px] shrink-0 lg:w-56" data-testid="scope-switch">
           <Segmented<Scope>
             label={tx.scope.label}
             options={[

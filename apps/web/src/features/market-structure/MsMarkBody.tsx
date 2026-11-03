@@ -1,6 +1,6 @@
 'use client';
 import { useMemo } from 'react';
-import { msToolsFor, TIMEFRAME_MS, type SkillId } from '@tl/core';
+import { TIMEFRAME_MS, type SkillId } from '@tl/core';
 import { formatDateTimeRu, msConceptTask, msFocusTask, msReference } from '@/i18n/ru/ms';
 import { ss } from '@/i18n/ru/session';
 import { msMarkAnswer } from '../session/adapters';
@@ -18,10 +18,8 @@ export function MsMarkBody({ envelope, flow, base }: { envelope: TaskEnvelope<Ms
   const candles = envelope.series[p.tf] ?? [];
   // focus - явный набор проверяемых понятий; без него (старый payload) - concepts. Инструменты только по focus.
   const concepts = useMemo(() => (p.focus?.length ? p.focus : p.concepts) as SkillId[], [p.focus, p.concepts]);
-  const groups = useMemo(() => {
-    const byFocus = new Set<string>(msToolsFor(concepts));
-    return msToolGroups(p.tools.filter((t) => byFocus.has(t)));
-  }, [p.tools, concepts]);
+  // Инструменты - все понятия задания (база + focus): база тоже оценивается, без неё (например, при focus=internal-external) рисовать нечем.
+  const groups = useMemo(() => msToolGroups(p.tools), [p.tools]);
   const windowBars = p.windowCandles ?? Math.round((p.window.toTime - p.window.fromTime) / TIMEFRAME_MS[p.tf]) + 1;
   const details = (
     <>
