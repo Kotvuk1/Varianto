@@ -22,7 +22,9 @@ export function relativeDuration(ms: number): string {
     const m = Math.round((ms - h * H) / M);
     return m === 0 ? `${h}ч` : `${h}ч ${m}м`;
   }
-  return `${Math.round(ms / D)}д`;
+  const d = Math.floor(ms / D);
+  const h = Math.round((ms - d * D) / H);
+  return h === 0 || h === 24 ? `${h === 24 ? d + 1 : d}д` : `${d}д ${h}ч`;
 }
 
 export interface AxisTick {

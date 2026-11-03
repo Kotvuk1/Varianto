@@ -133,3 +133,15 @@ for (const c of [
     if (c.status === 429) await expect(err).toContainText('7 с');
   });
 }
+
+test('×16: проигрывание доходит до итога само, без ошибок страницы', async ({ page }) => {
+  const errors: string[] = [];
+  page.on('pageerror', (e) => errors.push(e.message));
+  await startSession(page, 'easy');
+  await page.getByRole('radio', { name: 'SHORT' }).click();
+  await submitDecision(page, 'trend-continuation');
+  await waitResult(page);
+  await page.getByRole('radio', { name: '×16' }).click();
+  await expect(page.getByTestId('challenge-session')).toHaveAttribute('data-phase', 'result', { timeout: 60_000 });
+  expect(errors).toEqual([]);
+});

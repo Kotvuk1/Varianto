@@ -225,7 +225,7 @@ export function ChallengeSession() {
           <span className="lg:hidden">{ch.session.titleShort(ch.difficulties[difficulty].label)}</span>
           <span className="hidden lg:inline">{ch.session.title(ch.difficulties[difficulty].label)}</span>
         </h1>
-        <div className="w-[164px] shrink-0 lg:w-60 [&_button]:px-1 lg:[&_button]:px-3" title={locked ? ch.session.tfLockedReplay : undefined}>
+        <div className="w-[176px] shrink-0 lg:w-60 [&_button]:px-1 lg:[&_button]:px-3" title={locked ? ch.session.tfLockedReplay : undefined}>
           <Segmented
             label={ch.session.timeframe}
             value={s.tf}

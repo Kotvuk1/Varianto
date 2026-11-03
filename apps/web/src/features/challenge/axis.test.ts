@@ -13,6 +13,8 @@ describe('относительная ось времени', () => {
     expect(relativeLabel(T + 4 * H + 37 * 60_000, T, 'сейчас')).toBe('+4ч 37м');
     expect(relativeLabel(T - 5 * D, T, 'сейчас')).toBe('−5д');
     expect(relativeDuration(40 * 60_000)).toBe('40м');
+    expect(relativeDuration(3.5 * D)).toBe('3д 12ч');
+    expect(relativeDuration(4 * D)).toBe('4д');
   });
 
   it('метки оси не содержат абсолютных дат, годов и месяцев', () => {
@@ -23,7 +25,7 @@ describe('относительная ось времени', () => {
         expect(t.label).not.toMatch(/\d{4}/);
         expect(t.label).not.toMatch(/\d{1,2}[./:-]\d{1,2}/);
         expect(t.label).not.toMatch(/янв|фев|мар|апр|мая|июн|июл|авг|сен|окт|ноя|дек/);
-        expect(t.label).toMatch(/^(сейчас|[−+]\d+(ч|м|д)( \d+м)?)$/);
+        expect(t.label).toMatch(/^(сейчас|[−+]\d+(ч|м|д)( \d+(м|ч))?)$/);
         expect(t.x).toBeGreaterThanOrEqual(0);
         expect(t.x).toBeLessThanOrEqual(330);
       }
