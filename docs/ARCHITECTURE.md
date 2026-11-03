@@ -103,7 +103,7 @@ interface Mark {
 - `analyzeStructure(candles, params)` → внешняя/внутренняя структура, HH/HL/LH/LL, BOS/CHoCH (по **закрытию тела**), sweeps, OB, FVG.
 - `detectPatterns(candles)` → 6 моделей PA.
 - `findLevels(candles)` → зоны S/R по кластерам разворотов.
-- `gradeMarks(user: Mark[], algo: Mark[], tolerance)` → совпадения/пропуски/лишние + коды ошибок.
+- `gradeMarks(user: Mark[], algo: AlgoMarkSet, ctx: GradeContext)` (ALGORITHMS §12) → совпадения/пропуски/лишние + коды ошибок.
 - `resolveTrade(position, futureProvider)` → исход с drill-down 15m/1h/4h/1d → 1m → aggTrades.
 - `buildFeedback(gradeResult)` → 6-частный разбор из шаблонов `i18n/ru/feedback/*` по кодам ошибок.
 Точные параметры фиксирует Technical Analyst в `docs/specs/ALGORITHMS.md` (обязательно до реализации, M2).

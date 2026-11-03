@@ -92,7 +92,7 @@ interface Mark {
   author: 'user' | 'algo';
 }
 ```
-Функции ядра (сигнатуры уточняет `docs/specs/ALGORITHMS.md`): `detectSwings`, `analyzeStructure`, `detectPatterns`, `findLevels`, `gradeMarks(user, algo, tolerance)`, `resolveTrade(position, futureProvider)`, `buildFeedback(gradeResult)`, `normalize`, `sliceAt(series, T)`; константа `ALGO_VERSION`.
+Функции ядра (сигнатуры уточняет `docs/specs/ALGORITHMS.md`): `detectSwings`, `analyzeStructure`, `detectPatterns`, `findLevels`, `gradeMarks(user: Mark[], algo: AlgoMarkSet, ctx: GradeContext)` (ALGORITHMS §12.1; прежняя форма `gradeMarks(user, algo, tolerance)` не хватала входов, см. ALGORITHMS §19 п.1), `resolveTrade(position, futureProvider)`, `buildFeedback(gradeResult)`, `normalize`, `sliceAt(series, T)`; константа `ALGO_VERSION = '1.0.0'` (ALGORITHMS §19 п.6).
 
 Нормализация (`normalize`): сортировка по `openTime`; дубликаты — побеждает последняя версия (для незакрытой) / закрытая; пропуски дозапрашиваются, иначе помечаются `gap`; синтетика запрещена.
 
@@ -201,7 +201,7 @@ interface TaskEnvelope<P extends TaskPayload = TaskPayload> {
   payload: P;
 }
 ```
-Свечи: challenge — все четыре ТФ; market-structure / price-action — только запрошенный `tf`. Глубина истории **(предложение)**: 500 свечей на ТФ, для `1d` — 365; фиксируется при реализации (OQ-19 PRD). Ни одна свеча не содержит данных позже `T`; частичная свеча старшего ТФ собрана из 1m в `[openTime, T)` (ADR-0006).
+Свечи: challenge — все четыре ТФ; market-structure — только запрошенный `tf`; price-action с `taskType: 'context'` — ряды `tf` и `htf(tf)` (старший ТФ: 15m→1h, 1h→4h, 4h→1d, 1d→1d; ALGORITHMS §11.2, §19 п.4), оба только закрытые свечи до `T`; прочие price-action задания — только `tf`. Глубина истории **(предложение)**: 500 свечей на ТФ, для `1d` — 365; фиксируется при реализации (OQ-19 PRD). Ни одна свеча не содержит данных позже `T`; частичная свеча старшего ТФ собрана из 1m в `[openTime, T)` (ADR-0006).
 
 ```ts
 type TaskPayload =
@@ -394,7 +394,8 @@ interface MarkGrade {
   matched: { userMarkId: string; algoMarkId: string; timeOffsetCandles: number; priceOffsetPct: number }[];
   missed: Mark[];                            // эталонные, которых нет у пользователя
   extra: Mark[];                             // лишние метки пользователя
-  toleranceCandles: number;                  // допуск по времени (±2 по умолчанию, FR-MS-13; уточняется в ALGORITHMS.md)
+  ignored: string[];                         // (новое) id меток пользователя, совпавших с допустимыми эталонами (заполненные FVG, инвалидированные OB, sweep-кандидаты у правого края) или вне окна оценки (ALGORITHMS §12.1, §12.2, §12.6; §19 п.2)
+  toleranceCandles: number;                  // допуск по времени (±2, FR-MS-13; значение — ALGORITHMS §12.1)
 }
 
 interface ChallengeDetail {
@@ -438,30 +439,40 @@ interface FeedbackBlock {
   glyph: 'match' | 'miss' | 'extra' | 'info';   // иконка/форма, не цвет (FR-FB-05)
 }
 type OkCode = 'OK_SWING' | 'OK_BOS' | 'OK_CHOCH' | 'OK_OB' | 'OK_FVG' | 'OK_LEVEL' | 'OK_PATTERN'
-            | 'OK_CONTEXT' | 'OK_SL_PLACEMENT' | 'OK_WAIT';        // начальный список
+            | 'OK_CONTEXT' | 'OK_SL_PLACEMENT' | 'OK_WAIT'
+            | 'OK_LABEL' | 'OK_SCOPE' | 'OK_SWEEP' | 'OK_HTF' | 'OK_RR';   // OK_LABEL…OK_RR — (новое), ALGORITHMS §19 п.5
 ```
 Элементы массивов `mistakes`, `why`, `howTo` соответствуют друг другу по `code` (один `GradeError` порождает по одному блоку в каждой из трёх частей).
 
-### 5.3 Коды ошибок — начальный список (предложение; окончательный фиксирует `ALGORITHMS.md`)
+### 5.3 Коды ошибок
+
+Окончательный список: `ALGORITHMS.md` (§12.6, §14.3, §17; §19 п.5). Коды, помеченные (новое), добавлены спецификацией.
 
 ```ts
 type ErrorCode =
   // Market Structure
-  | 'SWING_MISSED' | 'SWING_EXTRA' | 'SWING_OFF_TOLERANCE'
-  | 'STRUCTURE_LABEL_WRONG'
-  | 'BOS_WICK_ONLY' | 'BOS_MISSING' | 'BOS_WRONG_LEVEL'
-  | 'CHOCH_MISSING' | 'CHOCH_WRONG_DIRECTION'
+  | 'SWING_MISSED' | 'SWING_EXTRA' | 'SWING_OFF_TOLERANCE' | 'SWING_UNCONFIRMED'          // SWING_UNCONFIRMED (новое)
+  | 'STRUCTURE_LABEL_WRONG' | 'STRUCTURE_LABEL_MISSED' | 'STRUCTURE_LABEL_EXTRA'          // *_MISSED / *_EXTRA (новые)
+  | 'BOS_WICK_ONLY' | 'BOS_MISSING' | 'BOS_WRONG_LEVEL'                                  // BOS_WICK_ONLY и BOS_WRONG_LEVEL применимы к CHoCH (params.kind = 'choch')
+  | 'BOS_EXTRA' | 'BOS_WRONG_DIRECTION' | 'BOS_CHOCH_CONFUSED'                           // (новые)
+  | 'CHOCH_MISSING' | 'CHOCH_WRONG_DIRECTION' | 'CHOCH_EXTRA'                             // CHOCH_EXTRA (новое)
   | 'INTERNAL_AS_EXTERNAL' | 'EXTERNAL_AS_INTERNAL'
-  | 'SWEEP_MISSED' | 'SWEEP_IS_BREAK'
-  | 'OB_WRONG_CANDLE' | 'OB_NO_DISPLACEMENT'
-  | 'FVG_NOT_GAP' | 'FVG_WRONG_BOUNDS'
+  | 'SWEEP_MISSED' | 'SWEEP_IS_BREAK' | 'SWEEP_EXTRA'                                    // SWEEP_EXTRA (новое)
+  | 'MARK_WRONG_DIRECTION'                                                               // (новое)
+  | 'OB_WRONG_CANDLE' | 'OB_NO_DISPLACEMENT' | 'OB_WRONG_BOUNDS' | 'OB_MISSED' | 'OB_EXTRA'   // OB_WRONG_BOUNDS, OB_MISSED, OB_EXTRA (новые)
+  | 'FVG_NOT_GAP' | 'FVG_WRONG_BOUNDS' | 'FVG_MISSED' | 'FVG_EXTRA'                       // FVG_MISSED, FVG_EXTRA (новые)
+  | 'QUESTION_WRONG'                                                                     // (новое)
   // Price Action
   | 'PATTERN_WRONG_TYPE' | 'PATTERN_MISSED' | 'PATTERN_EXTRA' | 'PATTERN_WRONG_DIRECTION'
-  | 'LEVEL_OFF_TOLERANCE'
+  | 'LEVEL_OFF_TOLERANCE' | 'LEVEL_NOT_STRONGEST' | 'LEVEL_WRONG_TYPE'                   // LEVEL_NOT_STRONGEST, LEVEL_WRONG_TYPE (новые)
   | 'CONTEXT_IGNORED_HTF' | 'CONTEXT_MISSED_SWEEP' | 'CONTEXT_MISSED_LEVEL' | 'CONTEXT_FALSE_POSITIVE'
+  | 'CONTEXT_MISSED_OB' | 'CONTEXT_PHANTOM_FACTOR' | 'CONTEXT_FALSE_NEGATIVE'            // (новые)
   // Challenge
   | 'SL_WRONG_SIDE' | 'TP_WRONG_SIDE' | 'SL_INSIDE_STRUCTURE' | 'RR_TOO_LOW'
-  | 'TRADE_AGAINST_HTF' | 'TRADE_IN_RANGE' | 'WAIT_MISSED_SETUP' | 'REASON_MISMATCH';
+  | 'SL_TOO_WIDE'                                                                        // (новое)
+  | 'TRADE_AGAINST_HTF' | 'TRADE_AGAINST_STRUCTURE' | 'TRADE_IN_RANGE'                   // TRADE_AGAINST_STRUCTURE (новое)
+  | 'ENTRY_NO_POI'                                                                       // (новое)
+  | 'WAIT_MISSED_SETUP' | 'REASON_MISMATCH';
 ```
 
 | Код | Навык (`SkillId`) | Смысл |
@@ -490,6 +501,22 @@ type ErrorCode =
 | `SL_WRONG_SIDE` / `TP_WRONG_SIDE` | `challenge-risk` | Стоп/тейк с неправильной стороны от входа (в API — validation issue, 400) |
 | `SL_INSIDE_STRUCTURE` | `challenge-risk` | Стоп внутри структуры, а не за значимым swing |
 | `RR_TOO_LOW` | `challenge-risk` | Соотношение риск/прибыль ниже порога (значение — ALGORITHMS.md) |
+| `SWING_UNCONFIRMED` (новое) | `swing` | Swing отмечен на свече, которая ещё не подтверждена фракталом |
+| `STRUCTURE_LABEL_MISSED` / `STRUCTURE_LABEL_EXTRA` (новые) | `structure-labels` | Пропущена / лишняя метка HH/HL/LH/LL |
+| `BOS_EXTRA` / `BOS_WRONG_DIRECTION` (новые) | `bos` | Лишний BOS / BOS в неверном направлении |
+| `BOS_CHOCH_CONFUSED` (новое) | `bos`, `choch` | Перепутаны BOS и CHoCH на одной свече |
+| `CHOCH_EXTRA` (новое) | `choch` | Лишний CHoCH |
+| `SWEEP_EXTRA` (новое) | `sweep` | Лишний sweep: за фитилём нет подтверждённого внешнего swing |
+| `MARK_WRONG_DIRECTION` (новое) | по `params.kind` | Направление метки BREAK, SWEEP, OB или FVG не совпадает с эталоном |
+| `OB_WRONG_BOUNDS` (новое) | `order-block` | Границы OB неверны (IoU ценовых интервалов < 0.5) |
+| `OB_MISSED` / `OB_EXTRA` (новые) | `order-block` | Пропущен / лишний OB |
+| `FVG_MISSED` / `FVG_EXTRA` (новые) | `fvg` | Пропущен / лишний FVG |
+| `QUESTION_WRONG` (новое) | по шаблону | Неверный ответ в вопросе (`ms-question`) |
+| `LEVEL_NOT_STRONGEST` / `LEVEL_WRONG_TYPE` (новые) | `pa-level` | Отмечен слабее эталонного уровень того же типа / уровень другого типа |
+| `CONTEXT_MISSED_OB` / `CONTEXT_PHANTOM_FACTOR` / `CONTEXT_FALSE_NEGATIVE` (новые) | `pa-context` | Не замечен OB / назван фактор, которого нет / модель названа незначимой при подтверждённом контексте |
+| `SL_TOO_WIDE` (новое) | `challenge-risk` | Stop Loss дальше защищённого уровня более чем на 1.5 ATR |
+| `TRADE_AGAINST_STRUCTURE` (новое) | `challenge-entry` | Сделка против структуры рабочего ТФ |
+| `ENTRY_NO_POI` (новое) | `challenge-entry` | Вход вне зоны интереса (OB, FVG, защищённый уровень) |
 | `TRADE_AGAINST_HTF` | `challenge-entry` | Вход против тренда старшего ТФ без обоснования |
 | `TRADE_IN_RANGE` | `challenge-entry` | Позиция во флэте, где корректен WAIT |
 | `WAIT_MISSED_SETUP` | `challenge-wait` | WAIT при наличии валидной точки входа |
