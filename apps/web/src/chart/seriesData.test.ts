@@ -47,7 +47,8 @@ describe('toCandleData', () => {
     expect(toCandleData(mk(0, false), tokens).color).toMatch(/^rgba\(58, 134, 255, 0\.\d+\)$/);
   });
   it('объём окрашивается по направлению свечи', () => {
-    expect(toVolumeData(mk(0, true, 10, 12), tokens).color).toBe('rgba(58, 134, 255, 0.35)');
+    // прозрачность ниже токена: объём не конкурирует со свечами (0.35 * VOLUME_ALPHA)
+    expect(toVolumeData(mk(0, true, 10, 12), tokens).color).toBe('rgba(58, 134, 255, 0.245)');
     expect(toVolumeData(mk(0, true, 12, 10), tokens).value).toBe(5);
   });
 });

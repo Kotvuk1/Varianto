@@ -32,6 +32,7 @@ export interface PrimitiveState {
   tokens: ChartTokens;
   openCandle: OpenCandleInfo | null;
   openBadge: string;
+  fmt: (price: number) => string;
 }
 
 const ZONE_KINDS = new Set(['order-block', 'fvg']);
@@ -124,7 +125,7 @@ export class DrawingPrimitive implements ISeriesPrimitive<Time> {
           // Зоны под линиями и подписями.
           visible.sort((a, b) => Number(ZONE_KINDS.has(b.kind)) - Number(ZONE_KINDS.has(a.kind)));
           for (const m of visible) {
-            const g = buildGeometry(m, proj);
+            const g = buildGeometry(m, proj, { fmt: st.fmt });
             if (g.parts.some((p) => Object.values(p).some((v) => typeof v === 'number' && !Number.isFinite(v)))) continue;
             drawGeometry(context, g, { tokens: st.tokens, selected: m.id === st.selectedId, ghost: false });
             drawn++;
@@ -137,7 +138,7 @@ export class DrawingPrimitive implements ISeriesPrimitive<Time> {
             }
           }
           if (st.preview) {
-            const g = buildGeometry(st.preview, proj);
+            const g = buildGeometry(st.preview, proj, { fmt: st.fmt });
             drawGeometry(context, g, { tokens: st.tokens, selected: false, ghost: true });
           }
           this.lastDrawnCount = drawn;

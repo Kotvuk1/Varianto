@@ -14,13 +14,14 @@ import {
   type Time,
 } from 'lightweight-charts';
 import { TIMEFRAME_MS, type Candle, type CandleSeries, type Mark } from '@tl/core';
-import { DrawingController, type PointerInput } from './interaction/controller';
+import { DrawingController, type ControllerNotice, type PointerInput } from './interaction/controller';
 import { DrawingPrimitive } from './drawing/DrawingPrimitive';
 import { lwcProjection } from './drawing/lwcProjection';
 import type { PointerKind } from './drawing/hit';
 import type { ToolId } from './drawing/tools';
 import { TimeIndex } from './geometry/timeIndex';
-import { limitCandles, pricePrecision, toCandleData, toVolumeData } from './seriesData';
+import { decimalsForTick, makePriceFormatter, tickSizeFor } from './priceFormat';
+import { limitCandles, toCandleData, toVolumeData } from './seriesData';
 import {
   defaultLogicalRange,
   logicalRangeFromWindow,
@@ -55,6 +56,12 @@ export interface TradingChartProps {
   openCandleLabel?: string;
   ariaLabel?: string;
   className?: string;
+  /** tickSize символа из exchangeInfo, если известен; иначе таблица для BTC/ETH/SOL и 2 знака по умолчанию. */
+  tickSize?: number;
+  /** Шаг мастера и предупреждения инструмента (строка-инструкция). */
+  onNotice?: (n: ControllerNotice) => void;
+  /** Центрировать график по времени на метке (nonce меняется при каждом запросе). */
+  focus?: { time: number; nonce: number } | null;
 }
 
 const LOCALE = 'ru-RU';
@@ -98,7 +105,7 @@ function chartColors(t: ChartTokens) {
   };
 }
 
-const fmtNum = (n: number) => n.toLocaleString(LOCALE, { maximumFractionDigits: 8 });
+const fmtVol = (n: number) => Math.round(n).toLocaleString(LOCALE);
 
 export function TradingChart(props: TradingChartProps) {
   const tokens = useChartTokens();
@@ -120,6 +127,8 @@ export function TradingChart(props: TradingChartProps) {
   // Актуальные props для обработчиков (без пересоздания графика).
   const propsRef = useRef(props);
   const tokensRef = useRef(tokens);
+  const fmt = useMemo(() => makePriceFormatter(tickSizeFor(props.series.symbol, props.tickSize)), [props.series.symbol, props.tickSize]);
+  const fmtRef = useRef(fmt);
 
   const candles = useMemo(() => limitCandles(props.series.candles, props.now), [props.series.candles, props.now]);
 
@@ -139,6 +148,7 @@ export function TradingChart(props: TradingChartProps) {
       tokens: t,
       openCandle: last && !last.closed ? { openTime: last.openTime, high: last.high, low: last.low } : null,
       openBadge: p.openCandleLabel ?? 'Идёт',
+      fmt: fmtRef.current,
     });
   };
   const pushStateRef = useRef(pushState);
@@ -147,6 +157,7 @@ export function TradingChart(props: TradingChartProps) {
     propsRef.current = props;
     tokensRef.current = tokens;
     pushStateRef.current = pushState;
+    fmtRef.current = fmt;
   });
 
   // --- Создание графика (один раз, когда известны токены) ---
@@ -160,7 +171,7 @@ export function TradingChart(props: TradingChartProps) {
       autoSize: true,
       ...chartColors(t),
       crosshair: { mode: CrosshairMode.Normal, ...chartColors(t).crosshair },
-      localization: { locale: LOCALE, timeFormatter: crosshairTimeFormatter },
+      localization: { locale: LOCALE, timeFormatter: crosshairTimeFormatter, priceFormatter: fmtRef.current },
       timeScale: {
         ...chartColors(t).timeScale,
         timeVisible: true,
@@ -181,14 +192,14 @@ export function TradingChart(props: TradingChartProps) {
       wickDownColor: t.wickBear,
       priceLineColor: t.lastPriceBg,
     });
-    candle.priceScale().applyOptions({ scaleMargins: { top: 0.08, bottom: 0.24 } });
+    candle.priceScale().applyOptions({ scaleMargins: { top: 0.08, bottom: 0.16 } });
     const volume = chart.addSeries(HistogramSeries, {
       priceScaleId: '',
       priceFormat: { type: 'volume' },
       lastValueVisible: false,
       priceLineVisible: false,
     });
-    volume.priceScale().applyOptions({ scaleMargins: { top: 0.8, bottom: 0 } });
+    volume.priceScale().applyOptions({ scaleMargins: { top: 0.88, bottom: 0 } });
 
     const primitive = new DrawingPrimitive(() => indexRef.current);
     candle.attachPrimitive(primitive);
@@ -212,6 +223,8 @@ export function TradingChart(props: TradingChartProps) {
       select: (id) => propsRef.current.onSelectedChange?.(id),
       newId: () => (globalThis.crypto?.randomUUID?.() ?? `m${Date.now()}${Math.random().toString(36).slice(2, 8)}`),
       invalidate: () => pushStateRef.current(),
+      notify: (n) => propsRef.current.onNotice?.(n),
+      fmt: (v) => fmtRef.current(v),
     });
 
     chartRef.current = chart;
@@ -348,6 +361,17 @@ export function TradingChart(props: TradingChartProps) {
       };
     }
 
+    if (hooks) {
+      const w = window as unknown as Record<string, unknown>;
+      w.__tlCandles = () => candlesRef.current;
+      w.__tlProject = (time: number, price: number) => {
+        const r = el.getBoundingClientRect();
+        const x = chart.timeScale().logicalToCoordinate(indexRef.current.timeToLogical(time) as never);
+        const y = candle.priceToCoordinate(price);
+        return x === null || y === null ? null : { x: r.left + x, y: r.top + y };
+      };
+    }
+
     setReady(true);
     return () => {
       window.removeEventListener('keydown', onKey);
@@ -385,6 +409,31 @@ export function TradingChart(props: TradingChartProps) {
       priceLineColor: tokens.lastPriceBg,
     });
   }, [tokens, ready]);
+
+  // --- Единый формат цен: шкала, перекрестие, метки ---
+  useEffect(() => {
+    const chart = chartRef.current;
+    const candle = candleRef.current;
+    if (!chart || !candle) return;
+    const tick = tickSizeFor(props.series.symbol, props.tickSize);
+    chart.applyOptions({ localization: { priceFormatter: fmt } });
+    candle.applyOptions({ priceFormat: { type: 'price', precision: decimalsForTick(tick), minMove: tick } });
+    pushStateRef.current();
+  }, [fmt, props.series.symbol, props.tickSize, ready]);
+
+  // --- Центрирование на метке по запросу списка ---
+  const focusNonce = props.focus?.nonce;
+  useEffect(() => {
+    const f = propsRef.current.focus;
+    const chart = chartRef.current;
+    if (!f || !chart || indexRef.current.length === 0) return;
+    const ts = chart.timeScale();
+    const lr = ts.getVisibleLogicalRange();
+    if (!lr) return;
+    const w = lr.to - lr.from;
+    const l = indexRef.current.timeToLogical(f.time);
+    ts.setVisibleLogicalRange({ from: l - w / 2, to: l + w / 2 });
+  }, [focusNonce]);
 
   // --- Данные: смена пары/ТФ, догрузка истории, обновление хвоста ---
   useEffect(() => {
@@ -426,13 +475,7 @@ export function TradingChart(props: TradingChartProps) {
       try {
         indexRef.current = newIndex;
         if (candles.length > 0) {
-          candle.applyOptions({
-            priceFormat: {
-              type: 'price',
-              precision: pricePrecision(candles[candles.length - 1]!.close),
-              minMove: 10 ** -pricePrecision(candles[candles.length - 1]!.close),
-            },
-          });
+          // шкала и перекрестие используют единый форматер (localization.priceFormatter)
         }
         candle.setData(candles.map((c) => toCandleData(c, tokens)));
         volume.setData(candles.map((c) => toVolumeData(c, tokens)));
@@ -507,7 +550,7 @@ export function TradingChart(props: TradingChartProps) {
             borderRadius: 4,
           }}
         >
-          O {fmtNum(shown.open)} H {fmtNum(shown.high)} L {fmtNum(shown.low)} C {fmtNum(shown.close)} Об {fmtNum(Math.round(shown.volume))}
+          O {fmt(shown.open)} H {fmt(shown.high)} L {fmt(shown.low)} C {fmt(shown.close)} Об {fmtVol(shown.volume)}
         </div>
       )}
     </div>

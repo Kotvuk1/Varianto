@@ -1,16 +1,19 @@
 'use client';
-import { Database, Menu, Settings, Trash2, TriangleAlert, WifiOff, X } from 'lucide-react';
+import { Database, ListChecks, Menu, ScanSearch, Settings, TriangleAlert, WifiOff } from 'lucide-react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { useCallback, useEffect, useState } from 'react';
-import type { Symbol, Timeframe } from '@tl/core';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import type { Mark, Symbol, Timeframe } from '@tl/core';
+import type { ControllerNotice } from '@/chart/interaction/controller';
+import { makePriceFormatter, tickSizeFor } from '@/chart/priceFormat';
 import { TradingChart } from '@/chart/TradingChart';
 import { ru } from '@/i18n/ru';
 import { DesktopTabs } from '@/shell';
 import { NAV_ITEMS } from '@/shell/routes';
-import { Badge, BottomSheet, Button, IconButton, Segmented } from '@/ui';
+import { Badge, BottomSheet, Button, IconButton, Segmented, cn } from '@/ui';
 import { normalizeSymbolInput, resolveSourceMode, TERMINAL_TIMEFRAMES, TF_LABEL } from './dataSource';
-import { MarksPanel, markTitle } from './MarksPanel';
+import { InstructionBar } from './InstructionBar';
+import { MarksSheet } from './MarksSheet';
 import { PairPicker } from './PairPicker';
 import { errorCopy, tx } from './strings';
 import { HOTKEYS, type TerminalTool } from './toolCatalog';
@@ -61,22 +64,34 @@ export function TerminalScreen() {
   const [tool, setTool] = useState<TerminalTool>('select');
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [marksOpen, setMarksOpen] = useState(false);
+  const [notice, setNotice] = useState<ControllerNotice>({ step: 0, code: null });
+  const [focus, setFocus] = useState<{ time: number; nonce: number } | null>(null);
 
   const data = useMarketData(symbol, tf, mode);
   const shownSymbol = data.series?.symbol ?? null;
   const { marks, setMarks } = useTerminalMarks(shownSymbol);
+  const fmt = useMemo(() => makePriceFormatter(tickSizeFor(shownSymbol ?? symbol)), [shownSymbol, symbol]);
 
   const changeTool = useCallback((t: TerminalTool) => {
     setTool(t);
     setSelectedId(null);
+    setNotice({ step: 0, code: null });
   }, []);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const tag = (e.target as HTMLElement | null)?.tagName;
       if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || e.ctrlKey || e.metaKey || e.altKey) return;
-      if (e.key === 'Escape') setTool('select');
-      else if (HOTKEYS[e.key]) changeTool(HOTKEYS[e.key]!);
+      if (e.key === 'Escape') {
+        setTool('select');
+        setNotice({ step: 0, code: null });
+        return;
+      }
+      // по физической клавише: работает и в русской раскладке
+      const letter = e.code.startsWith('Key') ? e.code.slice(3).toLowerCase() : e.key.toLowerCase();
+      const t = HOTKEYS[letter];
+      if (t) changeTool(t);
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
@@ -87,6 +102,14 @@ export function TerminalScreen() {
     setSelectedId((s) => (s === id ? null : s));
   };
   const selected = marks.find((m) => m.id === selectedId) ?? null;
+  const focusMark = (m: Mark) => {
+    setTool('select');
+    setSelectedId(m.id);
+    setMarksOpen(false);
+    const first = m.anchors[0]!.time;
+    const last = m.anchors[m.anchors.length - 1]!.time;
+    setFocus((f) => ({ time: (first + last) / 2, nonce: (f?.nonce ?? 0) + 1 }));
+  };
 
   const status = data.status;
   const statusBadge =
@@ -99,6 +122,14 @@ export function TerminalScreen() {
     ) : (
       <Badge>{tx.statusConnecting}</Badge>
     );
+  const archiveBadge = (testId: string, className?: string) =>
+    mode === 'archive' ? (
+      <span data-testid={testId} role="status" title={tx.archiveBanner} aria-label={tx.archiveBanner} className={cn('inline-flex', className)}>
+        <Badge variant="outline" icon={<Database size={12} strokeWidth={1.75} aria-hidden />}>
+          {tx.archiveBadge}
+        </Badge>
+      </span>
+    ) : null;
 
   const blocking = data.error && (!data.series || data.series.symbol !== symbol || data.series.tf !== tf || !data.series.candles.length);
 
@@ -119,67 +150,93 @@ export function TerminalScreen() {
             onChange={setTf}
           />
         </div>
+        {archiveBadge('archive-banner', 'ml-2 hidden lg:inline-flex')}
         <div className="ml-auto hidden items-center gap-2 lg:flex">
           {statusBadge}
+          <Button size="sm" icon={<ListChecks size={20} strokeWidth={1.75} />} onClick={() => setMarksOpen(true)} data-testid="marks-button">
+            {tx.marksButton(marks.length)}
+          </Button>
+          <Button
+            variant="primary"
+            size="sm"
+            disabled
+            icon={<ScanSearch size={20} strokeWidth={1.75} />}
+            title={tx.checkDisabled}
+            data-testid="check-button"
+            className="aria-disabled:border-accent aria-disabled:text-text-1"
+          >
+            {tx.checkFull}
+          </Button>
           <Link href="/settings" aria-label={ru.actions.settings} title={ru.actions.settings} className="flex size-11 items-center justify-center rounded-md hover:bg-surface-2">
             <Settings size={20} strokeWidth={1.75} aria-hidden />
           </Link>
         </div>
       </header>
 
-      {mode === 'archive' && (
-        <div role="status" data-testid="archive-banner" className="flex h-8 shrink-0 items-center gap-2 bg-surface-2 px-3 text-sm text-text-1">
-          <Database size={16} strokeWidth={1.75} aria-hidden />
-          {tx.archiveBanner}
-        </div>
-      )}
-
       <div className="flex min-h-0 flex-1">
         <DesktopRail tool={tool} onTool={changeTool} />
-        <section className="relative min-w-0 flex-1 bg-bg" aria-label={tx.title}>
-          {data.series && (
-            <TradingChart
-              series={data.series}
-              marks={marks}
+        <section className="relative flex min-w-0 flex-1 flex-col bg-bg" aria-label={tx.title}>
+          <div className="relative z-10 flex shrink-0 items-center border-b border-border bg-surface-1 px-3">
+            <InstructionBar
               tool={tool}
-              onMarksChange={setMarks}
-              selectedId={selectedId}
-              onSelectedChange={setSelectedId}
-              onRequestMoreHistory={(before) => {
-                if (data.hasMore) void data.loadMore(before);
-              }}
-              openCandleLabel={tx.openCandle}
-              ariaLabel={`${data.series.symbol} ${TF_LABEL[data.series.tf]}`}
+              step={notice.step}
+              notice={notice.code}
+              selected={selected}
+              fmt={fmt}
+              onCancel={() => changeTool('select')}
+              onDelete={() => selected && deleteMark(selected.id)}
+              onDeselect={() => setSelectedId(null)}
             />
-          )}
-          <div className="pointer-events-none absolute top-2 right-14 z-10 flex gap-2 lg:hidden">{statusBadge}</div>
-          {(data.loading || data.loadingMore) && !blocking && (
-            <div role="status" className="pointer-events-none absolute top-2 left-1/2 z-10 -translate-x-1/2">
-              <Badge>{data.loading ? tx.loading : tx.loadingMore}</Badge>
-            </div>
-          )}
-          {data.loading && !data.series && !data.error && (
-            <div role="status" className="absolute inset-0 flex items-center justify-center text-sm text-text-2">
-              {tx.loading}
-            </div>
-          )}
-          {blocking && data.error && <ErrorBlock {...data.error} onRetry={data.reload} />}
-          <div className="absolute bottom-10 left-2 z-10 flex max-w-[calc(100%-1rem)] items-center gap-1 rounded-md border border-border bg-surface-1 pl-3 text-sm" data-testid="context-bar">
-            {selected ? (
-              <>
-                <span className="font-medium">{markTitle(selected)}</span>
-                <IconButton label={tx.deleteMark} icon={<Trash2 size={20} strokeWidth={1.75} />} onClick={() => deleteMark(selected.id)} />
-                <IconButton label={tx.clearSelection} icon={<X size={20} strokeWidth={1.75} />} onClick={() => setSelectedId(null)} />
-              </>
-            ) : (
-              <span className="py-2 pr-3 text-text-2">{tool === 'select' && marks.length === 0 ? tx.hint : tx.tools_[tool]}</span>
+          </div>
+          <div className="relative min-h-0 flex-1">
+            {data.series && (
+              <TradingChart
+                series={data.series}
+                marks={marks}
+                tool={tool}
+                onMarksChange={setMarks}
+                selectedId={selectedId}
+                onSelectedChange={setSelectedId}
+                onRequestMoreHistory={(before) => {
+                  if (data.hasMore) void data.loadMore(before);
+                }}
+                openCandleLabel={tx.openCandle}
+                ariaLabel={`${data.series.symbol} ${TF_LABEL[data.series.tf]}`}
+                onNotice={setNotice}
+                focus={focus}
+              />
             )}
+            <div className="absolute top-2 right-14 z-10 flex items-center gap-2 lg:hidden">
+              {archiveBadge('archive-badge-mobile')}
+              {statusBadge}
+              <button
+                type="button"
+                onClick={() => setMarksOpen(true)}
+                data-testid="marks-button-mobile"
+                className="inline-flex h-11 cursor-pointer items-center gap-1 rounded-md border border-border-strong bg-surface-1 px-3 text-sm font-medium"
+              >
+                <ListChecks size={20} strokeWidth={1.75} aria-hidden />
+                {tx.marksButton(marks.length)}
+              </button>
+            </div>
+            {(data.loading || data.loadingMore) && !blocking && (
+              <div role="status" className="pointer-events-none absolute top-14 left-1/2 z-10 -translate-x-1/2 lg:top-2">
+                <Badge>{data.loading ? tx.loading : tx.loadingMore}</Badge>
+              </div>
+            )}
+            {data.loading && !data.series && !data.error && (
+              <div role="status" className="absolute inset-0 flex items-center justify-center text-sm text-text-2">
+                {tx.loading}
+              </div>
+            )}
+            {blocking && data.error && <ErrorBlock {...data.error} onRetry={data.reload} />}
           </div>
         </section>
-        <MarksPanel marks={marks} selectedId={selectedId} onSelect={(id) => { setTool('select'); setSelectedId(id); }} onDelete={deleteMark} />
       </div>
 
       <MobileToolbar tool={tool} onTool={changeTool} />
+
+      <MarksSheet open={marksOpen} onClose={() => setMarksOpen(false)} marks={marks} selectedId={selectedId} fmt={fmt} onFocus={focusMark} onDelete={deleteMark} />
 
       <BottomSheet open={menuOpen} onClose={() => setMenuOpen(false)} title={tx.sections} height="medium">
         <ul>

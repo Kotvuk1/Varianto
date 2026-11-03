@@ -9,6 +9,8 @@ export function limitCandles(candles: readonly Candle[], now?: number): readonly
 }
 
 export const OPEN_CANDLE_ALPHA = 0.45;
+/** Объём не конкурирует со свечами: дополнительно приглушается поверх токена. */
+export const VOLUME_ALPHA = 0.7;
 
 export function toCandleData(c: Candle, t: ChartTokens): CandlestickData {
   const up = c.close >= c.open;
@@ -36,7 +38,7 @@ export function toVolumeData(c: Candle, t: ChartTokens): HistogramData {
   return {
     time: (c.openTime / 1000) as UTCTimestamp,
     value: c.volume,
-    color: c.close >= c.open ? t.volumeBull : t.volumeBear,
+    color: withAlpha(c.close >= c.open ? t.volumeBull : t.volumeBear, VOLUME_ALPHA),
   };
 }
 

@@ -93,20 +93,13 @@ function drawPart(ctx: CanvasRenderingContext2D, p: Part, color: string, on: str
       const x = p.x - w / 2;
       const y = p.y - PILL_H / 2;
       roundRect(ctx, x, y, w, PILL_H, 4);
-      if (algo) {
-        ctx.fillStyle = t.bg;
-        ctx.globalAlpha *= 0.85;
-        ctx.fill();
-        ctx.globalAlpha /= 0.85;
-        ctx.setLineDash([]);
-        ctx.lineWidth = 1.5;
-        ctx.stroke();
-        ctx.fillStyle = on;
-      } else {
-        ctx.fillStyle = color;
-        ctx.fill();
-        ctx.fillStyle = on;
-      }
+      // плашка на фоне surface: читается поверх свечей в обеих темах; user - контур цвета метки, algo - толще
+      ctx.fillStyle = t.bg;
+      ctx.fill();
+      ctx.setLineDash([]);
+      ctx.lineWidth = algo ? 1.5 : 1;
+      ctx.stroke();
+      ctx.fillStyle = algo ? on : t.text1;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillText(p.text, p.x, p.y + 0.5);

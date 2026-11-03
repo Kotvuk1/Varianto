@@ -1,11 +1,12 @@
 import type { ReactNode } from 'react';
 import {
   AlignVerticalSpaceAround,
-  ArrowRightToLine,
   ArrowLeftRight,
+  ArrowRightToLine,
   ArrowUpFromLine,
   ChevronDown,
   ChevronUp,
+  Crosshair,
   Eraser,
   Minus,
   MousePointer2,
@@ -13,13 +14,14 @@ import {
   RectangleHorizontal,
   SeparatorHorizontal,
   TrendingUp,
+  Zap,
 } from 'lucide-react';
 import type { ToolId } from '@/chart/drawing/tools';
 
 const ic = { size: 24, strokeWidth: 1.75, 'aria-hidden': true } as const;
 const txt = (t: string): ReactNode => <span className="text-sm leading-6 font-semibold">{t}</span>;
 
-export const TOOL_ICON: Record<Exclude<ToolId, 'position'>, ReactNode> = {
+export const TOOL_ICON: Record<ToolId, ReactNode> = {
   select: <MousePointer2 {...ic} />,
   eraser: <Eraser {...ic} />,
   'swing-high': <ChevronUp {...ic} />,
@@ -36,32 +38,52 @@ export const TOOL_ICON: Record<Exclude<ToolId, 'position'>, ReactNode> = {
   level: <Minus {...ic} />,
   hline: <SeparatorHorizontal {...ic} />,
   trendline: <MoveDiagonal {...ic} />,
+  position: <Crosshair {...ic} />,
 };
 
 export type TerminalTool = keyof typeof TOOL_ICON;
-export type GroupId = 'structure' | 'zones' | 'lines';
+export type GroupId = 'select' | 'structure' | 'breaks' | 'zones' | 'lines' | 'position';
 
-export const GROUPS: readonly { id: GroupId; tools: readonly TerminalTool[]; icon: ReactNode }[] = [
-  { id: 'structure', tools: ['swing-high', 'swing-low', 'hh', 'hl', 'lh', 'll', 'bos', 'choch'], icon: <TrendingUp {...ic} /> },
-  { id: 'zones', tools: ['sweep', 'order-block', 'fvg'], icon: <RectangleHorizontal {...ic} /> },
+export interface ToolGroup {
+  id: GroupId;
+  tools: readonly TerminalTool[];
+  icon: ReactNode;
+}
+
+/** Шесть групп рейки (ластик - отдельно внизу). Группы из одного инструмента не имеют flyout. */
+export const GROUPS: readonly ToolGroup[] = [
+  { id: 'select', tools: ['select'], icon: TOOL_ICON.select },
+  { id: 'structure', tools: ['swing-high', 'swing-low', 'hh', 'hl', 'lh', 'll'], icon: <TrendingUp {...ic} /> },
+  { id: 'breaks', tools: ['bos', 'choch', 'sweep'], icon: <Zap {...ic} /> },
+  { id: 'zones', tools: ['order-block', 'fvg'], icon: <RectangleHorizontal {...ic} /> },
   { id: 'lines', tools: ['level', 'hline', 'trendline'], icon: <Minus {...ic} /> },
+  { id: 'position', tools: ['position'], icon: TOOL_ICON.position },
 ];
 
-export const groupOf = (t: ToolId | null): GroupId | null => GROUPS.find((g) => (g.tools as readonly string[]).includes(t ?? ''))?.id ?? null;
+/** Мобильная панель: «Позиция» входит в веер «Линии», чтобы 6 элементов + «Проверить» поместились в 360 px. */
+export const MOBILE_GROUPS: readonly ToolGroup[] = [
+  GROUPS[0]!,
+  GROUPS[1]!,
+  GROUPS[2]!,
+  GROUPS[3]!,
+  { ...GROUPS[4]!, tools: ['level', 'hline', 'trendline', 'position'] },
+];
 
-/** Горячие клавиши десктопа (COMPONENTS 1.1). */
-export const HOTKEYS: Record<string, TerminalTool> = {
+export const groupOf = (t: ToolId | null, groups: readonly ToolGroup[] = GROUPS): GroupId | null =>
+  groups.find((g) => (g.tools as readonly string[]).includes(t ?? ''))?.id ?? null;
+
+/** Горячие клавиши десктопа. Esc - отмена (обрабатывается отдельно). */
+export const HOTKEYS: Readonly<Record<string, TerminalTool>> = {
   v: 'select',
-  s: 'swing-high',
-  S: 'swing-low',
-  h: 'hh',
+  e: 'eraser',
   b: 'bos',
   c: 'choch',
-  w: 'sweep',
-  o: 'order-block',
   f: 'fvg',
+  o: 'order-block',
   l: 'level',
-  g: 'hline',
   t: 'trendline',
-  e: 'eraser',
 };
+
+export const HOTKEY_OF: Readonly<Partial<Record<TerminalTool, string>>> = Object.fromEntries(
+  Object.entries(HOTKEYS).map(([k, t]) => [t, k.toUpperCase()]),
+);
