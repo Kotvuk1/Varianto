@@ -214,3 +214,37 @@ describe('GS-9 равные максимумы', () => {
     for (const p of pend) expect(full.some((s) => s.index === p.index && s.type === p.type)).toBe(false);
   });
 });
+
+describe('GS-4b кросс-месячный ряд BTCUSDT 4h 2026-07 + 2026-08', () => {
+  interface G {
+    params: StructureParams;
+    expected: {
+      events: (GEv & { brokenSwingTime: string; close?: number })[];
+      sweep: { side: string; time: string; level: number; low: number; close: number };
+      orderBlock: { eventTime: string; time: string; direction: string };
+    };
+  }
+  const g = readGolden<G>('GS-4b.BTCUSDT-4h-2026-07_08.cross-month.golden.json');
+  const candles = [...readKlines('klines/BTCUSDT/4h/BTCUSDT-4h-2026-07.csv'), ...readKlines('klines/BTCUSDT/4h/BTCUSDT-4h-2026-08.csv')];
+  const r = analyzeStructure(candles, g.params);
+
+  it('пробой на 3.0 USDT закрытием тела, CHoCH и sweep на одной свече', () => {
+    const from = iso('2026-08-01T00:00:00Z');
+    const to = iso('2026-08-25T00:00:00Z');
+    const ev = r.events.filter((e) => e.breakTime >= from && e.breakTime < to);
+    expect(ev.map(evView)).toEqual(g.expected.events.map(gEv));
+    ev.forEach((e, i) => expect(e.brokenSwing.time).toBe(iso(g.expected.events[i]!.brokenSwingTime)));
+    const c = candles.find((x) => x.openTime === iso(g.expected.sweep.time))!;
+    expect(c.close).toBe(g.expected.events[0]!.close);
+    expect(g.expected.events[0]!.level - c.close).toBeCloseTo(3.0, 6);
+    const s = r.sweeps.find((x) => x.time === iso(g.expected.sweep.time))!;
+    expect({ side: s.side, level: s.level, wick: s.wickExtreme }).toEqual({ side: g.expected.sweep.side, level: g.expected.sweep.level, wick: g.expected.sweep.low });
+  });
+
+  it('OB для CHoCH 08-19 12:00 — свеча 08-19 04:00', () => {
+    const o = r.orderBlocks.find((x) => x.event.breakTime === iso(g.expected.orderBlock.eventTime))!;
+    expect(o.time).toBe(iso(g.expected.orderBlock.time));
+    expect(o.direction).toBe(g.expected.orderBlock.direction);
+    expect(o.valid).toBe(true);
+  });
+});
