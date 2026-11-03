@@ -10,7 +10,9 @@
     "typecheck": "pnpm -r --if-present typecheck",
     "test": "pnpm -r --if-present test",
     "test:e2e": "playwright test -c e2e/playwright.config.ts",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "sync:tokens": "node scripts/sync-tokens.mjs",
+    "check:tokens": "node scripts/sync-tokens.mjs --check"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.0",

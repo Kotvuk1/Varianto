@@ -22,6 +22,10 @@ export default tseslint.config(
     settings: { next: { rootDir: 'apps/web' } },
   },
   {
+    files: ['scripts/**/*.mjs'],
+    languageOptions: { globals: { process: 'readonly', console: 'readonly' } },
+  },
+  {
     files: ['packages/core/**/*.ts'],
     rules: {
       'no-restricted-globals': ['error', 'window', 'document', 'process', 'Buffer'],

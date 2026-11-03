@@ -1,1 +1,39 @@
 @import 'tailwindcss';
+@import '../src/styles/tokens.css';
+
+/* next/font подставляет реальное имя семейства через переменные --font-plex-*. */
+:root {
+  --ff-sans:
+    var(--font-plex-sans), 'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --ff-mono:
+    var(--font-plex-mono), 'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+}
+
+html {
+  background: var(--bg);
+  color: var(--text-1);
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text-1);
+  font-family: var(--ff-sans);
+  font-size: var(--text-base);
+  line-height: 1.5;
+  overflow-x: hidden;
+}
+
+/* Анимация шторки: translateY 240 мс; при reduced-motion токен обнуляется. */
+@keyframes sheet-in {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+.sheet-in {
+  animation: sheet-in var(--dur-sheet) var(--ease-std);
+}

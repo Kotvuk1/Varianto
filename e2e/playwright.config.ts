@@ -13,6 +13,8 @@ export default defineConfig({
     trace: 'retain-on-failure',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
+    // Локально можно указать установленный Chrome, если Playwright-браузеры не скачаны.
+    launchOptions: { executablePath: process.env.PLAYWRIGHT_CHROME_PATH || undefined },
   },
   projects: [
     {

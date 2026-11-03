@@ -1,17 +1,17 @@
 # Graph Report - Varianto  (2026-11-03)
 
 ## Corpus Check
-- 88 files · ~51,793 words
+- 163 files · ~73,018 words
 - Verdict: corpus is large enough that graph structure adds value.
-- Unclassified: 26 file(s) not represented in the graph (top: .csv 16, (none) 8, .example 1)
+- Unclassified: 22 file(s) not represented in the graph (top: .csv 16, (none) 4, .example 1)
 
 ## Summary
-- 783 nodes · 1025 edges · 57 communities (51 shown, 6 thin omitted)
-- Extraction: 98% EXTRACTED · 2% INFERRED · 0% AMBIGUOUS · INFERRED: 20 edges (avg confidence: 0.94)
+- 1183 nodes · 2185 edges · 73 communities (66 shown, 7 thin omitted)
+- Extraction: 97% EXTRACTED · 3% INFERRED · 0% AMBIGUOUS · INFERRED: 73 edges (avg confidence: 0.91)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `685a604d`
+- Built from commit: `7e918312`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -20,18 +20,18 @@
 - PRD — Trading Lab
 - package.json
 - API Contracts — Trading Lab
-- core/src/index.ts
+- normalize.ts
 - with
 - Architecture — Trading Lab
 - 2. Карточки
 - Стратегия тестирования — Trading Lab
 - market-data/package.json
-- Database Schema — Trading Lab
-- archive.ts
+- core/src/index.ts
+- live.ts
 - core/package.json
 - compilerOptions
 - Interview Summary — Trading Lab
-- layout.tsx
+- ui/index.ts
 - compilerOptions
 - Project Status — Trading Lab
 - Skills Registry — Trading Lab
@@ -39,7 +39,7 @@
 - chart-developer.md
 - devops-security.md
 - documentation-engineer.md
-- frontend-developer.md
+- controller.ts
 - market-data-engineer.md
 - qa-engineer.md
 - technical-analyst.md
@@ -68,88 +68,104 @@
 - COPY — микрокопия Trading Lab
 - check_tokens.py
 - devDependencies
-- layout.tsx
-- FakeWs
+- AppShell.tsx
+- live.test.ts
 - scripts
-- ADR-0002: Lightweight Charts v5 + собственный слой разметки на Series Primitives
+- TradingChart.tsx
 - fixtures
+- TimeIndex
+- TradingChart
+- progressData.ts
+- fetch-fixtures.mjs
+- controller.test.ts
+- archive.ts
+- dataSource.ts
+- serialize.ts
+- ArchiveSource
+- ref_vitest
+- README.md
+- 4. Обязательные наборы тестов
+- DrawingPrimitive
+- Roadmap — Trading Lab
+- 5. Потоки данных
+- 4. Домен и общие типы (`@tl/core`)
 
 ## God Nodes (most connected - your core abstractions)
-1. `ArchiveSource` - 23 edges
-2. `UtcMs` - 20 edges
-3. `Candle` - 15 edges
-4. `2. Компоненты` - 15 edges
-5. `ArchiveError` - 14 edges
-6. `compilerOptions` - 14 edges
-7. `PRD — Trading Lab` - 13 edges
-8. `Timeframe` - 12 edges
-9. `parseArchiveCsv()` - 12 edges
-10. `Architecture — Trading Lab` - 12 edges
+1. `UtcMs` - 29 edges
+2. `Mark` - 29 edges
+3. `cn()` - 28 edges
+4. `react` - 27 edges
+5. `TradingChart()` - 24 edges
+6. `LocalRepository` - 23 edges
+7. `Candle` - 23 edges
+8. `ArchiveSource` - 23 edges
+9. `TimeIndex` - 22 edges
+10. `DrawingController` - 22 edges
 
 ## Surprising Connections (you probably didn't know these)
-- `Backend Developer` --references--> `sliceAt()`  [INFERRED]
-  docs/AGENTS.md → packages/core/src/candles/aggregate.ts
+- `5.4 Хранение (Repository)` --references--> `LocalRepository`  [INFERRED]
+  docs/ARCHITECTURE.md → apps/web/src/storage/LocalRepository.ts
+- `5.3 Коды ошибок — начальный список (предложение; окончательный фиксирует `ALGORITHMS.md`)` --references--> `SkillId`  [INFERRED]
+  docs/API_CONTRACTS.md → apps/web/src/storage/types.ts
+- `Зона владения` --references--> `Repository`  [INFERRED]
+  .claude/agents/backend-developer.md → apps/web/src/storage/types.ts
+- `7. Интерфейс `Repository` (`ARCHITECTURE.md` §5.4)` --references--> `Repository`  [INFERRED]
+  docs/API_CONTRACTS.md → apps/web/src/storage/types.ts
 - `Решение` --references--> `sliceAt()`  [INFERRED]
   docs/DECISIONS/0005-stateless-signed-task-tokens.md → packages/core/src/candles/aggregate.ts
-- `Решение` --references--> `sliceAt()`  [INFERRED]
-  docs/DECISIONS/0009-deterministic-core-engine.md → packages/core/src/candles/aggregate.ts
-- `2. Пирамида` --references--> `sliceAt()`  [INFERRED]
-  docs/TESTING_STRATEGY.md → packages/core/src/candles/aggregate.ts
-- `4.1 Шкала задания` --references--> `UtcMs`  [INFERRED]
-  docs/API_CONTRACTS.md → packages/core/src/index.ts
 
 ## Import Cycles
 - 2-file cycle: `packages/core/src/candles/aggregate.ts -> packages/core/src/index.ts -> packages/core/src/candles/aggregate.ts`
 
-## Communities (57 total, 6 thin omitted)
+## Communities (73 total, 7 thin omitted)
 
 ### Community 0 - "web/package.json"
-Cohesion: 0.15
-Nodes (18): dependencies, dexie@^4.0.0, lightweight-charts@~5.2.1, react-dom@^19.0.0, @tl/core@workspace:*, @tl/market-data@workspace:*, zod@^4.0.0, zustand@^5.0.0 (+10 more)
+Cohesion: 0.14
+Nodes (14): dependencies, dexie@^4.0.0, lightweight-charts@~5.2.1, lucide-react@^1.66.0, react@^19.0.0, react-dom@^19.0.0, @tl/core@workspace:*, @tl/market-data@workspace:* (+6 more)
 
 ### Community 1 - "PRD — Trading Lab"
 Cohesion: 0.05
 Nodes (41): 10. Приоритизация функций (MoSCoW), 11. План MVP, 12. Открытые вопросы, 1.1 Что это, 1.2 Цель, 1.3 Целевой пользователь, 1.4 Модули, 1. Обзор и цель продукта (+33 more)
 
 ### Community 2 - "package.json"
-Cohesion: 0.08
-Nodes (30): devDependencies, eslint@^9.39.0, eslint-config-next@^16.0.0, @eslint/js@^9.39.0, @playwright/test@1.63.0, prettier@^3.6.0, @types/node@^22.0.0, typescript@~5.9.3 (+22 more)
+Cohesion: 0.07
+Nodes (32): devDependencies, eslint@^9.39.0, eslint-config-next@^16.0.0, @eslint/js@^9.39.0, @playwright/test@1.63.0, prettier@^3.6.0, @types/node@^22.0.0, typescript@~5.9.3 (+24 more)
 
 ### Community 3 - "API Contracts — Trading Lab"
-Cohesion: 0.07
-Nodes (26): 1.1 Формат ошибки, 1.2 Заголовки кэша, 1. Общие соглашения, 2.1 Из `ARCHITECTURE.md` §4 (дословно), 2.2 Расширения контрактов (предложение — фиксируются при реализации в `@tl/core`), 2. Типы `@tl/core`, используемые в контрактах, 3.1 `GET /api/health`, 3.2 `GET /api/history` (+18 more)
+Cohesion: 0.08
+Nodes (25): 1.1 Формат ошибки, 1.2 Заголовки кэша, 1. Общие соглашения, 2.1 Из `ARCHITECTURE.md` §4 (дословно), 2.2 Расширения контрактов (предложение — фиксируются при реализации в `@tl/core`), 2. Типы `@tl/core`, используемые в контрактах, 3.1 `GET /api/health`, 3.2 `GET /api/history` (+17 more)
 
-### Community 4 - "core/src/index.ts"
-Cohesion: 0.07
-Nodes (39): dynamic, GET(), aggregate(), SeriesByTf, sliceAt(), synthetic_hour(), synthetic_m1(), ALGO_VERSION (+31 more)
+### Community 4 - "normalize.ts"
+Cohesion: 0.14
+Nodes (20): TIMEFRAME_MS, load(), klinesZip(), NOW, Served, zipOf(), ARCHIVE_KLINE_HEADER, findGaps() (+12 more)
 
 ### Community 5 - "with"
 Cohesion: 0.08
 Nodes (26): runs-on, steps, GITHUB_TOKEN, jobs, check, secrets-scan, name, on (+18 more)
 
 ### Community 6 - "Architecture — Trading Lab"
-Cohesion: 0.11
-Nodes (19): 10. Развёртывание, 11. Риски, 1. Ключевые ограничения, определяющие архитектуру, 2. Обзор, 3. Репозиторий (pnpm monorepo), 4.1 Синхронизация таймфреймов, 4.2 Разметка (общая модель для пользователя и алгоритма), 4.3 Алгоритмы (детерминированные, версионируемые) (+11 more)
+Cohesion: 0.20
+Nodes (10): 10. Развёртывание, 11. Риски, 1. Ключевые ограничения, определяющие архитектуру, 2. Обзор, 3. Репозиторий (pnpm monorepo), 6. Авторизация (M7), 7. Безопасность, 8. Фронтенд (+2 more)
 
 ### Community 7 - "2. Карточки"
-Cohesion: 0.12
-Nodes (16): 1. Сводка, 2. Карточки, 3. Правила оркестрации, 4. Формат отчёта агента (до 15 строк), 5. Шаблон задания агенту, Backend Developer, Chart Developer, DevOps/Security Engineer (+8 more)
+Cohesion: 0.11
+Nodes (17): 1. Сводка, 2. Карточки, 3. Правила оркестрации, 4. Формат отчёта агента (до 15 строк), 5. Шаблон задания агенту, Backend Developer, Chart Developer, DevOps/Security Engineer (+9 more)
 
 ### Community 8 - "Стратегия тестирования — Trading Lab"
-Cohesion: 0.06
-Nodes (28): MVP, Roadmap — Trading Lab, v1.1 — Fibonacci Playground и Premium/Discount, v1.2 — Elliott Wave Lab, v2, Правила корректировки, 10. Производительность, 1. Принципы (+20 more)
+Cohesion: 0.20
+Nodes (10): 10. Производительность, 1. Принципы, 2. Пирамида, 3. Фикстуры, 5. E2E (Playwright), 6. Визуальная проверка и доступность, 7. Критерии «готово» для вехи, 8. CI (GitHub Actions) (+2 more)
 
 ### Community 9 - "market-data/package.json"
 Cohesion: 0.11
 Nodes (20): dependencies, fflate@^0.8.3, @tl/core@workspace:*, devDependencies, vitest@^4.1.12, @vitest/coverage-v8@^4.1.12, exports, ./archive (+12 more)
 
-### Community 10 - "Database Schema — Trading Lab"
-Cohesion: 0.12
-Nodes (16): 1. Принципы, 2. Локальная схема: IndexedDB (Dexie), 3.1 RLS, 3. Схема Supabase Postgres (M7), 4.1 Порядок, 4.2 Правила по таблицам (идемпотентность по `id`, конфликты по `updated_at`), 4.3 Пересчёт производных данных, 4.4 Ошибки и откат (+8 more)
+### Community 10 - "core/src/index.ts"
+Cohesion: 0.05
+Nodes (52): DailyActivityRow, SkillStatRow, TerminalMarksRow, TradingLabDB, defaultSettings(), LocalRepository, mark, Attempt (+44 more)
 
-### Community 11 - "archive.ts"
-Cohesion: 0.08
-Nodes (37): Frontend Developer, Candle, Symbol, Timeframe, UtcMs, AGG_TRADES_HEADER, AggTrade, ARCHIVE_BASE_URL (+29 more)
+### Community 11 - "live.ts"
+Cohesion: 0.12
+Nodes (16): BINANCE_REST_BASE, BINANCE_WS_BASE, binanceInterval(), FetchKlinesOptions, LiveErrorCode, LiveFeed, LiveFeedError, LiveFeedOptions (+8 more)
 
 ### Community 12 - "core/package.json"
 Cohesion: 0.15
@@ -163,9 +179,9 @@ Nodes (14): compilerOptions, esModuleInterop, forceConsistentCasingInFileNames, 
 Cohesion: 0.14
 Nodes (13): 1. Продукт и пользователь, 2. Модули и приоритеты, 3. Обратная связь и прогресс, 4. Интерфейс, 5. Рыночные данные, 6. Стек и инфраструктура, 7. Процесс, Interview Summary — Trading Lab (+5 more)
 
-### Community 15 - "layout.tsx"
-Cohesion: 0.33
-Nodes (5): Page(), @testing-library/react@^16.0.0, Home(), ru, @testing-library/react
+### Community 15 - "ui/index.ts"
+Cohesion: 0.06
+Nodes (76): Page(), Page(), Page(), EmptyState(), ErrorState(), LoadingRows(), LearnScreen(), MODULES (+68 more)
 
 ### Community 16 - "compilerOptions"
 Cohesion: 0.17
@@ -195,9 +211,9 @@ Nodes (6): graphify, Зона владения, Навыки, Обязатель
 Cohesion: 0.29
 Nodes (6): graphify, Зона владения, Навыки, Обязательно прочитай перед работой, Отчёт, Правила
 
-### Community 23 - "frontend-developer.md"
-Cohesion: 0.29
-Nodes (6): graphify, Зона владения, Навыки, Обязательно прочитай перед работой, Отчёт, Правила
+### Community 23 - "controller.ts"
+Cohesion: 0.10
+Nodes (31): distToRectEdge(), distToSegment(), Hit, hitTest(), inside(), partScore(), PointerKind, geos() (+23 more)
 
 ### Community 24 - "market-data-engineer.md"
 Cohesion: 0.29
@@ -240,7 +256,7 @@ Cohesion: 0.33
 Nodes (5): ADR-0006: Синхронизация таймфреймов — нативные ТФ, инвариант агрегации, sliceAt, Контекст, Последствия, Рассмотренные альтернативы, Решение
 
 ### Community 34 - "ADR-0008: Local-first хранилище за интерфейсом Repository; Supabase в M7"
-Cohesion: 0.29
+Cohesion: 0.33
 Nodes (6): ADR-0008: Local-first хранилище за интерфейсом Repository; Supabase в M7, Контекст, Открытые вопросы, Последствия, Рассмотренные альтернативы, Решение
 
 ### Community 35 - "ADR-0009: Детерминированное общее ядро @tl/core; разборы по шаблонам; ИИ позже"
@@ -264,8 +280,8 @@ Cohesion: 0.50
 Nodes (3): extends, include, ../../tsconfig.base.json
 
 ### Community 45 - "history/route.ts"
-Cohesion: 0.06
-Nodes (25): dynamic, errorResponse(), GET(), ISSUE_CODES, querySchema, runtime, SYMBOLS, call() (+17 more)
+Cohesion: 0.11
+Nodes (15): dynamic, errorResponse(), GET(), ISSUE_CODES, querySchema, runtime, SYMBOLS, call() (+7 more)
 
 ### Community 46 - "LAYOUTS — Trading Lab"
 Cohesion: 0.07
@@ -288,44 +304,104 @@ Cohesion: 0.20
 Nodes (7): cr(), de(), lab(), lin(), lum(), rgb(), sim()
 
 ### Community 51 - "devDependencies"
-Cohesion: 0.15
-Nodes (13): devDependencies, jsdom@^26.0.0, tailwindcss@^4.0.0, @tailwindcss/postcss@^4.0.0, @types/react@^19.0.0, @types/react-dom@^19.0.0, vitest@^4.1.12, vitest (+5 more)
+Cohesion: 0.12
+Nodes (20): devDependencies, fake-indexeddb@^6.2.7, jsdom@^26.0.0, tailwindcss@^4.0.0, @tailwindcss/postcss@^4.0.0, @testing-library/react@^16.0.0, @testing-library/user-event@^14.6.8, @types/react@^19.0.0 (+12 more)
 
-### Community 52 - "layout.tsx"
-Cohesion: 0.18
-Nodes (7): metadata, csp, nextConfig, next@^16.0.0, react@^19.0.0, next, react
+### Community 52 - "AppShell.tsx"
+Cohesion: 0.09
+Nodes (36): metadata, plexMono, plexSans, RootLayout(), viewport, csp, nextConfig, next@^16.0.0 (+28 more)
+
+### Community 53 - "live.test.ts"
+Cohesion: 0.12
+Nodes (12): LiveStatus, archiveH1, archiveM1, FakeWs, json(), NOW, restH1, restM1 (+4 more)
 
 ### Community 54 - "scripts"
 Cohesion: 0.33
 Nodes (6): scripts, build, dev, start, test, typecheck
 
-### Community 55 - "ADR-0002: Lightweight Charts v5 + собственный слой разметки на Series Primitives"
-Cohesion: 0.47
-Nodes (6): ADR-0002: Lightweight Charts v5 + собственный слой разметки на Series Primitives, Контекст, Последствия, Рассмотренные альтернативы, Решение, Mark
+### Community 55 - "TradingChart.tsx"
+Cohesion: 0.11
+Nodes (28): OpenCandleInfo, PrimitiveState, ZONE_KINDS, RenderStyle, ToolId, limitCandles(), OPEN_CANDLE_ALPHA, pricePrecision() (+20 more)
 
 ### Community 56 - "fixtures"
 Cohesion: 0.50
 Nodes (3): fixtures, recorded/ - записанные форматы API (fapi/fstream недоступны из облака, 451), Архивные CSV
 
+### Community 57 - "TimeIndex"
+Cohesion: 0.12
+Nodes (15): lwcProjection(), snapAnchor(), SnapOptions, snapPriceToCandle(), c(), synthetic_candles, T0, T0 (+7 more)
+
+### Community 58 - "TradingChart"
+Cohesion: 0.15
+Nodes (15): constrainAnchors(), createMark(), DrawKind, FULL_WIDTH_KINDS, isDrawKind(), RAY_RIGHT_KINDS, TOOL_DEFS, ToolDef (+7 more)
+
+### Community 59 - "progressData.ts"
+Cohesion: 0.12
+Nodes (17): DayStat, prevDay(), softStreak(), done, AsyncState, useAsync(), DailyProgress, MIN_SAMPLE (+9 more)
+
+### Community 60 - "fetch-fixtures.mjs"
+Cohesion: 0.09
+Nodes (12): downloadedAt, items, m1, rec, root, rows, scratch, table (+4 more)
+
+### Community 61 - "controller.test.ts"
+Cohesion: 0.11
+Nodes (12): isMarkVisible(), synthetic_proj, T0, Projection, ControllerDeps, bosMark, index, lvl (+4 more)
+
+### Community 62 - "archive.ts"
+Cohesion: 0.20
+Nodes (15): Candle, Timeframe, AGG_TRADES_HEADER, AggTrade, ARCHIVE_BASE_URL, ArchiveFetch, ArchiveFileSpec, ArchiveSourceOptions (+7 more)
+
+### Community 63 - "dataSource.ts"
+Cohesion: 0.16
+Nodes (15): ARCHIVE_MIN_AGE_MS, ARCHIVE_SYMBOLS, archiveAllowed(), archiveWindow(), HISTORY_PAGE, normalizeSymbolInput(), PRESET_SYMBOLS, resolveSourceMode() (+7 more)
+
+### Community 64 - "serialize.ts"
+Cohesion: 0.21
+Nodes (10): zod@^4.0.0, anchor, KINDS, MARKS_FORMAT_VERSION, markSchema, parseMarks(), serializeMarks(), m (+2 more)
+
+### Community 66 - "ref_vitest"
+Cohesion: 0.27
+Nodes (3): dynamic, GET(), ALGO_VERSION
+
+### Community 67 - "README.md"
+Cohesion: 0.22
+Nodes (4): Trading Lab, Документация, Запуск, Структура
+
+### Community 68 - "4. Обязательные наборы тестов"
+Cohesion: 0.25
+Nodes (8): 4.1 Инвариант агрегации таймфреймов, 4.2 `sliceAt(series, T)`, 4.3 Нормализация (`market-data`), 4.4 Golden-тесты SMC/PA, 4.5 `resolveTrade`, 4.6 Интеграционные тесты API, 4.7 Прочие unit-тесты, 4. Обязательные наборы тестов
+
+### Community 70 - "Roadmap — Trading Lab"
+Cohesion: 0.29
+Nodes (6): MVP, Roadmap — Trading Lab, v1.1 — Fibonacci Playground и Premium/Discount, v1.2 — Elliott Wave Lab, v2, Правила корректировки
+
+### Community 71 - "5. Потоки данных"
+Cohesion: 0.40
+Nodes (5): 5.1 Живые данные (терминал), 5.2 История для заданий (сервер), 5.3 Задания (stateless, без БД до M7), 5.4 Хранение (Repository), 5. Потоки данных
+
+### Community 72 - "4. Домен и общие типы (`@tl/core`)"
+Cohesion: 0.50
+Nodes (4): 4.1 Синхронизация таймфреймов, 4.2 Разметка (общая модель для пользователя и алгоритма), 4.3 Алгоритмы (детерминированные, версионируемые), 4. Домен и общие типы (`@tl/core`)
+
 ## Knowledge Gaps
 - **4 isolated node(s):** `../../tsconfig.base.json`, `../tsconfig.base.json`, `../../tsconfig.base.json`, `../../tsconfig.base.json`
-  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 474 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
-- **6 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 568 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
+- **7 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `ArchiveSource` connect `archive.ts` to `PRD — Trading Lab`, `core/src/index.ts`, `2. Карточки`, `Стратегия тестирования — Trading Lab`, `history/route.ts`, `ADR-0001: Next.js 16 + TypeScript strict, pnpm monorepo, Vercel`?**
-  _High betweenness centrality (0.125) - this node is a cross-community bridge._
-- **Are the 6 inferred relationships involving `ArchiveSource` (e.g. with `Market Data Engineer` and `Решение`) actually correct?**
-  _`ArchiveSource` has 6 INFERRED edges - model-reasoned connections that need verification._
+- **Why does `react` connect `ui/index.ts` to `web/package.json`, `devDependencies`, `AppShell.tsx`, `TradingChart.tsx`, `progressData.ts`?**
+  _High betweenness centrality (0.084) - this node is a cross-community bridge._
+- **Are the 2 inferred relationships involving `UtcMs` (e.g. with `1. Общие соглашения` and `4.1 Шкала задания`) actually correct?**
+  _`UtcMs` has 2 INFERRED edges - model-reasoned connections that need verification._
 - **What connects `../../tsconfig.base.json`, `../tsconfig.base.json`, `../../tsconfig.base.json` to the rest of the system?**
   _4 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `web/package.json` be split into smaller, more focused modules?**
-  _Cohesion score 0.14619883040935672 - nodes in this community are weakly interconnected._
-- **Why does `PRD — Trading Lab` connect `PRD — Trading Lab` to `Стратегия тестирования — Trading Lab`?**
-  _High betweenness centrality (0.071) - this node is a cross-community bridge._
-- **Are the 2 inferred relationships involving `UtcMs` (e.g. with `1. Общие соглашения` and `4.1 Шкала задания`) actually correct?**
-  _`UtcMs` has 2 INFERRED edges - model-reasoned connections that need verification._
+  _Cohesion score 0.14285714285714285 - nodes in this community are weakly interconnected._
+- **Why does `Repository` connect `core/src/index.ts` to `PRD — Trading Lab`, `ADR-0008: Local-first хранилище за интерфейсом Repository; Supabase в M7`, `API Contracts — Trading Lab`, `4. Обязательные наборы тестов`, `2. Карточки`, `Стратегия тестирования — Trading Lab`, `backend-developer.md`, `AppShell.tsx`?**
+  _High betweenness centrality (0.061) - this node is a cross-community bridge._
+- **Are the 3 inferred relationships involving `Mark` (e.g. with `Контекст` and `Последствия`) actually correct?**
+  _`Mark` has 3 INFERRED edges - model-reasoned connections that need verification._
 - **Should `PRD — Trading Lab` be split into smaller, more focused modules?**
   _Cohesion score 0.04878048780487805 - nodes in this community are weakly interconnected._

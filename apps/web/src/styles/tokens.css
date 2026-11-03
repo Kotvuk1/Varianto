@@ -1,0 +1,289 @@
+/*
+ * Trading Lab — дизайн-токены.
+ * Подключение (Tailwind v4): в globals.css
+ *   @import "tailwindcss";
+ *   @import "../../docs/design/tokens.css";   (или копия в apps/web)
+ * Тёмная тема — по умолчанию (:root). Светлая — [data-theme="light"] на <html>.
+ * Монохром свечей — [data-candles="mono"] на <html> (независимо от темы).
+ * Значения контраста и проверка дальтонизма: DESIGN.md §2–§3.
+ * Токены свечей/меток читает и слой графика: getComputedStyle(documentElement).
+ */
+
+/* ------------------------------------------------------------------ */
+/* 1. Значения: тёмная тема (по умолчанию)                             */
+/* ------------------------------------------------------------------ */
+:root {
+  color-scheme: dark;
+
+  /* Поверхности: не более трёх уровней */
+  --bg: #0e1116;          /* страница, фон графика */
+  --surface-1: #151a21;   /* панели, тулбары */
+  --surface-2: #1d232c;   /* шторка, поповер, поля ввода */
+
+  /* Текст */
+  --text-1: #e6eaf0;      /* основной */
+  --text-2: #a3adba;      /* вторичный */
+  --text-3: #8793a1;      /* третичный: подписи, оси (>= 5.06:1 на любой поверхности) */
+
+  /* Границы */
+  --border: #2a323d;          /* декоративные разделители (не несут смысла) */
+  --border-strong: #6b7789;   /* границы полей/кнопок, >= 3:1 (WCAG 1.4.11) */
+
+  /* Акцент интерфейса — один. Нейтральный «ink»: цвет не конкурирует с данными */
+  --accent: #e6eaf0;
+  --on-accent: #0e1116;
+  --accent-hover: #ffffff;
+  --accent-muted: #2a323d;  /* фон выбранного, ненавязчивый */
+
+  /* Фокус: двойное кольцо (внутри фон, снаружи ink), виден на любой поверхности */
+  --focus: #e6eaf0;
+
+  /* Свечи: бычья синяя, медвежья оранжевая */
+  --candle-bull: #3a86ff;
+  --candle-bull-fill: #3a86ff;
+  --candle-bear: #ffb45e;
+  --candle-bear-fill: #ffb45e;
+  --candle-wick-bull: #3a86ff;
+  --candle-wick-bear: #ffb45e;
+  --volume-bull: rgb(58 134 255 / 0.35);
+  --volume-bear: rgb(255 180 94 / 0.35);
+
+  /* Сетка и оси графика */
+  --chart-grid: #1a2029;
+  --chart-axis-text: #8793a1;
+  --chart-crosshair: #6b7789;
+  --chart-last-price-bg: #e6eaf0;
+  --chart-last-price-text: #0e1116;
+
+  /* Метки: user (ваши) и algo (эталон алгоритма) */
+  --mark-user: #e6eaf0;       /* ink: сплошной контур, ЗАПОЛНЕННАЯ плашка */
+  --mark-user-on: #0e1116;
+  --mark-algo: #f2509a;       /* розово-малиновый: контур, ПУСТАЯ плашка */
+  --mark-algo-on: #f2509a;
+  --mark-zone-fill-user: rgb(230 234 240 / 0.12);
+  --mark-zone-fill-algo: rgb(242 80 154 / 0.14);
+
+  /* Состояния разбора: форма и иконка первичны, цвет вторичен */
+  --state-match: var(--mark-user);   /* круг + галочка */
+  --state-missed: var(--mark-algo);  /* пунктирный круг (есть в эталоне, нет у вас) */
+  --state-extra: var(--text-2);      /* квадрат + крест (лишнее) */
+
+  /* Системные сообщения (не оценка результата): нейтральные */
+  --notice-bg: var(--surface-2);
+  --notice-border: var(--border-strong);
+
+  /* Скрим под шторкой/модалкой */
+  --scrim: rgb(5 7 10 / 0.6);
+
+  /* Тени: только для поднятых слоёв (шторка, поповер) */
+  --elev-raised: 0 8px 24px rgb(0 0 0 / 0.45);
+}
+
+/* ------------------------------------------------------------------ */
+/* 2. Светлая тема                                                     */
+/* ------------------------------------------------------------------ */
+[data-theme="light"] {
+  color-scheme: light;
+
+  --bg: #f4f5f7;
+  --surface-1: #ffffff;   /* фон графика в светлой теме — surface-1 */
+  --surface-2: #e9ecf0;
+
+  --text-1: #14181f;
+  --text-2: #475160;
+  --text-3: #596475;
+
+  --border: #d3d8df;
+  --border-strong: #7a8494;
+
+  --accent: #14181f;
+  --on-accent: #ffffff;
+  --accent-hover: #000000;
+  --accent-muted: #e9ecf0;
+
+  --focus: #14181f;
+
+  --candle-bull: #1650b0;
+  --candle-bull-fill: #1650b0;
+  --candle-bear: #d96a00;
+  --candle-bear-fill: #d96a00;
+  --candle-wick-bull: #1650b0;
+  --candle-wick-bear: #d96a00;
+  --volume-bull: rgb(22 80 176 / 0.3);
+  --volume-bear: rgb(217 106 0 / 0.3);
+
+  --chart-grid: #eceff3;
+  --chart-axis-text: #596475;
+  --chart-crosshair: #7a8494;
+  --chart-last-price-bg: #14181f;
+  --chart-last-price-text: #ffffff;
+
+  --mark-user: #14181f;
+  --mark-user-on: #ffffff;
+  --mark-algo: #c2185b;
+  --mark-algo-on: #c2185b;
+  --mark-zone-fill-user: rgb(20 24 31 / 0.08);
+  --mark-zone-fill-algo: rgb(194 24 91 / 0.10);
+
+  --scrim: rgb(20 24 31 / 0.35);
+  --elev-raised: 0 8px 24px rgb(20 24 31 / 0.16);
+}
+
+/* ------------------------------------------------------------------ */
+/* 3. Монохром свечей (настройка). Различие: полая светлая / заполненная серая */
+/* ------------------------------------------------------------------ */
+[data-candles="mono"] {
+  --candle-bull: var(--text-1);          /* контур и фитиль */
+  --candle-bull-fill: transparent;       /* полая */
+  --candle-bear: #8a94a3;
+  --candle-bear-fill: #8a94a3;           /* заполненная серая */
+  --candle-wick-bull: var(--text-1);
+  --candle-wick-bear: #8a94a3;
+  --volume-bull: rgb(163 173 186 / 0.25);
+  --volume-bear: rgb(163 173 186 / 0.5);
+}
+[data-theme="light"][data-candles="mono"] {
+  --candle-bear: #6b7482;
+  --candle-bear-fill: #6b7482;
+  --candle-wick-bear: #6b7482;
+  --volume-bull: rgb(71 81 96 / 0.2);
+  --volume-bear: rgb(71 81 96 / 0.45);
+}
+
+/* ------------------------------------------------------------------ */
+/* 4. Тема-независимые токены                                          */
+/* ------------------------------------------------------------------ */
+:root {
+  /* Шрифты. Интерфейс — IBM Plex Sans (next/font/google, subsets: cyrillic, latin).
+     Mono — только для canvas графика (ось цены, OHLCV): canvas не поддерживает font-feature. */
+  --ff-sans: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --ff-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+
+  /* Отступы: сетка 4px */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-12: 3rem;
+
+  /* Радиусы */
+  --r-sm: 4px;       /* чипы, бейджи, поля */
+  --r-md: 8px;       /* кнопки, панели */
+  --r-lg: 12px;      /* верх шторки */
+  --r-full: 9999px;  /* только круглые метки/индикаторы */
+
+  /* Размеры интерактива */
+  --hit: 2.75rem;         /* 44px — минимум касания и ручек объектов */
+  --hit-fine: 2.25rem;    /* 36px — текстовые кнопки при pointer: fine (не ручки графика) */
+  --topbar-h: 3rem;       /* 48 */
+  --toolbar-h: 3.5rem;    /* 56 */
+  --rail-w: 3.5rem;       /* 56, левая панель инструментов на десктопе */
+  --panel-w: 22.5rem;     /* 360, правая панель на десктопе */
+
+  /* Движение */
+  --dur-fast: 100ms;
+  --dur-base: 160ms;
+  --dur-sheet: 240ms;
+  --ease-std: cubic-bezier(0.2, 0, 0, 1);
+
+  /* Слои */
+  --z-chart-overlay: 10;
+  --z-toolbar: 20;
+  --z-sheet: 30;
+  --z-popover: 40;
+  --z-toast: 50;
+}
+
+/* Числа — моноширинные (tabular) везде, где есть цены, R, проценты, время */
+.tnum,
+[data-num] {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+}
+
+/* Движение: отключается при prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --dur-fast: 0ms;
+    --dur-base: 0ms;
+    --dur-sheet: 0ms;
+  }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Фокус: двойное кольцо, не зависит от цвета фона */
+:where(button, [role="button"], a, input, select, textarea, [tabindex]):focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px var(--bg);
+}
+
+/* ------------------------------------------------------------------ */
+/* 5. Tailwind v4: утилиты (bg-surface-1, text-text-2, border-border …) */
+/*    `inline` — утилиты ссылаются на var(), смена темы работает без пересборки */
+/* ------------------------------------------------------------------ */
+@theme inline {
+  --color-*: initial;   /* сбросить палитру Tailwind: только токены проекта */
+
+  --color-bg: var(--bg);
+  --color-surface-1: var(--surface-1);
+  --color-surface-2: var(--surface-2);
+  --color-text-1: var(--text-1);
+  --color-text-2: var(--text-2);
+  --color-text-3: var(--text-3);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-accent: var(--accent);
+  --color-on-accent: var(--on-accent);
+  --color-accent-muted: var(--accent-muted);
+  --color-focus: var(--focus);
+  --color-candle-bull: var(--candle-bull);
+  --color-candle-bear: var(--candle-bear);
+  --color-mark-user: var(--mark-user);
+  --color-mark-user-on: var(--mark-user-on);
+  --color-mark-algo: var(--mark-algo);
+  --color-state-match: var(--state-match);
+  --color-state-missed: var(--state-missed);
+  --color-state-extra: var(--state-extra);
+  --color-scrim: var(--scrim);
+  --color-transparent: transparent;
+  --color-current: currentColor;
+
+  --font-sans: var(--ff-sans);
+  --font-mono: var(--ff-mono);
+
+  --radius-sm: var(--r-sm);
+  --radius-md: var(--r-md);
+  --radius-lg: var(--r-lg);
+  --radius-full: var(--r-full);
+
+  --shadow-raised: var(--elev-raised);
+
+  --ease-out: var(--ease-std);
+}
+
+/* Шкала текста (статичные значения; утилиты text-xs … text-2xl) */
+@theme {
+  --text-xs: 0.75rem;     /* 12 / 16 */
+  --text-xs--line-height: 1rem;
+  --text-sm: 0.875rem;    /* 14 / 20 — основной размер UI */
+  --text-sm--line-height: 1.25rem;
+  --text-base: 1rem;      /* 16 / 24 — поля ввода на мобильном, абзацы разбора */
+  --text-base--line-height: 1.5rem;
+  --text-lg: 1.125rem;    /* 18 / 26 — заголовки шторки/панелей */
+  --text-lg--line-height: 1.625rem;
+  --text-xl: 1.375rem;    /* 22 / 28 — заголовок экрана */
+  --text-xl--line-height: 1.75rem;
+  --text-2xl: 1.75rem;    /* 28 / 34 — ключевые числа (R, %) */
+  --text-2xl--line-height: 2.125rem;
+
+  --spacing: 0.25rem; /* сетка 4px: p-1 = 4px */
+}

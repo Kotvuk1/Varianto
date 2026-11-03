@@ -1,10 +1,5 @@
 import { expect, test } from '@playwright/test';
 
-test('главная открывается', async ({ page }) => {
-  await page.goto('/');
-  await expect(page.getByRole('heading', { name: 'Trading Lab' })).toBeVisible();
-});
-
 test('/api/health отвечает ok', async ({ request }) => {
   const res = await request.get('/api/health');
   expect(res.ok()).toBe(true);
