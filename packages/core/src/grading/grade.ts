@@ -414,9 +414,19 @@ export function gradeMarks(user: readonly Mark[], algo: AlgoMarkSet, ctx: GradeC
   };
   let nearHandledU = new Set<Entry>();
   let nearHandledA = new Set<Entry>();
+  // Неразмеченный swing с неразмеченной подписью HH/HL/LH/LL на той же свече - одна ошибка на точку: подпись уходит в note swing-ошибки.
+  const unmatchedLabel = new Map<string, Entry>();
+  for (const a of unmatchedA) if (a.group === 'LABEL_H' || a.group === 'LABEL_L') unmatchedLabel.set(`${a.group === 'LABEL_H' ? 'H' : 'L'}:${a.lo}`, a);
+  const mergedLabels = new Set<Entry>();
+  const labelNoteFor = (a: Entry): string => {
+    const l = unmatchedLabel.get(`${a.group === 'SWING_H' ? 'H' : 'L'}:${a.lo}`);
+    if (!l) return '';
+    mergedLabels.add(l);
+    return ` Подпись: ${l.mark.kind.toUpperCase()}.`;
+  };
   pairNear(['SWING_H', 'SWING_L'], 4, false, (u, a, d) =>
     addErr('SWING_OFF_TOLERANCE', 'swing', a.lo, [u.mark.id, a.mark.id], {
-      time: timeOf(u.lo), refTime: timeOf(a.lo), offset: d, tol,
+      time: timeOf(u.lo), refTime: timeOf(a.lo), offset: d, tol, labelNote: labelNoteFor(a),
     }),
   );
   pairNear(['OB'], 6, true, (u, a) =>
@@ -531,6 +541,8 @@ export function gradeMarks(user: readonly Mark[], algo: AlgoMarkSet, ctx: GradeC
       }
     }
   }
+  const swingNote = new Map<Entry, string>();
+  for (const a of restA) if (a.group === 'SWING_H' || a.group === 'SWING_L') swingNote.set(a, labelNoteFor(a));
   for (const a of restA) {
     const am = a.mark;
     const ids = [am.id];
@@ -540,10 +552,12 @@ export function gradeMarks(user: readonly Mark[], algo: AlgoMarkSet, ctx: GradeC
       case 'SWING_L':
         addErr('SWING_MISSED', 'swing', a.lo, ids, {
           time: tm, side: a.group === 'SWING_H' ? 'high' : 'low', price: am.anchors[0]!.price, ...(n !== undefined ? { n } : {}),
+          labelNote: swingNote.get(a) ?? '',
         });
         break;
       case 'LABEL_H':
       case 'LABEL_L':
+        if (mergedLabels.has(a)) break;
         addErr('STRUCTURE_LABEL_MISSED', 'structure-labels', a.lo, ids, { time: tm, expected: am.kind.toUpperCase() });
         break;
       case 'BREAK':
