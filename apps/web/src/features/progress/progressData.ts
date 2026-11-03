@@ -4,10 +4,8 @@ import { useCallback } from 'react';
 import { softStreak } from '@/data/streak';
 import { localDay } from '@/i18n/format';
 import { useRepository, type SkillStat } from '@/storage';
-import { useAsync } from '../common/useAsync';
-
-/** Минимальное окно, при котором показывается точность (DATABASE_SCHEMA §5.1, MIN_SAMPLE). */
-export const MIN_SAMPLE = 5;
+import { useLiveData } from './useLiveData';
+import { selectWeak } from './progressLogic';
 
 export interface DailyProgress {
   done: number;
@@ -31,17 +29,26 @@ export function useDailyProgress() {
       streak: softStreak(map, today, firstDay).streak,
     };
   }, [repo]);
-  return useAsync(load);
+  return useLiveData(load);
 }
 
-/** Слабые места: навыки с достаточным окном, по возрастанию точности (при равенстве — меньше окно). */
+/** Слабые места: навыки с окном >= MIN_SAMPLE по возрастанию точности (ядро: rankWeakSkills). */
 export function useWeakSkills() {
   const repo = useRepository();
-  const load = useCallback(async (): Promise<SkillStat[]> => {
-    const stats = await repo.getSkillStats();
-    return stats
-      .filter((s) => s.accuracy !== null && s.recent.length >= MIN_SAMPLE)
-      .sort((a, b) => (a.accuracy ?? 0) - (b.accuracy ?? 0) || a.recent.length - b.recent.length);
-  }, [repo]);
-  return useAsync(load);
+  const load = useCallback(async (): Promise<SkillStat[]> => selectWeak(await repo.getSkillStats()), [repo]);
+  return useLiveData(load);
+}
+
+/** Все статистики навыков (для группировки и рекомендации). */
+export function useSkillStats() {
+  const repo = useRepository();
+  const load = useCallback(() => repo.getSkillStats(), [repo]);
+  return useLiveData(load);
+}
+
+/** Все попытки по убыванию времени (журнал ошибок, статистика Challenge). */
+export function useAttempts() {
+  const repo = useRepository();
+  const load = useCallback(() => repo.listAttempts({ order: 'desc' }), [repo]);
+  return useLiveData(load);
 }

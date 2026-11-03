@@ -1,5 +1,5 @@
 import { isOutcomeOk, type Mark, type Symbol } from '@tl/core';
-import { TradingLabDB } from './db';
+import { TradingLabDB, type DailyActivityRow, type TerminalMarksRow } from './db';
 import {
   DEFAULT_DAILY_GOAL,
   SKILL_WINDOW,
@@ -22,6 +22,14 @@ function defaultSettings(): Settings {
     lastTerminalSymbol: 'BTCUSDT',
     locale: 'ru',
   };
+}
+
+/** Снимок для однократного импорта в облако (DATABASE_SCHEMA §4.1): без skillStats, они производные. */
+export interface LocalSnapshot {
+  attempts: Attempt[];
+  terminalMarks: TerminalMarksRow[];
+  settings: Settings | null;
+  dailyActivity: DailyActivityRow[];
 }
 
 /** Хранилище на IndexedDB (Dexie). До M7 единственная реализация Repository. */
@@ -127,5 +135,23 @@ export class LocalRepository implements Repository {
   async getDailyActivity(fromDay: string, toDay: string): Promise<DailyActivity[]> {
     const rows = await this.db.dailyActivity.where('day').between(fromDay, toDay, true, true).toArray();
     return rows.map(({ day, tasksDone, goal }) => ({ day, tasksDone, goal }));
+  }
+
+  async exportSnapshot(): Promise<LocalSnapshot> {
+    const { db } = this;
+    return {
+      attempts: await db.attempts.toArray(),
+      terminalMarks: await db.terminalMarks.toArray(),
+      settings: (await db.settings.toCollection().first()) ?? null,
+      dailyActivity: await db.dailyActivity.toArray(),
+    };
+  }
+
+  async getMeta(key: string): Promise<unknown> {
+    return (await this.db.meta.get(key))?.value;
+  }
+
+  async setMeta(key: string, value: unknown): Promise<void> {
+    await this.db.meta.put({ key, value });
   }
 }
