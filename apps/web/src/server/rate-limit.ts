@@ -39,8 +39,14 @@ export class RateLimiter {
   }
 }
 
-/** Ключ клиента: первый адрес из x-forwarded-for, иначе x-real-ip, иначе общий. */
+/**
+ * Ключ клиента. Первый элемент x-forwarded-for подконтролен клиенту (обход лимита ротацией значений),
+ * поэтому: x-real-ip платформы (Vercel перезаписывает), иначе ПОСЛЕДНИЙ элемент XFF (добавлен ближайшим прокси), иначе общий ключ.
+ */
 export function clientKey(headers: Headers): string {
-  const fwd = headers.get('x-forwarded-for')?.split(',')[0]?.trim();
-  return (fwd || headers.get('x-real-ip') || 'anonymous').slice(0, 64);
+  const real = headers.get('x-real-ip')?.trim();
+  if (real) return real.slice(0, 64);
+  const parts = headers.get('x-forwarded-for')?.split(',');
+  const last = parts?.[parts.length - 1]?.trim();
+  return (last || 'anonymous').slice(0, 64);
 }

@@ -11,5 +11,14 @@ export const isSupabaseConfigured = (): boolean => supabaseConfig() !== null;
 /** Защита от open redirect: только путь внутри сайта. */
 export function safeNextPath(next: string | null | undefined): string {
   if (!next || !next.startsWith('/') || next.startsWith('//') || next.includes('\\')) return '/';
+  // URL-парсер удаляет TAB/CR/LF, поэтому '/\t/evil.com' превращается в '//evil.com' (open redirect): управляющие символы запрещены.
+  // eslint-disable-next-line no-control-regex
+  if (/[\u0000-\u001f\u007f]/.test(next)) return '/';
+  // Страховка: итоговый адрес обязан остаться на том же origin.
+  try {
+    if (new URL(next, 'https://origin.invalid').origin !== 'https://origin.invalid') return '/';
+  } catch {
+    return '/';
+  }
   return next;
 }

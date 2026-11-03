@@ -28,6 +28,10 @@ describe('safeNextPath', () => {
     ['//evil.com', '/'],
     ['https://evil.com', '/'],
     ['/\\evil.com', '/'],
+    ['/\t/evil.com', '/'],
+    ['/\n/evil.com', '/'],
+    ['/\r/evil.com', '/'],
+    ['/\u0000/evil.com', '/'],
     ['', '/'],
     [null, '/'],
   ])('%s -> %s', (input, out) => expect(safeNextPath(input)).toBe(out));

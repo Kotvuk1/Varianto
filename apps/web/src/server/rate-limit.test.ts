@@ -22,7 +22,11 @@ describe('RateLimiter', () => {
     expect(rl.take('a').ok).toBe(true);
   });
   it('clientKey', () => {
-    expect(clientKey(new Headers({ 'x-forwarded-for': '1.2.3.4, 5.6.7.8' }))).toBe('1.2.3.4');
+    // Подделанный клиентом левый элемент XFF не должен выбираться: берём адрес, добавленный ближайшим прокси (последний).
+    expect(clientKey(new Headers({ 'x-forwarded-for': '9.9.9.9, 5.6.7.8' }))).toBe('5.6.7.8');
+    expect(clientKey(new Headers({ 'x-forwarded-for': '1.2.3.4' }))).toBe('1.2.3.4');
+    // x-real-ip (задаётся платформой Vercel) приоритетнее XFF.
+    expect(clientKey(new Headers({ 'x-real-ip': '7.7.7.7', 'x-forwarded-for': '9.9.9.9' }))).toBe('7.7.7.7');
     expect(clientKey(new Headers())).toBe('anonymous');
   });
 });
