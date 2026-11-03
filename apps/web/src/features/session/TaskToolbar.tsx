@@ -26,7 +26,9 @@ function Cell({
   onClick,
   className,
   testId,
+  title,
 }: {
+  title?: string;
   label: string;
   icon: ReactNode;
   selected?: boolean;
@@ -40,6 +42,7 @@ function Cell({
     <button
       type="button"
       aria-label={label}
+      title={title ?? label}
       aria-pressed={group ? undefined : selected}
       aria-expanded={group ? expanded : undefined}
       aria-haspopup={group ? 'true' : undefined}
@@ -93,6 +96,7 @@ export function TaskToolbarBar({ groups, tool, onTool, onCheck, checkDisabled, c
             <Cell
               key={g.id}
               label={g.label}
+              title={g.title}
               icon={on && multi && current ? current.icon : g.icon}
               group={multi}
               expanded={fan === g.id}
@@ -155,6 +159,7 @@ export function TaskToolRail({ groups, tool, onTool }: Omit<TaskToolbarProps, 'o
             <div key={g.id} className="relative w-full">
               <Cell
                 label={g.label}
+              title={g.title}
                 icon={on && multi && current ? current.icon : g.icon}
                 group={multi}
                 expanded={open === g.id}

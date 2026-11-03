@@ -12,7 +12,7 @@ async function shot(page: Page, name: string) {
 }
 
 async function solveOne(page: Page) {
-  await selectTool(page, 'Swing High', 'Структура');
+  await selectTool(page, 'Swing High', 'Свинги');
   await tapCandle(page, 20);
   await expect(page.getByTestId('chart')).toHaveAttribute('data-mark-count', '1');
   await checkAndSeeResult(page);

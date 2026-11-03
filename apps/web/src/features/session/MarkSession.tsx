@@ -4,6 +4,7 @@ import { useMemo, useState, type ReactNode } from 'react';
 import type { Candle, Mark } from '@tl/core';
 import type { ToolId } from '@/chart/drawing/tools';
 import { makePriceFormatter, tickSizeFor } from '@/chart/priceFormat';
+import { otherScope, useScopeHotkey } from '@/features/terminal/useScope';
 import { InstructionBar } from '@/features/terminal/InstructionBar';
 import { ss } from '@/i18n/ru/session';
 import { Button } from '@/ui';
@@ -40,6 +41,8 @@ export interface MarkSessionProps {
   /** Окно оценки: вне него график затемнён. */
   highlightRange?: { fromTime: number; toTime: number };
   candles: Candle[];
+  /** Показывать выбор слоя Внешняя/Внутренняя для BOS/CHoCH (MS: payload.scoped). */
+  allowScope?: boolean;
 }
 
 export function MarkSession(p: MarkSessionProps) {
@@ -50,6 +53,9 @@ export function MarkSession(p: MarkSessionProps) {
   const busy = flow.phase === 'grading';
   const tf = envelope.payload.tf;
   const fmt = useMemo(() => makePriceFormatter(tickSizeFor(envelope.symbol)), [envelope.symbol]);
+
+  const allowScope = p.allowScope === true;
+  useScopeHotkey(allowScope && !result, () => ci.setScope(otherScope(ci.scope)));
 
   const submit = () => {
     if (busy || result) return;
@@ -80,6 +86,7 @@ export function MarkSession(p: MarkSessionProps) {
       onSelectedChange={ci.setSelectedId}
       onNotice={ci.setNotice}
       focus={ci.focus}
+      scope={allowScope ? ci.scope : null}
     />
   );
 
@@ -94,6 +101,9 @@ export function MarkSession(p: MarkSessionProps) {
       onDelete={() => ci.selected && ci.deleteMark(ci.selected.id)}
       onDeselect={() => ci.setSelectedId(null)}
       message={message}
+      allowScope={allowScope}
+      scope={ci.scope}
+      onScope={ci.setScope}
     />
   );
 

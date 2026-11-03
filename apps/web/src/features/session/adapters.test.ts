@@ -16,6 +16,12 @@ describe('адаптеры ответа', () => {
     expect(a.marks.map((m) => m.id)).toEqual(['u1']);
   });
 
+  it('ms-mark: scope меток передаётся в ответ', () => {
+    const m: Mark = { ...mk('u2', 'bos', 1), scope: 'internal' };
+    const a = msMarkAnswer([m, { ...mk('u3', 'choch', 2), scope: 'external' }]);
+    expect(a.marks.map((x) => x.scope)).toEqual(['internal', 'external']);
+  });
+
   it('pa-level: цена последнего уровня; без уровня null', () => {
     expect(paLevelAnswer([])).toBeNull();
     expect(paLevelAnswer([mk('l1', 'level', 1, 10), mk('l2', 'level', 2, 20)])).toEqual({ kind: 'pa-level', price: 20 });

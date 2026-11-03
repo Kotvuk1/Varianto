@@ -26,6 +26,7 @@ export const ss = {
   loadingTask: 'Подбираю ситуацию на реальных свечах…',
   slowLoad: 'Это дольше обычного',
   grading: 'Сверяю с эталоном…',
+  windowLabel: 'Окно задания',
   windowNote: (n: number, from: string) => `Оцениваются последние ${n} свечей, с ${from}.`,
   summary: (match: number, missed: number, extra: number) => `Верно: ${match} · Пропущено: ${missed} · Лишнее: ${extra}`,
   markStates: 'Состояние меток',

@@ -39,7 +39,7 @@ const proj: Projection = {
   height: 400,
 };
 
-function setup(tool: ToolId | null, initial: Mark[] = [], snap = true, cs: Candle[] = synthetic_candles, notices: ControllerNotice[] = []) {
+function setup(tool: ToolId | null, initial: Mark[] = [], snap = true, cs: Candle[] = synthetic_candles, notices: ControllerNotice[] = [], scope: Mark['scope'] = null) {
   let marks = initial;
   let selected: string | null = null;
   let n = 0;
@@ -61,6 +61,7 @@ function setup(tool: ToolId | null, initial: Mark[] = [], snap = true, cs: Candl
       selected = id;
     },
     newId: () => `id${++n}`,
+    scope: () => scope,
   });
   return { c, get marks() { return marks; }, get selected() { return selected; }, commits };
 }
@@ -75,6 +76,19 @@ const drag = (c: DrawingController, x1: number, y1: number, x2: number, y2: numb
   c.pointerMove(pt(x2, y2));
   c.pointerUp(pt(x2, y2));
 };
+
+describe('слой BOS/CHoCH', () => {
+  it.each(['internal', 'external'] as const)('BOS получает scope %s из текущего выбора', (scope) => {
+    const s = setup('bos', [], true, synthetic_candles, [], scope);
+    drag(s.c, 100, 600 - peak.high, breakIdx * 10, 600 - 330);
+    expect(s.marks[0]!.scope).toBe(scope);
+  });
+  it('без слоя scope остаётся null', () => {
+    const s = setup('bos');
+    drag(s.c, 100, 600 - peak.high, breakIdx * 10, 600 - 330);
+    expect(s.marks[0]!.scope).toBeNull();
+  });
+});
 
 describe('рисование', () => {
   it('swing-high: тап рядом со свингом снапится к high локального максимума (в радиусе 3 свечей)', () => {

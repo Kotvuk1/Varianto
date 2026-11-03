@@ -61,6 +61,16 @@ export function isMarkVisible(mark: Mark, proj: Projection, margin = 60): boolea
   return maxX >= -margin && minX <= proj.width + margin;
 }
 
+/** Подпись не должна выходить за область графика (правый край - шкала цен): при нехватке места сдвигается влево от якоря. */
+export function keepTextsInside(parts: Part[], width: number, pad = 2): Part[] {
+  return parts.map((p) => {
+    if (p.t !== 'text') return p;
+    const half = textWidth(p.text) / 2;
+    const x = Math.max(half + pad, Math.min(p.x, width - half - pad));
+    return x === p.x ? p : { ...p, x };
+  });
+}
+
 const norm = (x1: number, y1: number, x2: number, y2: number) => ({
   x1: Math.min(x1, x2),
   x2: Math.max(x1, x2),
@@ -81,9 +91,12 @@ export function buildGeometry(mark: Mark, proj: Projection, opts: GeometryOption
   const baseLabel = kind in TOOL_DEFS ? TOOL_DEFS[kind as DrawKind].label : (String(mark.meta?.patternType ?? 'Pattern'));
   // Метка эталона может лежать ровно на метке пользователя: её подпись уходит на другую сторону, чтобы не накладываться.
   const algo = mark.author === 'algo';
-  const label = (opts.state ? STATE_PREFIX[opts.state] : '') + baseLabel;
+  // internal-слой: общепринятая SMC-нотация iBOS / iCHoCH
+  const scoped = (kind === 'bos' || kind === 'choch') && mark.scope === 'internal' ? `i${baseLabel}` : baseLabel;
+  const label = (opts.state ? STATE_PREFIX[opts.state] : '') + scoped;
 
   if (!p0) return { mark, parts, handles };
+  const done = () => ({ mark, parts: keepTextsInside(parts, proj.width), handles });
 
   switch (kind) {
     case 'swing-high':
@@ -153,5 +166,5 @@ export function buildGeometry(mark: Mark, proj: Projection, opts: GeometryOption
     default:
       parts.push({ t: 'text', text: label, x: p0.x, y: p0.y - GLYPH_OFFSET });
   }
-  return { mark, parts, handles };
+  return done();
 }

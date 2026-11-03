@@ -1,6 +1,6 @@
 'use client';
 import { useCallback, useState } from 'react';
-import type { Mark } from '@tl/core';
+import type { Mark, Scope } from '@tl/core';
 import type { ControllerNotice } from '@/chart/interaction/controller';
 import type { ToolId } from '@/chart/drawing/tools';
 
@@ -12,6 +12,7 @@ export function useChartInteraction(initialTool: ToolId, transform?: (next: Mark
   const [notice, setNotice] = useState<ControllerNotice>({ step: 0, code: null });
   const [focus, setFocus] = useState<{ time: number; nonce: number } | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+  const [scope, setScope] = useState<Scope>('external');
 
   const setTool = useCallback((t: ToolId) => {
     setToolRaw(t);
@@ -44,5 +45,5 @@ export function useChartInteraction(initialTool: ToolId, transform?: (next: Mark
   const focusAt = useCallback((time: number) => setFocus((f) => ({ time, nonce: (f?.nonce ?? 0) + 1 })), []);
 
   const selected = marks.find((m) => m.id === selectedId) ?? null;
-  return { tool, setTool, marks, setMarks, selectedId, setSelectedId, selected, notice, setNotice, focus, focusOn, focusAt, deleteMark, message, setMessage };
+  return { tool, setTool, marks, setMarks, selectedId, setSelectedId, selected, notice, setNotice, focus, focusOn, focusAt, deleteMark, message, setMessage, scope, setScope };
 }

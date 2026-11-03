@@ -51,6 +51,7 @@ export function MsMarkBody({ envelope, flow, base }: { envelope: TaskEnvelope<Ms
       hintDetails={details}
       candles={candles}
       highlightRange={p.window}
+      allowScope={p.scoped === true}
       bars={windowBars + LEAD_IN}
       buildAnswer={(marks) => (marks.length === 0 ? ss.input.noMarks : msMarkAnswer(marks))}
     />

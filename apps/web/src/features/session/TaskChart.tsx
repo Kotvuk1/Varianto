@@ -1,6 +1,6 @@
 'use client';
 import { useMemo } from 'react';
-import { TIMEFRAME_MS, type Candle, type CandleSeries, type Mark, type TaskSymbol, type TaskTimeframe } from '@tl/core';
+import { TIMEFRAME_MS, type Candle, type CandleSeries, type Mark, type Scope, type TaskSymbol, type TaskTimeframe } from '@tl/core';
 import type { ControllerNotice } from '@/chart/interaction/controller';
 import type { ToolId } from '@/chart/drawing/tools';
 import type { TimeWindow } from '@/chart/TradingChart';
@@ -36,6 +36,7 @@ export interface TaskChartProps {
   onSelectedChange?: (id: string | null) => void;
   onNotice?: (n: ControllerNotice) => void;
   focus?: { time: number; nonce: number } | null;
+  scope?: Scope | null;
 }
 
 /** График задания: только прошлое (ряд приходит с сервера), без догрузки истории. */
@@ -53,6 +54,8 @@ export function TaskChart(p: TaskChartProps) {
       onMarksChange={p.onMarksChange}
       {...(visibleRange ? { visibleRange } : {})}
       {...(hr ? { highlightRange: hr } : {})}
+      windowLabel={ss.windowLabel}
+      scope={p.scope ?? null}
       {...(p.readOnlyMarks ? { readOnlyMarks: p.readOnlyMarks } : {})}
       {...(p.markStates ? { markStates: p.markStates } : {})}
       selectedId={p.selectedId ?? null}

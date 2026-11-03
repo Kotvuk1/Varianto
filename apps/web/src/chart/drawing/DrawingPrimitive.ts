@@ -38,6 +38,8 @@ export interface PrimitiveState {
   states?: Record<string, MarkState>;
   /** Окно оценки: вне него свечи затемнены. */
   highlightRange?: HighlightRange;
+  /** Подпись границы окна оценки. */
+  windowLabel?: string;
 }
 
 const ZONE_KINDS = new Set(['order-block', 'fvg']);
@@ -95,22 +97,37 @@ export class DrawingPrimitive implements ISeriesPrimitive<Time> {
             const xb = proj.timeToX(hr.toTime);
             if (Number.isFinite(xa) && Number.isFinite(xb)) {
               context.save();
-              context.globalAlpha = 0.6;
+              context.globalAlpha = 0.45;
               context.fillStyle = st.tokens.bg;
               for (const sp of dimSpans(xa, xb, spacing, mediaSize.width)) context.fillRect(sp.x1, 0, sp.x2 - sp.x1, mediaSize.height);
               context.restore();
-              const edge = xa - spacing / 2;
-              if (edge > 0 && edge < mediaSize.width) {
-                context.save();
-                context.strokeStyle = st.tokens.text1;
-                context.globalAlpha = 0.5;
-                context.setLineDash([4, 4]);
+              // Границы окна - сплошная тонкая линия; подпись у левой границы.
+              const left = xa - spacing / 2;
+              const right = xb + spacing / 2;
+              context.save();
+              context.strokeStyle = st.tokens.text1;
+              context.globalAlpha = 0.6;
+              context.lineWidth = 1;
+              for (const e of [left, right]) {
+                if (e <= 0 || e >= mediaSize.width) continue;
                 context.beginPath();
-                context.moveTo(edge, 0);
-                context.lineTo(edge, mediaSize.height);
+                context.moveTo(Math.round(e) + 0.5, 0);
+                context.lineTo(Math.round(e) + 0.5, mediaSize.height);
                 context.stroke();
-                context.restore();
               }
+              context.globalAlpha = 1;
+              const label = st.windowLabel ?? 'Окно задания';
+              context.font = `600 11px ${st.tokens.fontSans}`;
+              const lw = context.measureText(label).width + 10;
+              const lx = Math.min(Math.max(left + 4, 4), Math.max(4, mediaSize.width - lw - 4));
+              context.fillStyle = st.tokens.bg;
+              context.fillRect(lx, 4, lw, 16);
+              context.strokeRect(lx + 0.5, 4.5, lw - 1, 15);
+              context.fillStyle = st.tokens.text1;
+              context.textAlign = 'left';
+              context.textBaseline = 'middle';
+              context.fillText(label, lx + 5, 12.5);
+              context.restore();
             }
           }
 

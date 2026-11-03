@@ -1,4 +1,4 @@
-import type { Anchor, Mark, MarkKind } from '@tl/core';
+import type { Anchor, Mark, MarkKind, Scope } from '@tl/core';
 
 /** Виды меток, которые пользователь может рисовать (pattern - только алгоритм). */
 export type DrawKind = Exclude<MarkKind, 'pattern'>;
@@ -33,6 +33,9 @@ export const TOOL_DEFS: Readonly<Record<DrawKind, ToolDef>> = {
   position: { anchors: 3, taps: 3, snapPrice: false, label: '' },
 };
 
+/** Инструменты, которым нужен выбор слоя (Внешняя / Внутренняя). */
+export const isScopedKind = (t: ToolId | null): boolean => t === 'bos' || t === 'choch';
+
 export const isDrawKind = (t: ToolId | null): t is DrawKind => t !== null && t !== 'select' && t !== 'eraser';
 
 /**
@@ -59,6 +62,8 @@ export const SWING_SIDE: Readonly<Partial<Record<MarkKind, 'high' | 'low'>>> = {
 
 export interface MarkExtra {
   direction?: 'bull' | 'bear' | null;
+  /** Слой структуры (только BOS/CHoCH): internal/external; иначе null. */
+  scope?: Scope | null;
   meta?: Record<string, unknown>;
 }
 
@@ -68,7 +73,7 @@ export function createMark(kind: DrawKind, anchors: readonly Anchor[], id: strin
     id,
     kind,
     anchors: a,
-    scope: null,
+    scope: extra.scope ?? null,
     direction: extra.direction ?? null,
     author: 'user',
     ...(extra.meta ? { meta: extra.meta } : {}),

@@ -94,7 +94,8 @@ export function runCheck(candles: readonly Candle[], tf: Timeframe, userMarks: r
     levelPricePct: 0.1,
     scoped: false,
   });
-  const feedback = buildFeedback({
+  const summary = { matched: grade.okPairs.length, total: algo.required.length };
+  const built = buildFeedback({
     module: 'market-structure',
     verdict: grade.verdict,
     score: grade.score,
@@ -102,6 +103,11 @@ export function runCheck(candles: readonly Candle[], tf: Timeframe, userMarks: r
     skillOutcomes: grade.skillOutcomes,
     toleranceCandles: grade.toleranceCandles,
   });
+  // «N из M совпало»: M - число эталонных меток (без лишних меток пользователя), N - верные из них;
+  // то же число показывается в итоге и в сводке.
+  const vp = built.verdict.params;
+  const feedback =
+    vp && 'matched' in vp && 'total' in vp ? { ...built, verdict: { ...built.verdict, params: { ...vp, matched: summary.matched, total: summary.total } } } : built;
   const states: Record<string, CheckState> = {};
   for (const p of grade.okPairs) {
     states[p.userMarkId] = 'match';
@@ -128,7 +134,7 @@ export function runCheck(candles: readonly Candle[], tf: Timeframe, userMarks: r
   return { ok: true, result: { grade, feedback,
       algoMarks: [...shown.values()],
       states,
-      summary: { matched: grade.okPairs.length, total: algo.required.length },
+      summary,
       window,
     } };
 }

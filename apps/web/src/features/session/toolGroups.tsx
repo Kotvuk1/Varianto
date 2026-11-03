@@ -15,6 +15,8 @@ export interface ToolItem {
 export interface ToolGroupDef {
   id: string;
   label: string;
+  /** Полное название для tooltip. */
+  title?: string;
   icon: ReactNode;
   tools: readonly ToolItem[];
 }
@@ -34,7 +36,7 @@ export function msToolGroups(allowed: readonly (MarkKind | string)[]): ToolGroup
   for (const g of GROUPS) {
     if (g.id === 'select' || g.id === 'position') continue;
     const tools = g.tools.filter((t) => set.has(t)).map((t) => ({ id: t as ToolId, label: tx.tools_[t], icon: TOOL_ICON[t] }));
-    if (tools.length) groups.push({ id: g.id, label: tx.groups[g.id], icon: g.icon, tools });
+    if (tools.length) groups.push({ id: g.id, label: tx.groups[g.id], title: tx.groupTitles[g.id], icon: g.icon, tools });
   }
   return groups;
 }

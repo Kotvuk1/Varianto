@@ -20,6 +20,7 @@ import { PairPicker } from './PairPicker';
 import { errorCopy, tx } from './strings';
 import { HOTKEYS, type TerminalTool } from './toolCatalog';
 import { DesktopRail, MobileToolbar } from './ToolPalette';
+import { otherScope, useScope, useScopeHotkey } from './useScope';
 import { useMarketData } from './useMarketData';
 import { useTerminalMarks } from './useTerminalMarks';
 
@@ -74,6 +75,8 @@ export function TerminalScreen() {
   const [messageState, setMessageState] = useState<{ text: string; marks: Mark[] } | null>(null);
   const [focus, setFocus] = useState<{ time: number; nonce: number } | null>(null);
 
+  const [scope, setScope] = useScope();
+  useScopeHotkey(true, () => setScope(otherScope(scope)));
   const data = useMarketData(symbol, tf, mode);
   const shownSymbol = data.series?.symbol ?? null;
   const { marks, setMarks } = useTerminalMarks(shownSymbol);
@@ -213,6 +216,9 @@ export function TerminalScreen() {
               onDelete={() => selected && deleteMark(selected.id)}
               onDeselect={() => setSelectedId(null)}
               message={message}
+              allowScope
+              scope={scope}
+              onScope={setScope}
             />
             <button
               type="button"
@@ -245,6 +251,7 @@ export function TerminalScreen() {
                 focus={focus}
                 readOnlyMarks={check && showRef ? check.algoMarks : undefined}
                 markStates={check?.states}
+                scope={scope}
               />
             )}
             <div className="pointer-events-none absolute top-2 right-14 z-10 lg:hidden">{statusBadge}</div>

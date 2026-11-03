@@ -146,12 +146,12 @@ export async function coreLevels(page: Page) {
 }
 
 const TOOL_OF: Record<string, [string, string]> = {
-  'swing-high': ['Swing High', 'Структура'],
-  'swing-low': ['Swing Low', 'Структура'],
-  hh: ['HH', 'Структура'],
-  hl: ['HL', 'Структура'],
-  lh: ['LH', 'Структура'],
-  ll: ['LL', 'Структура'],
+  'swing-high': ['Swing High', 'Свинги'],
+  'swing-low': ['Swing Low', 'Свинги'],
+  hh: ['HH', 'Свинги'],
+  hl: ['HL', 'Свинги'],
+  lh: ['LH', 'Свинги'],
+  ll: ['LL', 'Свинги'],
   bos: ['BOS', 'Пробои'],
   choch: ['CHoCH', 'Пробои'],
   sweep: ['Sweep', 'Пробои'],

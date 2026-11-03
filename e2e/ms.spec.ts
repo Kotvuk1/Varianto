@@ -22,7 +22,7 @@ test('MS «Разметка»: метка, проверка, разбор, сл�
   await shot(page, 'ms-mark-before');
   // набор инструментов ограничен понятиями задания (лёгкий: без Sweep, FVG, Order Block)
   await expect(page.getByRole('button', { name: 'Зоны', exact: true })).toHaveCount(0);
-  await selectTool(page, 'Swing High', 'Структура');
+  await selectTool(page, 'Swing High', 'Свинги');
   await tapCandle(page, 20);
   await expect(page.getByTestId('chart')).toHaveAttribute('data-mark-count', '1');
   await checkAndSeeResult(page);
@@ -72,4 +72,24 @@ test('MS: 429 и 502 показывают тексты из COPY', async ({ page
   await page.route('**/api/tasks/market-structure/next', (route) => route.fulfill({ status: 502, json: { error: { code: 'archive_unavailable', message: 'x' } } }));
   await page.getByRole('button', { name: 'Повторить' }).click();
   await expect(page.getByTestId('task-error')).toContainText('Архив данных недоступен');
+});
+
+test('MS hard (internal-external): переключатель слоя BOS/CHoCH, клавиша I', async ({ page }) => {
+  await openSession(page, `${MS}/session?mode=mark&difficulty=hard&tf=1h&symbol=BTCUSDT&focus=internal-external`);
+  const sw = page.getByTestId('scope-switch');
+  await expect(sw).toHaveCount(0);
+  await selectTool(page, 'BOS', 'Пробои');
+  await expect(sw).toBeVisible();
+  await expect(sw.getByRole('radio', { name: 'Внешняя' })).toBeChecked();
+  await page.keyboard.press('KeyI');
+  await expect(sw.getByRole('radio', { name: 'Внутренняя' })).toBeChecked();
+  await shot(page, 'polish1-ms-hard-scope');
+  await page.keyboard.press('KeyI');
+  await expect(sw.getByRole('radio', { name: 'Внешняя' })).toBeChecked();
+});
+
+test('MS easy: переключателя слоя нет', async ({ page }) => {
+  await openSession(page, `${MS}/session?mode=mark&difficulty=medium&tf=1h&symbol=BTCUSDT`);
+  await selectTool(page, 'BOS', 'Пробои').catch(() => undefined);
+  await expect(page.getByTestId('scope-switch')).toHaveCount(0);
 });

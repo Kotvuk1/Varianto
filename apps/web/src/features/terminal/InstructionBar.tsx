@@ -1,10 +1,10 @@
 'use client';
 import { Trash2, TriangleAlert, X } from 'lucide-react';
 import { useState } from 'react';
-import type { Mark } from '@tl/core';
+import type { Mark, Scope } from '@tl/core';
 import type { NoticeCode } from '@/chart/interaction/controller';
-import type { ToolId } from '@/chart/drawing/tools';
-import { IconButton, cn } from '@/ui';
+import { isScopedKind, type ToolId } from '@/chart/drawing/tools';
+import { IconButton, Segmented, cn } from '@/ui';
 import { describeMark } from './markText';
 import { tx } from './strings';
 
@@ -20,6 +20,10 @@ export interface InstructionBarProps {
   onDeselect: () => void;
   /** Сообщение проверки (например, нечего проверять): приоритетнее подсказки. */
   message?: string | null;
+  /** Показывать переключатель слоя «Внешняя / Внутренняя» для BOS/CHoCH (горячая клавиша I). */
+  allowScope?: boolean;
+  scope?: Scope;
+  onScope?: (s: Scope) => void;
 }
 
 /** Текст строки-инструкции (без кнопок): выбор метки / предупреждение / инструмент и шаг. */
@@ -58,6 +62,19 @@ export function InstructionBar(props: InstructionBarProps) {
           {text}
         </span>
       </button>
+      {props.allowScope && props.onScope && !props.selected && isScopedKind(props.tool) && (
+        <div className="w-[176px] shrink-0 lg:w-56" data-testid="scope-switch">
+          <Segmented<Scope>
+            label={tx.scope.label}
+            options={[
+              { value: 'external', label: tx.scope.external },
+              { value: 'internal', label: tx.scope.internal },
+            ]}
+            value={props.scope ?? 'external'}
+            onChange={props.onScope}
+          />
+        </div>
+      )}
       {props.selected && (
         <>
           <IconButton label={tx.deleteMark} icon={<Trash2 size={20} strokeWidth={1.75} />} onClick={props.onDelete} />

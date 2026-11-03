@@ -63,6 +63,13 @@ describe('runCheck на реальных свечах', () => {
     expect(o.result.grade.errors.map((e) => e.code)).not.toContain('SWING_MISSED');
   });
 
+  it('вердикт «N из M совпало»: M - число эталонных меток, совпадает со сводкой', () => {
+    const o = runCheck(candles, '1h', [asUser(choch), { ...asUser(choch), id: 'u2', anchors: [{ time: candles[3]!.openTime, price: 1 }, { time: candles[4]!.openTime, price: 1 }] }]);
+    expect(o.ok).toBe(true);
+    if (!o.ok) return;
+    expect(o.result.feedback.verdict.params).toMatchObject({ matched: o.result.summary.matched, total: o.result.summary.total });
+  });
+
   it('метка вдали от структуры - extra, эталон показан как missed', () => {
     const far = { ...asUser(choch, 'fvg'), anchors: [{ time: candles[100]!.openTime, price: candles[100]!.high }, { time: candles[110]!.openTime, price: candles[100]!.low }] };
     const o = runCheck(candles, '1h', [far]);

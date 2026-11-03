@@ -13,7 +13,7 @@ import {
   type LogicalRange as LwcLogicalRange,
   type Time,
 } from 'lightweight-charts';
-import { TIMEFRAME_MS, type Candle, type CandleSeries, type Mark } from '@tl/core';
+import { TIMEFRAME_MS, type Candle, type CandleSeries, type Mark, type Scope } from '@tl/core';
 import { DrawingController, type ControllerNotice, type PointerInput } from './interaction/controller';
 import { DrawingPrimitive } from './drawing/DrawingPrimitive';
 import type { HighlightRange } from './drawing/highlight';
@@ -67,6 +67,10 @@ export interface TradingChartProps {
   markStates?: Record<string, 'match' | 'missed' | 'extra'>;
   /** Окно оценки задания: вне него свечи затемнены, граница окна пунктиром. */
   highlightRange?: HighlightRange;
+  /** Слой для новых BOS/CHoCH (Внешняя/Внутренняя); null - не задан. */
+  scope?: Scope | null;
+  /** Подпись границы окна оценки. */
+  windowLabel?: string;
 }
 
 const LOCALE = 'ru-RU';
@@ -156,6 +160,7 @@ export function TradingChart(props: TradingChartProps) {
       fmt: fmtRef.current,
       ...(p.markStates ? { states: p.markStates } : {}),
       ...(p.highlightRange ? { highlightRange: p.highlightRange } : {}),
+      ...(p.windowLabel ? { windowLabel: p.windowLabel } : {}),
     });
   };
   const pushStateRef = useRef(pushState);
@@ -232,6 +237,7 @@ export function TradingChart(props: TradingChartProps) {
       invalidate: () => pushStateRef.current(),
       notify: (n) => propsRef.current.onNotice?.(n),
       fmt: (v) => fmtRef.current(v),
+      scope: () => propsRef.current.scope ?? null,
     });
 
     chartRef.current = chart;

@@ -25,14 +25,17 @@ interface CellProps {
   className?: string;
   testId?: string;
   shortcut?: string;
+  /** Полное название (tooltip), если подпись сокращена. */
+  title?: string;
 }
 
 /** Кнопка рейки/панели: иконка и подпись 11 px под ней. */
-function Cell({ label, icon, selected = false, group = false, expanded, onClick, className, testId, shortcut }: CellProps) {
+function Cell({ label, icon, selected = false, group = false, expanded, onClick, className, testId, shortcut, title }: CellProps) {
   return (
     <button
       type="button"
       aria-label={label}
+      title={title ?? label}
       aria-pressed={group ? undefined : selected}
       aria-expanded={group ? expanded : undefined}
       aria-haspopup={group ? 'true' : undefined}
@@ -90,6 +93,7 @@ export function MobileToolbar({ tool, onTool, onCheck }: ToolPaletteProps) {
             <Cell
               key={g.id}
               label={tx.groups[g.id]}
+              title={tx.groupTitles[g.id]}
               icon={on && multi ? TOOL_ICON[tool as TerminalTool] : g.icon}
               group={multi}
               expanded={fan === g.id}
@@ -155,6 +159,7 @@ export function DesktopRail({ tool, onTool }: ToolPaletteProps) {
             <div key={g.id} className="relative w-full">
               <Cell
                 label={tx.groups[g.id]}
+                title={tx.groupTitles[g.id]}
                 icon={on && multi ? TOOL_ICON[tool as TerminalTool] : g.icon}
                 group={multi}
                 expanded={open === g.id}

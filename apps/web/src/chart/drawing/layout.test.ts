@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { Mark } from '@tl/core';
 import type { Projection } from './projection';
-import { buildGeometry, isMarkVisible } from './layout';
+import { buildGeometry, isMarkVisible, keepTextsInside, textWidth } from './layout';
 
 const T0 = Date.UTC(2025, 0, 1);
 const H = 3_600_000;
@@ -121,5 +121,24 @@ describe('isMarkVisible (рисуем только видимое)', () => {
     expect(isMarkVisible(mk('level', [a(0, 2000)]), synthetic_proj)).toBe(false);
     expect(isMarkVisible(mk('hline', [a(-500, 250)]), synthetic_proj)).toBe(true);
     expect(isMarkVisible(mk('hline', [a(500, 250)]), synthetic_proj)).toBe(false);
+  });
+});
+
+describe('подписи метки', () => {
+  it('internal BOS/CHoCH подписываются iBOS / iCHoCH', () => {
+    const t = (kind: 'bos' | 'choch') => buildGeometry(mk(kind, [a(5, 300), a(15, 300)], { scope: 'internal' }), synthetic_proj).parts.find((p) => p.t === 'text');
+    expect(t('bos')).toMatchObject({ text: 'iBOS' });
+    expect(t('choch')).toMatchObject({ text: 'iCHoCH' });
+    const ext = buildGeometry(mk('bos', [a(5, 300), a(15, 300)], { scope: 'external' }), synthetic_proj).parts.find((p) => p.t === 'text');
+    expect(ext).toMatchObject({ text: 'BOS' });
+  });
+
+  it('подпись у правого края сдвигается влево от якоря и не выходит за область графика', () => {
+    // позиция у самого правого края: x = 395 при ширине 400
+    const g = buildGeometry(mk('position', [a(39.5, 300), a(39.5, 280), a(39.5, 340)]), synthetic_proj);
+    const texts = g.parts.filter((p) => p.t === 'text');
+    expect(texts.length).toBe(3);
+    for (const p of texts) if (p.t === 'text') expect(p.x + textWidth(p.text) / 2).toBeLessThanOrEqual(synthetic_proj.width);
+    expect(keepTextsInside([{ t: 'text', text: 'TP', x: 5, y: 0 }], 400)[0]).toMatchObject({ x: textWidth('TP') / 2 + 2 });
   });
 });

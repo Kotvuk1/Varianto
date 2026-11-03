@@ -1,7 +1,7 @@
 // Контроллер жестов разметки: чистая логика без DOM и LWC (зависимости инъецируются).
 // Pointer Events приходят из TradingChart; возвращаемое true из pointerDown = жест принадлежит разметке
 // (график в это время не скроллится).
-import type { Anchor, Candle, Mark } from '@tl/core';
+import type { Anchor, Candle, Mark, Scope } from '@tl/core';
 import type { TimeIndex } from '../geometry/timeIndex';
 import { buildGeometry } from '../drawing/layout';
 import { hitTest, toleranceFor, type Hit, type PointerKind } from '../drawing/hit';
@@ -10,6 +10,7 @@ import {
   constrainAnchors,
   createMark,
   isDrawKind,
+  isScopedKind,
   SWING_SIDE,
   TOOL_DEFS,
   type DrawKind,
@@ -61,6 +62,8 @@ export interface ControllerDeps {
   /** Шаг мастера и мягкие предупреждения (строка-инструкция). */
   notify?: (n: ControllerNotice) => void;
   fmt?: (price: number) => string;
+  /** Текущий слой для BOS/CHoCH (null - не задан). */
+  scope?: () => Scope | null;
 }
 
 type Gesture =
@@ -170,7 +173,7 @@ export class DrawingController {
         }
         const r = resolveBreak(c, pending.swing, t.i);
         if (!r.ok) return { t: 'reject', code: 'before-swing' };
-        return { t: 'mark', anchors: r.anchors, extra: { direction: r.direction }, ...(r.bodyClosed ? {} : { notice: 'bos-wick-only' as const }) };
+        return { t: 'mark', anchors: r.anchors, extra: { direction: r.direction, scope: this.d.scope?.() ?? null }, ...(r.bodyClosed ? {} : { notice: 'bos-wick-only' as const }) };
       }
       case 'fvg': {
         const r = resolveFvg(c, t.i);
@@ -199,7 +202,7 @@ export class DrawingController {
     else if (b.t === 'pending' || (b.t === 'reject' && this.pending)) {
       const anchors = (b.t === 'pending' ? b.anchors : this.pending!.anchors).slice();
       while (anchors.length < TOOL_DEFS[kind].anchors) anchors.push(anchors[anchors.length - 1]!);
-      this.preview = createMark(kind, anchors, PREVIEW_ID, {});
+      this.preview = createMark(kind, anchors, PREVIEW_ID, isScopedKind(kind) ? { scope: this.d.scope?.() ?? null } : {});
     } else this.preview = null;
     this.d.invalidate?.();
   }
