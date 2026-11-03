@@ -13,6 +13,8 @@ import type {
   Verdict,
 } from '../types';
 import { candleIndexAt, inferTimeframe } from '../smc/series';
+import { patternCriterion } from '../pa/criteria';
+import type { PatternType } from '../pa/types';
 
 type Group =
   | 'SWING_H'
@@ -278,7 +280,14 @@ export function gradeMarks(user: readonly Mark[], algo: AlgoMarkSet, ctx: GradeC
         code,
         cost: 5,
         skill: a.skill,
-        params: { time: tm, given: um.direction ?? 'none', expected: am.direction ?? 'none', kind: am.kind, kindName: kindName(am.kind) },
+        params: {
+          time: tm,
+          given: um.direction ?? 'none',
+          expected: am.direction ?? 'none',
+          kind: am.kind,
+          kindName: kindName(am.kind),
+          ...(a.group.startsWith('PATTERN:') ? { pattern: kindName(a.group.slice('PATTERN:'.length)) } : {}),
+        },
       });
     }
     if (a.group === 'BREAK' && um.anchors.length > 0) {
@@ -533,11 +542,12 @@ export function gradeMarks(user: readonly Mark[], algo: AlgoMarkSet, ctx: GradeC
       default: {
         const other = otherTypePattern(u);
         const given = u.group.slice('PATTERN:'.length);
+        const criterion = patternCriterion(given as PatternType, candles, u.hi, false);
         if (other) {
           addErr('PATTERN_WRONG_TYPE', u.skill, u.lo, [um.id, other.mark.id], {
-            time: tm, given, expected: other.group.slice('PATTERN:'.length),
+            time: tm, given: kindName(given), expected: kindName(other.group.slice('PATTERN:'.length)), criterion,
           });
-        } else addErr('PATTERN_EXTRA', u.skill, u.lo, ids, { time: tm, pattern: given });
+        } else addErr('PATTERN_EXTRA', u.skill, u.lo, ids, { time: tm, pattern: kindName(given), criterion });
       }
     }
   }
@@ -588,7 +598,12 @@ export function gradeMarks(user: readonly Mark[], algo: AlgoMarkSet, ctx: GradeC
         });
         break;
       default:
-        addErr('PATTERN_MISSED', a.skill, a.lo, ids, { time: tm, pattern: a.group.slice('PATTERN:'.length) });
+        {
+          const type = a.group.slice('PATTERN:'.length);
+          addErr('PATTERN_MISSED', a.skill, a.lo, ids, {
+            time: tm, pattern: kindName(type), criterion: patternCriterion(type as PatternType, candles, a.hi, true),
+          });
+        }
     }
   }
   errors.sort((x, y) => x.key - y.key || x.ord - y.ord);

@@ -1,5 +1,5 @@
 // analyzeStructure (ALGORITHMS §3): внешний + внутренний слой, sweep, OB, FVG.
-import { ALGO_VERSION } from '../version';
+import { ANALYSIS_ALGO_VERSION } from '../version';
 import type {
   Candle,
   LayerState,
@@ -113,7 +113,7 @@ export function analyzeStructure(
   };
 
   const result: StructureResult = {
-    algoVersion: ALGO_VERSION,
+    algoVersion: ANALYSIS_ALGO_VERSION,
     params: p,
     swings,
     events,

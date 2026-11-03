@@ -311,9 +311,9 @@ export const ERROR_TEMPLATES_RU: Record<ErrorCode, ErrorTemplate> = {
   },
   QUESTION_WRONG: {
     mistake: 'Выбран ответ «{given}», верный — «{expected}».',
-    why: '{explain}.',
-    howTo: '{howTo}.',
-    principle: 'Принцип шаблона {template}.',
+    why: '{explain}',
+    howTo: '{howTo}',
+    principle: '{principle}',
   },
   PATTERN_WRONG_TYPE: {
     mistake: 'На {time} отмечена «{given}», а это «{expected}».',

@@ -10,7 +10,7 @@ import { computeContext, htfClosedAt } from './pa/context';
 import { findLevels } from './pa/levels';
 import { detectPatterns } from './pa/patterns';
 import { loadAggTrades, loadKlines } from './testing/fixtures-pa-challenge';
-import { ALGO_VERSION } from './version';
+import { ANALYSIS_ALGO_VERSION } from './version';
 
 const FIX = resolve(dirname(fileURLToPath(import.meta.url)), '../../../fixtures');
 const golden = (name: string) => JSON.parse(readFileSync(resolve(FIX, 'golden', name), 'utf8'));
@@ -26,12 +26,12 @@ describe('golden: версия и источники', () => {
     'challenge_CH-1.BTCUSDT-4h-2026-09.refside.golden.json',
   ])('%s: algoVersion и sha256 CSV', (name) => {
     const g = golden(name);
-    expect(g.algoVersion).toBe(ALGO_VERSION);
+    expect(g.algoVersion).toBe(ANALYSIS_ALGO_VERSION);
     expect(sha(`${g.source.csv}`)).toBe(g.source.sha256);
   });
   it('GS-10: algoVersion и sha256 всех источников', () => {
     const g = golden('challenge_GS-10.BTCUSDT-15m-2026-10-20.resolve-trade.golden.json');
-    expect(g.algoVersion).toBe(ALGO_VERSION);
+    expect(g.algoVersion).toBe(ANALYSIS_ALGO_VERSION);
     for (const rel of g.source.csv) expect(sha(rel)).toBe(g.source.sha256[rel]);
   });
 });

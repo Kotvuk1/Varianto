@@ -23,7 +23,7 @@ describe('buildFeedback: 6 частей (FR-FB-02)', () => {
       ],
       skillOutcomes: [{ skill: 'swing', correct: 3, total: 5 }],
     });
-    expect(fb.verdict).toEqual({ templateKey: 'feedback.verdict.partial', code: null, params: { score: 72 }, glyph: 'info' });
+    expect(fb.verdict).toEqual({ templateKey: 'feedback.verdict.partial', code: null, params: { matched: 3, total: 5, score: 72 }, glyph: 'info' });
     expect(fb.mistakes.map((b) => b.templateKey)).toEqual([
       'feedback.SWING_EXTRA.mistake',
       'feedback.BOS_WICK_ONLY.mistake',
@@ -42,7 +42,7 @@ describe('buildFeedback: 6 частей (FR-FB-02)', () => {
       const fb = buildFeedback({ module: m, verdict: 'correct', score: 1, errors: [], ok: [{ code: 'OK_WAIT' }] });
       expect(fb.principle).toEqual({ templateKey: `feedback.principle.${m}`, code: null, glyph: 'info' });
       expect(fb.mistakes).toEqual([]);
-      expect(fb.verdict.templateKey).toBe(m === 'challenge' ? 'feedback.verdict.challenge.correct' : 'feedback.verdict.correct');
+      expect(fb.verdict.templateKey).toBe(m === 'challenge' ? 'feedback.verdict.challenge.correct' : 'feedback.verdict.plain.correct');
       expect(fb.understood[0]!.code).toBe('OK_WAIT');
     }
   });
@@ -69,7 +69,7 @@ describe('okFromOutcomes', () => {
       2,
     );
     expect(items.map((i) => i.code)).toEqual(['OK_SWING', 'OK_LABEL', 'OK_CHOCH', 'OK_SWEEP', 'OK_OB', 'OK_FVG', 'OK_SCOPE', 'OK_PATTERN']);
-    expect(items.find((i) => i.code === 'OK_PATTERN')!.params).toEqual({ pattern: 'Утренняя/вечерняя звезда', count: 1, total: 1 });
+    expect(items.find((i) => i.code === 'OK_PATTERN')!.params).toEqual({ pattern: 'Morning/Evening star (утренняя/вечерняя звезда)', count: 1, total: 1 });
   });
   it('OK_SCOPE только при полностью верном scope; навыки без OkCode пропускаются', () => {
     const items = okFromOutcomes([
@@ -90,7 +90,7 @@ describe('шаблоны (ALGORITHMS §17)', () => {
     expect(Object.keys(VERDICT_TEMPLATES_RU)).toHaveLength(3);
     expect(Object.keys(PRINCIPLE_TEMPLATES_RU)).toHaveLength(3);
     expect(flat['feedback.BOS_WICK_ONLY.mistake']).toContain('{kind}');
-    expect(Object.keys(flat)).toHaveLength(3 + 3 + 3 + 15 + 57 * 4);
+    expect(Object.keys(flat)).toHaveLength(3 + 3 + 3 + 3 + 15 + 57 * 4);
   });
   it('каждый ключ buildFeedback существует в словаре', () => {
     const codes = Object.keys(ERROR_TEMPLATES_RU) as ErrorCode[];
@@ -104,9 +104,25 @@ describe('шаблоны (ALGORITHMS §17)', () => {
     }
   });
   it('fillTemplate подставляет параметры, неизвестные оставляет', () => {
-    expect(fillTemplate(flat['feedback.verdict.correct']!, { score: 91 })).toBe('Верно: 91% совпадения с эталоном.');
+    expect(fillTemplate(flat['feedback.verdict.correct']!, { matched: 10, total: 11, score: 91 })).toBe('Верно: 10 из 11 совпало (91%).');
     expect(fillTemplate('Пропущен {a} и {b}', { a: 1 })).toBe('Пропущен 1 и {b}');
     expect(fillTemplate('{a}')).toBe('{a}');
+  });
+  it('вердикт: «N из M совпало» основная, процент вторичен; не «0% совпадения» при частичных успехах', () => {
+    const fb = buildFeedback({
+      module: 'market-structure',
+      verdict: 'incorrect',
+      score: 0.04,
+      errors: [],
+      skillOutcomes: [
+        { skill: 'swing', correct: 2, total: 6 },
+        { skill: 'internal-external', correct: 2, total: 6 },
+      ],
+    });
+    const text = fillTemplate(flat[fb.verdict.templateKey]!, fb.verdict.params);
+    expect(text).toBe('Неверно: 2 из 6 совпало (4%). Разберём, что пошло не так.');
+    const plain = buildFeedback({ module: 'price-action', verdict: 'incorrect', score: 0, errors: [] });
+    expect(fillTemplate(flat[plain.verdict.templateKey]!, plain.verdict.params)).not.toMatch(/\{|совпадения/);
   });
   it('Challenge: вердикт по качеству, без «совпадения с эталоном»', () => {
     const fb = buildFeedback({ module: 'challenge', verdict: 'correct', score: 0.8, errors: [] });

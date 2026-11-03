@@ -461,6 +461,52 @@ export interface MsQuestionGrade {
   detail: { kind: 'ms-question'; chosenOptionId: string; correctOptionId: string };
 }
 
+/** Пояснения к `QUESTION_WRONG` (why/howTo/principle) по шаблону вопроса; без чисел и времён (их форматирует UI). */
+export function msQuestionTexts(q: Pick<MsQuestion, 'template' | 'explain'>): { explain: string; howTo: string; principle: string } {
+  switch (q.template) {
+    case 'trend':
+      return {
+        explain: 'Внешний тренд задаёт последнее событие внешней структуры: после бычьего BOS/CHoCH тренд восходящий, после медвежьего нисходящий, без событий - диапазон.',
+        howTo: 'Найдите последний пробой внешнего swing по закрытию тела и определите его направление.',
+        principle: 'Тренд определяется последним подтверждённым пробоем структуры, а не наклоном графика.',
+      };
+    case 'break-type': {
+      const kind = String(q.explain['kind']);
+      const explain =
+        kind === 'bos'
+          ? 'Тело свечи закрылось за целевым swing по направлению тренда - это BOS, продолжение структуры.'
+          : kind === 'choch'
+            ? 'Тело свечи закрылось за защищённым уровнем против тренда - это CHoCH, смена характера структуры.'
+            : 'Фитиль вышел за swing, а тело осталось по эту сторону уровня - это Liquidity sweep, а не пробой.';
+      return {
+        explain,
+        howTo: 'Сравните закрытие свечи с уровнем: закрытие за уровнем по тренду - BOS, против тренда - CHoCH, только фитиль - sweep.',
+        principle: 'Тело решает, фитиль проверяет.',
+      };
+    }
+    case 'wick-or-body':
+      return {
+        explain:
+          q.explain['close'] !== undefined && q.explain['level'] !== undefined && Number(q.explain['close']) !== Number(q.explain['level']) && isBodyBreak(q)
+            ? 'Тело свечи закрылось за уровнем - уровень пробит.'
+            : 'Уровень пробит только фитилём: закрытие осталось по эту сторону уровня.',
+        howTo: 'Смотрите на закрытие свечи, а не на экстремум: пробой засчитывается только по закрытию тела.',
+        principle: 'BOS и CHoCH - только по закрытию тела.',
+      };
+    default:
+      return {
+        explain: 'Тренд защищает ближайший swing, пробой которого сменит тренд: swing low в восходящем и swing high в нисходящем.',
+        howTo: 'Найдите последний swing против тренда, с которого начался текущий импульс.',
+        principle: 'Тренд жив, пока стоит защищённый уровень.',
+      };
+  }
+}
+
+const isBodyBreak = (q: Pick<MsQuestion, 'explain'>): boolean => {
+  const { close, level, high, low } = q.explain as Record<string, number>;
+  return !((high! > level! && close! <= level!) || (low! < level! && close! >= level!));
+};
+
 export function gradeMsQuestion(q: MsQuestion, chosenOptionId: string): MsQuestionGrade {
   const ok = chosenOptionId === q.correctOptionId;
   const errors: GradeError[] = ok
@@ -470,7 +516,7 @@ export function gradeMsQuestion(q: MsQuestion, chosenOptionId: string): MsQuesti
           code: 'QUESTION_WRONG',
           skill: q.skill,
           severity: 'major',
-          params: { template: q.template, given: chosenOptionId, expected: q.correctOptionId, ...q.explain },
+          params: { ...q.explain, template: q.template, given: chosenOptionId, expected: q.correctOptionId, ...msQuestionTexts(q) },
         },
       ];
   return {

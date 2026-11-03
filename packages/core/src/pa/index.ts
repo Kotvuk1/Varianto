@@ -1,3 +1,4 @@
+export { patternCheck, patternCriterion, type PatternCheck } from './criteria';
 export { detectPatterns, pinBarDirection, PATTERN_ORDER } from './patterns';
 export {
   findLevels,

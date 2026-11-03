@@ -190,7 +190,7 @@ export function gradeContext(ref: ContextReference, given: ContextAnswer, htfTf:
       given: given.htfTrend,
       expected: ref.htfTrend,
       htfTf,
-      lastEvent: ev.htfLastEvent ? `${ev.htfLastEvent.kind === 'bos' ? 'BOS' : 'CHoCH'} ${ev.htfLastEvent.direction}` : 'нет',
+      lastEvent: ev.htfLastEvent ? `${ev.htfLastEvent.kind === 'bos' ? 'BOS' : 'CHoCH'} (${ev.htfLastEvent.direction === 'bull' ? 'бычий' : 'медвежий'})` : 'событий нет',
     });
   }
   if (given.significant !== ref.significant) {

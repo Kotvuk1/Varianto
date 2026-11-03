@@ -23,7 +23,6 @@ import {
   levelToMark,
   msConceptsFor,
   msParamsFor,
-  msWindowSize,
   mulberry32,
   patternGradeContext,
   patternToMark,
@@ -100,7 +99,7 @@ const BASE_MS = 15 * 60_000;
 // ------------------------------------------------------------------ параметры токена
 
 const ParamsSchema = z.discriminatedUnion('kind', [
-  z.object({ kind: z.literal('ms-mark'), tf: z.string(), focus: z.array(z.string()).optional() }),
+  z.object({ kind: z.literal('ms-mark'), tf: z.string(), focus: z.array(z.string()).optional(), windowSize: z.number().int().min(1).max(500) }),
   z.object({ kind: z.literal('ms-question'), tf: z.string(), questionId: z.string(), focus: z.array(z.string()).optional() }),
   z.object({ kind: z.literal('pa-find'), tf: z.string(), target: z.string() }),
   z.object({ kind: z.literal('pa-level'), tf: z.string(), levelType: z.enum(['support', 'resistance']), evalDifficulty: z.enum(['easy', 'medium', 'hard']) }),
@@ -254,13 +253,18 @@ async function buildMs(req: MsReq, symbol: TaskSymbol, seed: number, deps: Serve
       seed,
       shiftMs: 0,
       tf,
-      params: { kind: 'ms-mark', tf, ...(req.focus ? { focus: req.focus } : {}) },
+      params: { kind: 'ms-mark', tf, focus: sel.focus, windowSize: sel.windowSize },
       series: { [tf]: shown },
       payload: {
         kind: 'ms-mark',
         tf,
         concepts: sel.concepts,
+        /** Что именно отметить сверх базы (hard); [] для easy/medium. */
+        focus: sel.focus,
         tools: sel.tools,
+        windowCandles: sel.windowSize,
+        requiredCount: sel.requiredCount,
+        scoped: sel.scoped,
         referenceKey: `ms.reference.${difficulty}`,
         window: { fromTime: visible[sel.window.fromIndex]!.openTime, toTime: visible[sel.window.toIndex]!.openTime },
       },
@@ -608,7 +612,7 @@ async function gradeMsMark(c: GradeCtx, p: Extract<Params, { kind: 'ms-mark' }>,
   const tf = p.tf as TaskTimeframe;
   const visible = await visibleFor(c, tf);
   const n = visible.length;
-  const window = { fromIndex: Math.max(0, n - msWindowSize(c.difficulty)), toIndex: n - 1 };
+  const window = { fromIndex: Math.max(0, n - p.windowSize), toIndex: n - 1 };
   const concepts = msConceptsFor(c.difficulty, p.focus as SkillId[] | undefined);
   const r = analyzeStructure(visible, msParamsFor(c.difficulty), { tf });
   const algo = buildAlgoMarkSet(r, { concepts, window });
@@ -619,7 +623,7 @@ async function gradeMsMark(c: GradeCtx, p: Extract<Params, { kind: 'ms-mark' }>,
     toleranceCandles: 2,
     iouMin: 0.5,
     levelPricePct: 0.1,
-    scoped: c.difficulty !== 'easy',
+    scoped: concepts.includes('internal-external'),
   });
   return {
     verdict: g.verdict,
