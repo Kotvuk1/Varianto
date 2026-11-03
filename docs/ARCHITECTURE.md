@@ -25,7 +25,7 @@
 │   ├─ @tl/core (shared): candles, SMC, PA, grading, feedback templates             │
 │   └─ Repository (IndexedDB now → Supabase at M7)                                  │
 └───────────────────────────────────────────────────────────────────────────────────┘
-                 │ /api/history, /api/tasks/*, /api/challenge/*
+                 │ /api/history, /api/tasks/{module}/next|grade
 ┌──────────────── Vercel Functions (Node runtime) ────────────────┐
 │  ArchiveSource ──GET zip/CSV──► data.binance.vision (official)  │
 │  @tl/core: aggregation checks, scenario generation, resolution  │
@@ -125,6 +125,7 @@ interface Mark {
 - `POST /api/tasks/{module}/next` `{difficulty, symbol?, exclude[]}` → сервер выбирает момент, проверяет, что ситуация подходит под тип/сложность (по `@tl/core`), возвращает **только прошлое** + `taskToken`.
 - `taskToken` = HMAC-подписанный `{module, symbol, T, tf, difficulty, algoVersion, seed}` (секрет `TASK_SIGNING_SECRET`). Сервер не хранит состояние; всё восстанавливается из токена и архива.
 - `POST /api/tasks/{module}/grade` `{taskToken, answer}` → проверка подписи → эталон через `@tl/core` → `GradeResult` + разбор + (Challenge) будущие свечи и раскрытая дата.
+- `T` и прочие чувствительные поля токена **шифруются** (AES-GCM, ADR-0005), а не только подписываются. Повторная отправка `grade` с тем же токеном до M7 не блокируется (известное ограничение, один пользователь); в M7 токены одноразовые через БД.
 - Дата скрыта: клиент получает время свечей **сдвинутым** относительно скрытого якоря (относительная шкала), реальная дата — только в ответе `grade`.
 
 ### 5.4 Хранение (Repository)
