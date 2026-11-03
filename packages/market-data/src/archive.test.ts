@@ -27,7 +27,7 @@ function makeFetch(served: Served) {
     if (v === 'throw') throw new TypeError('network down');
     if (typeof v === 'number') return new Response('err', { status: v });
     if (typeof v === 'string') return new Response(v, { status: 200 });
-    return new Response(v as BodyInit, { status: 200 });
+    return new Response(v as unknown as ConstructorParameters<typeof Response>[0], { status: 200 });
   };
   return { fn, calls };
 }
@@ -171,7 +171,6 @@ describe('ArchiveSource.get (klines)', () => {
 
 describe('ArchiveSource.getAggTrades (потоковая распаковка)', () => {
   const csv = fixtureText('aggTrades/BTCUSDT-aggTrades-2026-10-20.csv');
-  const url = `${BASE}/daily/aggTrades/BTCUSDT/BTCUSDT-aggTrades-2026-10-20.zip`;
   const rows = csv.trim().split('\n').slice(1).map((l) => l.split(','));
   const zip = zipOf('BTCUSDT-aggTrades-2026-10-20.csv', csv);
 

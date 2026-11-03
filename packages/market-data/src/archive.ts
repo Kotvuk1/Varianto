@@ -247,7 +247,7 @@ export class ArchiveSource {
 
     try {
       for (;;) {
-        let r: ReadableStreamReadResult<Uint8Array>;
+        let r: Awaited<ReturnType<typeof reader.read>>;
         try {
           r = await reader.read();
         } catch (e) {

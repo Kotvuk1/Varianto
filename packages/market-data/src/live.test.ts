@@ -171,7 +171,7 @@ describe('LiveFeed.subscribe', () => {
   });
 
   it('после переподключения REST-догрузка с последнего openTime', async () => {
-    const r = run((url) => json(restM1.slice(0, 10)));
+    const r = run(() => json(restM1.slice(0, 10)));
     const ws = FakeWs.all[0]!;
     ws.open();
     ws.send(wsEvents[0]);

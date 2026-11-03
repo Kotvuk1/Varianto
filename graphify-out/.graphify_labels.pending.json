@@ -10,7 +10,7 @@
   "8": "Стратегия тестирования — Trading Lab",
   "9": "market-data/package.json",
   "10": "Database Schema — Trading Lab",
-  "11": "README.md",
+  "11": "archive.ts",
   "12": "core/package.json",
   "13": "compilerOptions",
   "14": "Interview Summary — Trading Lab",
@@ -43,5 +43,17 @@
   "41": "postcss.config.mjs",
   "42": "CLAUDE.md",
   "43": ".claude/CLAUDE.md",
-  "44": "pnpm-workspace.yaml"
+  "44": "pnpm-workspace.yaml",
+  "45": "history/route.ts",
+  "46": "LAYOUTS — Trading Lab",
+  "47": "2. Компоненты",
+  "48": "DESIGN — Trading Lab",
+  "49": "COPY — микрокопия Trading Lab",
+  "50": "check_tokens.py",
+  "51": "devDependencies",
+  "52": "layout.tsx",
+  "53": "FakeWs",
+  "54": "scripts",
+  "55": "ADR-0002: Lightweight Charts v5 + собственный слой разметки на Series Primitives",
+  "56": "fixtures"
 }

@@ -1,4 +1,4 @@
-/* global fetch, console */
+/* global fetch, console, process, Buffer */
 // Воспроизводимое скачивание фикстур из data.binance.vision и сборка записанных форматов REST/WS.
 // Запуск: node packages/market-data/scripts/fetch-fixtures.mjs <scratchDir>
 // Каждый архив скачивается в отдельную пустую папку внутри <scratchDir>.

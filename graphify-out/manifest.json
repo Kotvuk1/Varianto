@@ -132,9 +132,9 @@
     "semantic_hash": ""
   },
   "packages/core/src/index.ts": {
-    "mtime": 1793676681.1418524,
-    "seen": 1793676752.0975223,
-    "ast_hash": "51e8a23a850bf9254265ce42046f6667",
+    "mtime": 1793676957.7485225,
+    "seen": 1793677271.6035106,
+    "ast_hash": "37615481959dfab91dc6884cc1a9203e",
     "semantic_hash": ""
   },
   "packages/core/tsconfig.json": {
@@ -150,9 +150,9 @@
     "semantic_hash": ""
   },
   "packages/market-data/package.json": {
-    "mtime": 1793676681.1443205,
-    "seen": 1793676752.0975244,
-    "ast_hash": "99fd82fe8fd5c0b55ac41551f8daabbd",
+    "mtime": 1793677229.7510521,
+    "seen": 1793677271.603514,
+    "ast_hash": "74d45a74270a1d62ffdc5cda27db23d6",
     "semantic_hash": ""
   },
   "packages/market-data/src/index.test.ts": {
@@ -162,9 +162,9 @@
     "semantic_hash": ""
   },
   "packages/market-data/src/index.ts": {
-    "mtime": 1793676681.148883,
-    "seen": 1793676752.0975263,
-    "ast_hash": "b27ed2095e65c3d5a898db91d84b9766",
+    "mtime": 1793677173.3336124,
+    "seen": 1793677271.603521,
+    "ast_hash": "953ec243867024bc3f7fab8f000e5a06",
     "semantic_hash": ""
   },
   "packages/market-data/tsconfig.json": {
@@ -174,9 +174,9 @@
     "semantic_hash": ""
   },
   "packages/market-data/vitest.config.mts": {
-    "mtime": 1793676681.147698,
-    "seen": 1793676752.0975275,
-    "ast_hash": "394b6e41c7c591394f1ede8111ed4515",
+    "mtime": 1793677262.043089,
+    "seen": 1793677271.6035278,
+    "ast_hash": "7bcac344f2237db55832f60b4991e8fd",
     "semantic_hash": ""
   },
   "pnpm-workspace.yaml": {
@@ -383,10 +383,154 @@
     "ast_hash": "170253a77067353d88755f0723f00c56",
     "semantic_hash": ""
   },
+  "apps/web/app/api/history/route.test.ts": {
+    "mtime": 1793677233.762829,
+    "seen": 1793677271.6034539,
+    "ast_hash": "f55f1869184e3f28240cbf86eb3331b1",
+    "semantic_hash": ""
+  },
+  "apps/web/app/api/history/route.ts": {
+    "mtime": 1793677222.9709833,
+    "seen": 1793677271.6034558,
+    "ast_hash": "a684da375b1a1d3db3369c6b86d7ddb3",
+    "semantic_hash": ""
+  },
+  "docs/design/check_tokens.py": {
+    "mtime": 1793676933.4988794,
+    "seen": 1793677271.6034677,
+    "ast_hash": "9dc1c617230571c300d3a5042049fdf4",
+    "semantic_hash": ""
+  },
+  "fixtures/recorded/rest-klines-BTCUSDT-1h-2026-10-20.json": {
+    "mtime": 1793676881.6099722,
+    "seen": 1793677271.6034727,
+    "ast_hash": "c26fc8837ede626e92b13a8edac16e27",
+    "semantic_hash": ""
+  },
+  "fixtures/recorded/rest-klines-BTCUSDT-1m-2026-10-20-first120.json": {
+    "mtime": 1793676881.6099722,
+    "seen": 1793677271.6034734,
+    "ast_hash": "839b784d71b2d34637ebcd6268ea3a4c",
+    "semantic_hash": ""
+  },
+  "fixtures/recorded/ws-kline-BTCUSDT-1m-2026-10-20.json": {
+    "mtime": 1793676881.6139722,
+    "seen": 1793677271.6034744,
+    "ast_hash": "464d79d851a79ae1dc5f320a627922ee",
+    "semantic_hash": ""
+  },
+  "packages/core/src/candles/aggregate.test.ts": {
+    "mtime": 1793676957.7471187,
+    "seen": 1793677271.6035063,
+    "ast_hash": "de861a327019954bfe123ea211f32116",
+    "semantic_hash": ""
+  },
+  "packages/core/src/candles/aggregate.ts": {
+    "mtime": 1793676961.039074,
+    "seen": 1793677271.6035078,
+    "ast_hash": "ac7321c7b29728fdb5464e6335fd41c8",
+    "semantic_hash": ""
+  },
+  "packages/market-data/scripts/fetch-fixtures.mjs": {
+    "mtime": 1793677245.1432042,
+    "seen": 1793677271.603515,
+    "ast_hash": "634dbbb23737dd6555b615b38ac50d32",
+    "semantic_hash": ""
+  },
+  "packages/market-data/src/aggregate.invariant.test.ts": {
+    "mtime": 1793677014.726984,
+    "seen": 1793677271.6035159,
+    "ast_hash": "4e09be701ee482559dfcb5d1d7e6deb4",
+    "semantic_hash": ""
+  },
+  "packages/market-data/src/archive.network.test.ts": {
+    "mtime": 1793677101.0068643,
+    "seen": 1793677271.6035166,
+    "ast_hash": "fa3c7bc0dc640aead1398948b16d79ea",
+    "semantic_hash": ""
+  },
+  "packages/market-data/src/archive.test.ts": {
+    "mtime": 1793677252.2832208,
+    "seen": 1793677271.6035175,
+    "ast_hash": "d32aebe21858427bbd275613bfb2bb4d",
+    "semantic_hash": ""
+  },
+  "packages/market-data/src/archive.ts": {
+    "mtime": 1793677182.409215,
+    "seen": 1793677271.603518,
+    "ast_hash": "d409f05f9f1d89c40272a9826aac19f5",
+    "semantic_hash": ""
+  },
+  "packages/market-data/src/errors.ts": {
+    "mtime": 1793676986.1897418,
+    "seen": 1793677271.6035187,
+    "ast_hash": "aafd8dfd5da1457d3650684b1c8ae10f",
+    "semantic_hash": ""
+  },
+  "packages/market-data/src/live.test.ts": {
+    "mtime": 1793677245.1494613,
+    "seen": 1793677271.6035223,
+    "ast_hash": "b6e383114c392f65079ff1756fe40fcc",
+    "semantic_hash": ""
+  },
+  "packages/market-data/src/live.ts": {
+    "mtime": 1793677168.0192685,
+    "seen": 1793677271.603523,
+    "ast_hash": "4b8a9975dffb17b2fd3cafa4ea8c2093",
+    "semantic_hash": ""
+  },
+  "packages/market-data/src/normalize.test.ts": {
+    "mtime": 1793677004.339403,
+    "seen": 1793677271.6035237,
+    "ast_hash": "22828af9ec4241b6164ec1f26cb8d42a",
+    "semantic_hash": ""
+  },
+  "packages/market-data/src/normalize.ts": {
+    "mtime": 1793677004.34084,
+    "seen": 1793677271.6035247,
+    "ast_hash": "d3f57518e399a80240eb1dce7cc23e65",
+    "semantic_hash": ""
+  },
+  "packages/market-data/src/testing/fixtures.ts": {
+    "mtime": 1793676986.1885,
+    "seen": 1793677271.6035254,
+    "ast_hash": "53abb9952fa5ec1fee5588e3ac9bd32a",
+    "semantic_hash": ""
+  },
+  "docs/design/COMPONENTS.md": {
+    "mtime": 1793677090.6783638,
+    "seen": 1793677271.6035635,
+    "ast_hash": "aec4a365d3a4b342cb2b864bc2e919ea",
+    "semantic_hash": ""
+  },
+  "docs/design/COPY.md": {
+    "mtime": 1793677138.852039,
+    "seen": 1793677271.6035645,
+    "ast_hash": "78b167732ccc32309b56f73250f761c1",
+    "semantic_hash": ""
+  },
+  "docs/design/DESIGN.md": {
+    "mtime": 1793676938.768662,
+    "seen": 1793677271.6035655,
+    "ast_hash": "520301c4a425b7b1afb041e2e98aeac4",
+    "semantic_hash": ""
+  },
+  "docs/design/LAYOUTS.md": {
+    "mtime": 1793677033.7270367,
+    "seen": 1793677271.6035683,
+    "ast_hash": "b07f8d06203b55dd5fa819bb511f347c",
+    "semantic_hash": ""
+  },
+  "fixtures/README.md": {
+    "mtime": 1793676881.6139722,
+    "seen": 1793677271.6035695,
+    "ast_hash": "8f72e600bfccf76d2ee6323f23f33b2c",
+    "semantic_hash": ""
+  },
   "pnpm-lock.yaml": {
-    "mtime": 1793676713.0019798,
-    "seen": 1793676752.0975575,
-    "ast_hash": "b78078adac0e142310df2d380016adab",
+    "mtime": 1793676936.2259698,
+    "seen": 1793677271.6035705,
+    "ast_hash": "a7e5c120f223fbee21fcb52e720a35be",
     "semantic_hash": ""
   }
 }
