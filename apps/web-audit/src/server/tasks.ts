@@ -1,0 +1,796 @@
+// Сервис заданий: выбор ситуации (next) и проверка ответа (grade) поверх @tl/core. Без HTTP-деталей.
+// Инвариант: payload next и эталон grade строятся из одних и тех же рядов - loadClosedBefore(T) (ADR-0005).
+import {
+  ALGO_VERSION,
+  HTF_OF,
+  MS_DEPTH,
+  REASON_CODES,
+  TIMEFRAME_MS,
+  TIME_LIMIT_CANDLES,
+  analyzeStructure,
+  buildAlgoMarkSet,
+  buildFeedback,
+  buildPatternAlgoMarkSet,
+  computeChallengeFacts,
+  computeContext,
+  detectPatterns,
+  gradeChallenge,
+  gradeContext,
+  gradeLevel,
+  gradeMarks,
+  gradeMsQuestion,
+  htfClosedAt,
+  levelToMark,
+  msConceptsFor,
+  msParamsFor,
+  mulberry32,
+  patternGradeContext,
+  patternToMark,
+  pickChallengeScenario,
+  pickContextTask,
+  pickFindPattern,
+  pickLevelTask,
+  randInt,
+  rebuildMsQuestion,
+  resolveTrade,
+  selectMsMarkTask,
+  selectMsQuestionTask,
+  sliceAt,
+  FIND_WINDOW,
+  LEVEL_TOLERANCE_PCT,
+  type Candle,
+  type ChallengeFacts,
+  type Difficulty,
+  type Feedback,
+  type GradeError,
+  type Mark,
+  type MarkGrade,
+  type ModuleId,
+  type PatternType,
+  type SkillId,
+  type SkillOutcome,
+  type TaskSymbol,
+  type TaskTimeframe,
+  type UtcMs,
+  type Verdict,
+} from '@tl/core';
+import { z } from 'zod';
+import { ApiError, validationError } from './errors';
+import { SYMBOLS, type Answer, type ChallengeAnswer, type GradeRequest, type NextRequest } from './schemas';
+import {
+  CHALLENGE_FUTURE_MS,
+  ChallengeZone,
+  DAY_MS,
+  cutoffOf,
+  depthOf,
+  floorTo,
+  futureProviderFor,
+  loadClosedBefore,
+  loadMinutes,
+  type CandleLoader,
+  ARCHIVE_START,
+} from './sources';
+import { open, seal, taskIdFor } from './token';
+
+export interface ServerDeps {
+  loader: CandleLoader;
+  now: () => UtcMs;
+  /** Источник seed (сервер: crypto.randomUUID -> число). */
+  newSeed: () => number;
+  /** Диапазон архива, из которого выбираются ситуации; по умолчанию [ARCHIVE_START, cutoff]. */
+  range?: { from: UtcMs; to: UtcMs };
+  /** Минимальная предистория перед зоной Challenge (по умолчанию 400 суток под 1d-контекст). */
+  warmupMs?: number;
+  /** Шаг сетки T (по умолчанию 15m). Тесты на фикстурах без 1m задают границу ТФ, чтобы не требовать частичных свечей. */
+  gridStepMs?: number;
+  /** Число попыток генератора на уровень сложности (по умолчанию как в ядре). */
+  maxAttempts?: number;
+  secret?: string;
+  aggTradesTimeoutMs?: number;
+}
+
+const HTF_TF = HTF_OF as Readonly<Record<TaskTimeframe, TaskTimeframe>>;
+const MAX_TRIES = 6;
+const TICK: Record<TaskSymbol, number> = { BTCUSDT: 0.1, ETHUSDT: 0.01, SOLUSDT: 0.01 };
+const SEGMENT_EXTRA = 300;
+const ZONE_MS = 15 * DAY_MS;
+const BASE_MS = 15 * 60_000;
+
+// ------------------------------------------------------------------ параметры токена
+
+const ParamsSchema = z.discriminatedUnion('kind', [
+  z.object({ kind: z.literal('ms-mark'), tf: z.string(), focus: z.array(z.string()).optional(), windowSize: z.number().int().min(1).max(500) }),
+  z.object({ kind: z.literal('ms-question'), tf: z.string(), questionId: z.string(), focus: z.array(z.string()).optional() }),
+  z.object({ kind: z.literal('pa-find'), tf: z.string(), target: z.string() }),
+  z.object({ kind: z.literal('pa-level'), tf: z.string(), levelType: z.enum(['support', 'resistance']), evalDifficulty: z.enum(['easy', 'medium', 'hard']) }),
+  z.object({ kind: z.literal('pa-context'), tf: z.string(), patternType: z.string(), direction: z.enum(['bull', 'bear']) }),
+  z.object({ kind: z.literal('challenge'), defaultTf: z.string(), entry: z.number() }),
+]);
+type Params = z.infer<typeof ParamsSchema>;
+
+// ------------------------------------------------------------------ вспомогательное
+
+export interface TaskEnvelope {
+  taskId: string;
+  taskToken: string;
+  module: ModuleId;
+  difficulty: Difficulty;
+  symbol: TaskSymbol;
+  algoVersion: string;
+  expiresAt: UtcMs;
+  timeline: { mode: 'relative' | 'absolute' };
+  decisionTime: UtcMs;
+  series: Partial<Record<TaskTimeframe, Candle[]>>;
+  payload: Record<string, unknown>;
+}
+
+interface Draft {
+  T: UtcMs;
+  seed: number;
+  shiftMs: number;
+  tf: TaskTimeframe;
+  params: Params;
+  series: Partial<Record<TaskTimeframe, Candle[]>>;
+  payload: Record<string, unknown>;
+}
+
+const toSeed = (n: number) => n >>> 0;
+const rngOf = (seed: number, salt: number) => mulberry32((seed ^ salt) | 0);
+
+function symbolFor(req: { symbol?: TaskSymbol }, baseSeed: number): TaskSymbol {
+  return req.symbol ?? SYMBOLS[randInt(rngOf(baseSeed, 0x51b0), SYMBOLS.length)]!;
+}
+
+function rangeOf(deps: ServerDeps): { from: UtcMs; to: UtcMs } {
+  const cutoff = cutoffOf(deps.now());
+  const r = deps.range ?? { from: ARCHIVE_START, to: cutoff };
+  return { from: r.from, to: Math.min(r.to, cutoff) };
+}
+
+/** Детерминированный по seed отрезок [from, to) из `len` свечей tf внутри доступного диапазона. */
+function pickSegment(deps: ServerDeps, seed: number, tf: TaskTimeframe, len: number, minLen: number): { from: UtcMs; to: UtcMs } | null {
+  const step = TIMEFRAME_MS[tf];
+  const r = rangeOf(deps);
+  const from = Math.ceil(r.from / step) * step;
+  const to = Math.floor(r.to / step) * step;
+  const available = Math.floor((to - from) / step);
+  const n = Math.min(len, available);
+  if (n < minLen) return null;
+  const start = randInt(rngOf(seed, 0x5eed), available - n + 1);
+  return { from: from + start * step, to: from + (start + n) * step };
+}
+
+const isoOf = (c: Candle) => c.openTime;
+
+/** Совпадают ли ряды, увиденные генератором и восстановленные при grade. */
+function sameSeries(a: readonly Candle[], b: readonly Candle[]): boolean {
+  return a.length === b.length && a.length > 0 && isoOf(a[0]!) === isoOf(b[0]!) && isoOf(a[a.length - 1]!) === isoOf(b[b.length - 1]!);
+}
+
+export async function withPartial(
+  deps: ServerDeps,
+  symbol: string,
+  tf: TaskTimeframe,
+  visible: Candle[],
+  T: UtcMs,
+): Promise<Candle[] | null> {
+  const bucket = floorTo(T, TIMEFRAME_MS[tf]);
+  if (bucket === T) return visible;
+  const minutes = await loadMinutes(deps.loader, symbol, bucket, T);
+  if (!minutes) return null; // пропуск 1m: сценарий отбраковывается (ADR-0006 п.5)
+  return sliceAt({ [tf]: visible, '1m': minutes }, T)[tf] ?? visible;
+}
+
+// ------------------------------------------------------------------ next
+
+export async function nextTask(module: ModuleId, req: NextRequest, deps: ServerDeps): Promise<TaskEnvelope> {
+  const now = deps.now();
+  const baseSeed = toSeed(deps.newSeed());
+  const symbol = symbolFor(req, baseSeed);
+  const excluded = new Set(req.exclude ?? []);
+  const idOf = (T: UtcMs) => taskIdFor(module, symbol, T, deps.secret);
+
+  for (let attempt = 0; attempt < MAX_TRIES; attempt++) {
+    const seed = toSeed(baseSeed + attempt * 0x9e3779b1);
+    let draft: Draft | null;
+    if (req.module === 'market-structure') draft = await buildMs(req, symbol, seed, deps, (T) => excluded.has(idOf(T)));
+    else if (req.module === 'price-action') draft = await buildPa(req, symbol, seed, deps);
+    else draft = await buildChallenge(req, symbol, seed, deps);
+    if (!draft || excluded.has(idOf(draft.T))) continue;
+
+    const { token, header } = seal({
+      header: { module, symbol, difficulty: req.difficulty },
+      sealed: { T: draft.T, seed: draft.seed, shiftMs: draft.shiftMs, tf: draft.tf, params: draft.params },
+      now,
+      secret: deps.secret,
+    });
+    return {
+      taskId: idOf(draft.T),
+      taskToken: token,
+      module,
+      difficulty: req.difficulty,
+      symbol,
+      algoVersion: ALGO_VERSION,
+      expiresAt: header.exp,
+      timeline: { mode: module === 'challenge' ? 'relative' : 'absolute' },
+      decisionTime: draft.T - draft.shiftMs,
+      series: draft.series,
+      payload: draft.payload,
+    };
+  }
+  throw new ApiError(404, 'not_found', 'No suitable task situation found for the request');
+}
+
+type MsReq = Extract<NextRequest, { module: 'market-structure' }>;
+
+async function buildMs(req: MsReq, symbol: TaskSymbol, seed: number, deps: ServerDeps, isExcludedId: (T: UtcMs) => boolean): Promise<Draft | null> {
+  const { tf, difficulty } = req;
+  const depth = MS_DEPTH[tf];
+  const seg = pickSegment(deps, seed, tf, depth + SEGMENT_EXTRA, depth + 50);
+  if (!seg) return null;
+  const candles = await deps.loader.candles(symbol, tf, seg.from, seg.to);
+  const fullFrom = seg.from + depth * TIMEFRAME_MS[tf];
+  const common = {
+    candles,
+    tf,
+    difficulty,
+    seed,
+    ...(req.focus ? { focus: req.focus as SkillId[] } : {}),
+    isExcluded: (T: UtcMs) => T < fullFrom || (deps.gridStepMs !== undefined && T % deps.gridStepMs !== 0) || isExcludedId(T),
+    maxT: seg.to,
+    ...(deps.maxAttempts ? { maxAttempts: deps.maxAttempts } : {}),
+  };
+
+  if (req.mode === 'mark') {
+    const sel = selectMsMarkTask(common);
+    if (!sel) return null;
+    const visible = await loadClosedBefore(deps.loader, symbol, tf, sel.T);
+    if (!sameSeries(visible, sel.visible)) return null;
+    const shown = await withPartial(deps, symbol, tf, visible, sel.T);
+    if (!shown) return null;
+    return {
+      T: sel.T,
+      seed,
+      shiftMs: 0,
+      tf,
+      params: { kind: 'ms-mark', tf, focus: sel.focus, windowSize: sel.windowSize },
+      series: { [tf]: shown },
+      payload: {
+        kind: 'ms-mark',
+        tf,
+        concepts: sel.concepts,
+        /** Что именно отметить сверх базы (hard); [] для easy/medium. */
+        focus: sel.focus,
+        tools: sel.tools,
+        windowCandles: sel.windowSize,
+        requiredCount: sel.requiredCount,
+        scoped: sel.scoped,
+        referenceKey: `ms.reference.${difficulty}`,
+        window: { fromTime: visible[sel.window.fromIndex]!.openTime, toTime: visible[sel.window.toIndex]!.openTime },
+      },
+    };
+  }
+
+  const sel = selectMsQuestionTask(common);
+  if (!sel) return null;
+  const visible = await loadClosedBefore(deps.loader, symbol, tf, sel.T);
+  if (!sameSeries(visible, sel.visible)) return null;
+  const shown = await withPartial(deps, symbol, tf, visible, sel.T);
+  if (!shown) return null;
+  const q = sel.question;
+  return {
+    T: sel.T,
+    seed,
+    shiftMs: 0,
+    tf,
+    params: { kind: 'ms-question', tf, questionId: q.questionId, ...(req.focus ? { focus: req.focus } : {}) },
+    series: { [tf]: shown },
+    payload: {
+      kind: 'ms-question',
+      tf,
+      questionId: q.questionId,
+      promptKey: q.promptKey,
+      promptParams: q.promptParams,
+      options: q.options,
+      ...(q.highlight ? { highlight: q.highlight } : {}),
+    },
+  };
+}
+
+const TARGETS_BY_SKILL: Partial<Record<SkillId, PatternType[]>> = {
+  'pa-engulfing': ['engulfing'],
+  'pa-pin-bar': ['pin-bar'],
+  'pa-inside-bar': ['inside-bar'],
+  'pa-doji': ['doji'],
+  'pa-star': ['morning-star', 'evening-star'],
+};
+
+type PaReq = Extract<NextRequest, { module: 'price-action' }>;
+
+async function buildPa(req: PaReq, symbol: TaskSymbol, seed: number, deps: ServerDeps): Promise<Draft | null> {
+  const { tf, difficulty } = req;
+  const depth = depthOf(tf);
+  const seg = pickSegment(deps, seed, tf, depth + SEGMENT_EXTRA, depth + 50);
+  if (!seg) return null;
+  const htfTf = HTF_TF[tf];
+  const [candles, htf] = await Promise.all([
+    deps.loader.candles(symbol, tf, seg.from, seg.to),
+    req.taskType === 'context'
+      ? deps.loader.candles(symbol, htfTf, seg.from - depthOf(htfTf) * TIMEFRAME_MS[htfTf], seg.to)
+      : Promise.resolve([] as Candle[]),
+  ]);
+  const base = { candles, tf, difficulty, seed, minHistory: depth, ...(deps.maxAttempts ? { maxAttempts: deps.maxAttempts } : {}) };
+
+  if (req.taskType === 'find-pattern') {
+    const targets = (req.focus ?? []).flatMap((s) => TARGETS_BY_SKILL[s as SkillId] ?? []);
+    const pick = pickFindPattern({ ...base, ...(targets.length ? { targets } : {}) });
+    if (!pick) return null;
+    const visible = await loadClosedBefore(deps.loader, symbol, tf, pick.T);
+    if (visible.length !== depth) return null;
+    const window = { fromIndex: visible.length - FIND_WINDOW, toIndex: visible.length - 1 };
+    if (buildPatternAlgoMarkSet(visible, pick.target, window).required.length === 0) return null; // эталон при grade пуст
+    return {
+      T: pick.T,
+      seed,
+      shiftMs: 0,
+      tf,
+      params: { kind: 'pa-find', tf, target: pick.target },
+      series: { [tf]: visible },
+      payload: {
+        kind: 'pa-find',
+        tf,
+        target: pick.target,
+        window: { fromTime: visible[window.fromIndex]!.openTime, toTime: visible[window.toIndex]!.openTime },
+      },
+    };
+  }
+
+  if (req.taskType === 'draw-level') {
+    const pick = pickLevelTask(base);
+    if (!pick) return null;
+    const visible = await loadClosedBefore(deps.loader, symbol, tf, pick.T);
+    if (visible.length !== depth) return null;
+    const evalDifficulty = pick.relaxedTo ?? difficulty;
+    try {
+      gradeLevel(visible, pick.levelType, 0.0001, evalDifficulty); // эталон должен восстанавливаться
+    } catch {
+      return null;
+    }
+    return {
+      T: pick.T,
+      seed,
+      shiftMs: 0,
+      tf,
+      params: { kind: 'pa-level', tf, levelType: pick.levelType, evalDifficulty },
+      series: { [tf]: visible },
+      payload: { kind: 'pa-level', tf, levelType: pick.levelType, tolerancePct: LEVEL_TOLERANCE_PCT },
+    };
+  }
+
+  const pick = pickContextTask({ ...base, htf });
+  if (!pick) return null;
+  const visible = await loadClosedBefore(deps.loader, symbol, tf, pick.T);
+  if (visible.length !== depth) return null;
+  const htfVisible = htfTf === tf ? visible : await loadClosedBefore(deps.loader, symbol, htfTf, pick.T);
+  const rec = reconstructContext(visible, htfVisible, pick.T, pick.pattern.type, pick.pattern.direction as 'bull' | 'bear');
+  if (!rec) return null;
+  return {
+    T: pick.T,
+    seed,
+    shiftMs: 0,
+    tf,
+    params: { kind: 'pa-context', tf, patternType: rec.pattern.type, direction: rec.pattern.direction as 'bull' | 'bear' },
+    series: htfTf === tf ? { [tf]: visible } : { [tf]: visible, [htfTf]: htfVisible },
+    payload: {
+      kind: 'pa-context',
+      tf,
+      pattern: patternToMark(visible, rec.pattern),
+      factorOptions: ['sweep', 'order-block', 'key-level', 'htf-trend'],
+    },
+  };
+}
+
+function reconstructContext(visible: Candle[], htfVisible: Candle[], T: UtcMs, type: string, direction: 'bull' | 'bear') {
+  const last = visible.length - 1;
+  const pattern = detectPatterns(visible).find((p) => p.type === type && p.direction === direction && p.lastIndex === last && p.firstIndex >= 1);
+  if (!pattern) return null;
+  try {
+    return { pattern, ref: computeContext(visible, pattern, htfClosedAt(htfVisible, T)) };
+  } catch {
+    return null;
+  }
+}
+
+// ------------------------------------------------------------------ Challenge next
+
+function shiftCandle(c: Candle, shift: number): Candle {
+  return { ...c, openTime: c.openTime - shift, closeTime: c.closeTime - shift };
+}
+
+const TIME_META = ['confirmedTime', 'eventTime', 'middleTime'];
+/** Метка на шкале задания; id заменяется (исходные id содержат реальное время). */
+export function shiftMark(m: Mark, shift: number, id: string): Mark {
+  const meta = m.meta ? { ...m.meta } : undefined;
+  if (meta) for (const k of TIME_META) if (typeof meta[k] === 'number') meta[k] = (meta[k] as number) - shift;
+  return { ...m, id, anchors: m.anchors.map((a) => ({ ...a, time: a.time - shift })), ...(meta ? { meta } : {}) };
+}
+
+type ChReq = Extract<NextRequest, { module: 'challenge' }>;
+
+async function buildChallenge(req: ChReq, symbol: TaskSymbol, seed: number, deps: ServerDeps): Promise<Draft | null> {
+  const r = rangeOf(deps);
+  const earliest = Math.ceil((r.from + (deps.warmupMs ?? 400 * DAY_MS)) / BASE_MS) * BASE_MS;
+  const latest = Math.floor((r.to - CHALLENGE_FUTURE_MS) / BASE_MS) * BASE_MS;
+  const span = latest - earliest;
+  if (span < DAY_MS) return null;
+  const zoneLen = Math.min(ZONE_MS, Math.floor(span / DAY_MS) * DAY_MS);
+  const zoneFrom = earliest + randInt(rngOf(seed, 0x20e), Math.floor((span - zoneLen) / BASE_MS) + 1) * BASE_MS;
+  let zone = await ChallengeZone.load(deps.loader, symbol, zoneFrom, zoneFrom + zoneLen, cutoffOf(deps.now()));
+  if (deps.gridStepMs && deps.gridStepMs !== BASE_MS) zone = zone.withStep(deps.gridStepMs);
+
+  const wait = (req.focus ?? []).includes('challenge-wait');
+  const pick = pickChallengeScenario({
+    source: zone.asSource(),
+    difficulty: req.difficulty,
+    seed,
+    ...(wait ? { waitShare: 0.6 } : {}),
+    ...(deps.maxAttempts ? { maxAttempts: deps.maxAttempts } : {}),
+  });
+  if (!pick || !Number.isFinite(pick.entry)) return null;
+  const T = pick.T;
+
+  const dayStart = floorTo(T, DAY_MS);
+  const minutes = dayStart === T ? [] : await loadMinutes(deps.loader, symbol, dayStart, T);
+  if (!minutes) return null;
+
+  const source = zone.asSource();
+  const tfs: TaskTimeframe[] = ['15m', '1h', '4h', '1d'];
+  const closed = Object.fromEntries(tfs.map((tf) => [tf, source.closedAt(tf, T) as Candle[]])) as Record<TaskTimeframe, Candle[]>;
+  const sliced = sliceAt({ ...closed, '1m': minutes }, T);
+
+  // Скрытый якорь: сдвиг на целое число суток (сетка 4h/1d сохраняется), реальная дата не раскрывается.
+  const offDays = 1000 + randInt(rngOf(seed, 0xa5a5), 3000);
+  const shiftMs = (Math.floor(T / DAY_MS) - offDays) * DAY_MS;
+  const series = Object.fromEntries(tfs.map((tf) => [tf, (sliced[tf] ?? []).map((c) => shiftCandle(c, shiftMs))])) as Record<TaskTimeframe, Candle[]>;
+  const hints = pick.hints?.map((m, i) => shiftMark(m, shiftMs, `hint:${i}`));
+
+  return {
+    T,
+    seed,
+    shiftMs,
+    tf: pick.defaultTf,
+    params: { kind: 'challenge', defaultTf: pick.defaultTf, entry: pick.entry },
+    series,
+    payload: {
+      kind: 'challenge',
+      defaultTf: pick.defaultTf,
+      entryPrice: pick.entry,
+      reasonOptions: [...REASON_CODES],
+      timeLimitCandles: { ...TIME_LIMIT_CANDLES },
+      ...(hints ? { hints } : {}),
+    },
+  };
+}
+
+// ------------------------------------------------------------------ grade
+
+export interface GradeResultApi {
+  taskId: string;
+  module: ModuleId;
+  algoVersion: string;
+  verdict: Verdict;
+  score: number;
+  task: {
+    module: ModuleId;
+    difficulty: Difficulty;
+    symbol: TaskSymbol;
+    tf: TaskTimeframe | null;
+    reveal: { decisionTime: UtcMs; shiftMs: number };
+    taskKind: string;
+  };
+  skillOutcomes: SkillOutcome[];
+  errors: GradeError[];
+  reference: Mark[];
+  detail: Record<string, unknown>;
+  feedback: Feedback;
+  replay?: { tf: TaskTimeframe; candles: Candle[]; exitIndex: number | null };
+  /** Расширение контракта: как определён исход и где сработал (шкала задания). Только challenge. */
+  resolution?: { method: string; triggerTime: UtcMs; triggerTf: string };
+}
+
+interface Core {
+  verdict: Verdict;
+  score: number;
+  skillOutcomes: SkillOutcome[];
+  errors: GradeError[];
+  reference: Mark[];
+  detail: Record<string, unknown>;
+  ok?: { code: never; params?: Record<string, string | number>; markIds?: string[] }[];
+  toleranceCandles?: number;
+  replay?: GradeResultApi['replay'];
+  resolution?: GradeResultApi['resolution'];
+}
+
+const mismatch = (path: string, message: string) => validationError('INVALID_TYPE', path, message);
+
+export async function gradeTask(module: ModuleId, req: GradeRequest, deps: ServerDeps): Promise<GradeResultApi> {
+  const { header, sealed } = open(req.taskToken, deps.now(), deps.secret);
+  if (header.module !== module) throw mismatch('taskToken', 'Token belongs to another module');
+  const parsed = ParamsSchema.safeParse(sealed.params);
+  if (!parsed.success) throw new ApiError(401, 'invalid_token_signature', 'Invalid task token');
+  const params = parsed.data;
+  const answer = req.answer;
+  if (answer.kind !== params.kind) throw mismatch('answer.kind', 'Answer kind does not match the task');
+
+  const symbol = header.symbol;
+  const T = sealed.T;
+  const ctx = { deps, symbol, T, difficulty: header.difficulty };
+  let core: Core;
+  let tf: TaskTimeframe | null;
+  switch (params.kind) {
+    case 'ms-mark':
+      tf = params.tf as TaskTimeframe;
+      core = await gradeMsMark(ctx, params, answer as Extract<Answer, { kind: 'ms-mark' }>);
+      break;
+    case 'ms-question':
+      tf = params.tf as TaskTimeframe;
+      core = await gradeMsQuestionTask(ctx, params, answer as Extract<Answer, { kind: 'ms-question' }>);
+      break;
+    case 'pa-find':
+      tf = params.tf as TaskTimeframe;
+      core = await gradePaFind(ctx, params, answer as Extract<Answer, { kind: 'pa-find' }>);
+      break;
+    case 'pa-level':
+      tf = params.tf as TaskTimeframe;
+      core = await gradePaLevel(ctx, params, answer as Extract<Answer, { kind: 'pa-level' }>);
+      break;
+    case 'pa-context':
+      tf = params.tf as TaskTimeframe;
+      core = await gradePaContext(ctx, params, answer as Extract<Answer, { kind: 'pa-context' }>);
+      break;
+    case 'challenge':
+      tf = params.defaultTf as TaskTimeframe;
+      core = await gradeChallengeTask(ctx, params, answer as ChallengeAnswer, sealed.shiftMs);
+      break;
+  }
+
+  const feedback = buildFeedback({
+    module,
+    verdict: core.verdict,
+    score: core.score,
+    errors: core.errors,
+    skillOutcomes: core.skillOutcomes,
+    ...(core.ok ? { ok: core.ok } : {}),
+    ...(core.toleranceCandles !== undefined ? { toleranceCandles: core.toleranceCandles } : {}),
+  });
+  return {
+    taskId: taskIdFor(module, symbol, T, deps.secret),
+    module,
+    algoVersion: header.algoVersion,
+    verdict: core.verdict,
+    score: core.score,
+    task: {
+      module,
+      difficulty: header.difficulty,
+      symbol,
+      tf,
+      reveal: { decisionTime: T, shiftMs: sealed.shiftMs },
+      taskKind: params.kind,
+    },
+    skillOutcomes: core.skillOutcomes,
+    errors: core.errors,
+    reference: core.reference,
+    detail: core.detail,
+    feedback,
+    ...(core.replay ? { replay: core.replay } : {}),
+    ...(core.resolution ? { resolution: core.resolution } : {}),
+  };
+}
+
+interface GradeCtx {
+  deps: ServerDeps;
+  symbol: TaskSymbol;
+  T: UtcMs;
+  difficulty: Difficulty;
+}
+
+async function visibleFor(c: GradeCtx, tf: TaskTimeframe): Promise<Candle[]> {
+  const visible = await loadClosedBefore(c.deps.loader, c.symbol, tf, c.T);
+  if (visible.length < 50) throw new ApiError(404, 'not_found', 'No archive data for the task period');
+  return visible;
+}
+
+const markGradeOf = (g: MarkGrade): MarkGrade => ({
+  matched: g.matched,
+  missed: g.missed,
+  extra: g.extra,
+  ignored: g.ignored,
+  toleranceCandles: g.toleranceCandles,
+});
+
+async function gradeMsMark(c: GradeCtx, p: Extract<Params, { kind: 'ms-mark' }>, a: Extract<Answer, { kind: 'ms-mark' }>): Promise<Core> {
+  const tf = p.tf as TaskTimeframe;
+  const visible = await visibleFor(c, tf);
+  const n = visible.length;
+  const window = { fromIndex: Math.max(0, n - p.windowSize), toIndex: n - 1 };
+  const concepts = msConceptsFor(c.difficulty, p.focus as SkillId[] | undefined);
+  const r = analyzeStructure(visible, msParamsFor(c.difficulty), { tf });
+  const algo = buildAlgoMarkSet(r, { concepts, window });
+  const g = gradeMarks(a.marks, algo, {
+    candles: visible,
+    window,
+    concepts,
+    toleranceCandles: 2,
+    iouMin: 0.5,
+    levelPricePct: 0.1,
+    scoped: concepts.includes('internal-external'),
+  });
+  return {
+    verdict: g.verdict,
+    score: g.score,
+    skillOutcomes: g.skillOutcomes,
+    errors: g.errors,
+    reference: algo.required,
+    detail: { kind: 'ms-mark', marks: markGradeOf(g) },
+    toleranceCandles: g.toleranceCandles,
+  };
+}
+
+async function gradeMsQuestionTask(c: GradeCtx, p: Extract<Params, { kind: 'ms-question' }>, a: Extract<Answer, { kind: 'ms-question' }>): Promise<Core> {
+  const tf = p.tf as TaskTimeframe;
+  if (a.questionId !== p.questionId) throw mismatch('answer.questionId', 'Question does not match the task');
+  const visible = await visibleFor(c, tf);
+  const q = rebuildMsQuestion(visible, c.difficulty, tf, p.questionId);
+  if (!q) throw new ApiError(404, 'not_found', 'Question cannot be reconstructed');
+  if (!q.options.some((o) => o.id === a.optionId)) throw mismatch('answer.optionId', 'Unknown option');
+  const g = gradeMsQuestion(q, a.optionId);
+  return { verdict: g.verdict, score: g.score, skillOutcomes: g.skillOutcomes, errors: g.errors, reference: [], detail: g.detail };
+}
+
+async function gradePaFind(c: GradeCtx, p: Extract<Params, { kind: 'pa-find' }>, a: Extract<Answer, { kind: 'pa-find' }>): Promise<Core> {
+  const tf = p.tf as TaskTimeframe;
+  const target = p.target as PatternType;
+  const visible = await visibleFor(c, tf);
+  const window = { fromIndex: visible.length - FIND_WINDOW, toIndex: visible.length - 1 };
+  const algo = buildPatternAlgoMarkSet(visible, target, window);
+  const g = gradeMarks(a.marks, algo, patternGradeContext(visible, target, window));
+  return {
+    verdict: g.verdict,
+    score: g.score,
+    skillOutcomes: g.skillOutcomes,
+    errors: g.errors,
+    reference: algo.required,
+    detail: { kind: 'pa-find', marks: markGradeOf(g) },
+    toleranceCandles: g.toleranceCandles,
+  };
+}
+
+async function gradePaLevel(c: GradeCtx, p: Extract<Params, { kind: 'pa-level' }>, a: Extract<Answer, { kind: 'pa-level' }>): Promise<Core> {
+  const visible = await visibleFor(c, p.tf as TaskTimeframe);
+  const g = gradeLevel(visible, p.levelType, a.price, p.evalDifficulty);
+  return {
+    verdict: g.verdict,
+    score: g.score,
+    skillOutcomes: g.skillOutcomes,
+    errors: g.errors,
+    reference: [levelToMark(g.reference, visible)],
+    detail: g.detail,
+    ok: g.ok as Core['ok'],
+  };
+}
+
+async function gradePaContext(c: GradeCtx, p: Extract<Params, { kind: 'pa-context' }>, a: Extract<Answer, { kind: 'pa-context' }>): Promise<Core> {
+  const tf = p.tf as TaskTimeframe;
+  const htfTf = HTF_TF[tf];
+  const visible = await visibleFor(c, tf);
+  const htfVisible = htfTf === tf ? visible : await loadClosedBefore(c.deps.loader, c.symbol, htfTf, c.T);
+  const rec = reconstructContext(visible, htfVisible, c.T, p.patternType, p.direction);
+  if (!rec) throw new ApiError(404, 'not_found', 'Pattern cannot be reconstructed');
+  const g = gradeContext(rec.ref, { ...a.factors, significant: a.significant }, htfTf);
+  return {
+    verdict: g.verdict,
+    score: g.score,
+    skillOutcomes: g.skillOutcomes,
+    errors: g.errors,
+    reference: [patternToMark(visible, rec.pattern)],
+    detail: g.detail,
+    ok: g.ok as Core['ok'],
+  };
+}
+
+// ---- Challenge grade
+
+async function gradeChallengeTask(
+  c: GradeCtx,
+  p: Extract<Params, { kind: 'challenge' }>,
+  a: ChallengeAnswer,
+  shift: number,
+): Promise<Core> {
+  const { deps, symbol, T } = c;
+  const defaultTf = p.defaultTf as TaskTimeframe;
+  const htfTf = HTF_TF[defaultTf];
+  const entry = p.entry;
+
+  if (a.side !== 'WAIT') {
+    if (Math.abs((a.entry as number) - entry) > TICK[symbol]) throw validationError('ENTRY_MISMATCH', 'answer.entry');
+    const long = a.side === 'LONG';
+    if (long ? (a.sl as number) >= entry : (a.sl as number) <= entry) throw validationError('SL_WRONG_SIDE', 'answer.sl');
+    if (long ? (a.tp as number) <= entry : (a.tp as number) >= entry) throw validationError('TP_WRONG_SIDE', 'answer.tp');
+  }
+
+  const [work, htf] = await Promise.all([
+    loadClosedBefore(deps.loader, symbol, defaultTf, T),
+    loadClosedBefore(deps.loader, symbol, htfTf, T),
+  ]);
+  if (work.length < 50) throw new ApiError(404, 'not_found', 'No archive data for the task period');
+  const facts: ChallengeFacts = computeChallengeFacts({ candles: work, tf: defaultTf, htf, entry });
+
+  const provider = futureProviderFor(deps.loader, symbol, cutoffOf(deps.now()), { aggTradesTimeoutMs: deps.aggTradesTimeoutMs });
+  const replayTf = a.side === 'WAIT' ? defaultTf : a.tf;
+  const limit = TIME_LIMIT_CANDLES[replayTf];
+
+  let outcome = null;
+  if (a.side !== 'WAIT') {
+    try {
+      outcome = await resolveTrade(
+        { side: a.side, entry, sl: a.sl as number, tp: a.tp as number, T, tf: a.tf, limitCandles: limit },
+        provider,
+      );
+    } catch (e) {
+      if (e instanceof Error && e.message === 'NO_FUTURE_CANDLES') throw new ApiError(404, 'not_found', 'No archive data after the decision time');
+      if (e instanceof Error && e.message === 'INVALID_POSITION') throw validationError('INVALID_TYPE', 'answer');
+      throw e;
+    }
+  }
+
+  const g = gradeChallenge(
+    { side: a.side, tf: a.tf, entry, sl: a.sl, tp: a.tp, reasons: a.reasons as never },
+    facts,
+    outcome,
+  );
+
+  const future = (await provider.candles(replayTf, T, limit)).filter((x) => x.closed);
+  let exitIndex: number | null = null;
+  let shown = future;
+  if (outcome) {
+    const i = future.findIndex((x) => outcome!.exitTime >= x.openTime && outcome!.exitTime <= x.closeTime);
+    if (i >= 0) {
+      exitIndex = i;
+      shown = future.slice(0, i + 1);
+    }
+  }
+  const detail = g.detail.outcome
+    ? { ...g.detail, outcome: { ...g.detail.outcome, exitTime: g.detail.outcome.exitTime - shift } }
+    : g.detail;
+
+  const T2 = T - shift;
+  const reference: Mark[] = facts.ref
+    ? [
+        {
+          id: 'algo:position:reference',
+          kind: 'position',
+          anchors: [
+            { time: T2, price: entry },
+            { time: T2, price: facts.ref.sl },
+            { time: T2, price: facts.ref.tp },
+          ],
+          scope: null,
+          direction: facts.refSide === 'LONG' ? 'bull' : 'bear',
+          meta: { side: facts.refSide, sl: facts.ref.sl, tp: facts.ref.tp, rr: facts.ref.rr },
+          author: 'algo',
+        },
+      ]
+    : [];
+
+  return {
+    verdict: g.verdict,
+    score: g.score,
+    skillOutcomes: g.skillOutcomes,
+    errors: g.errors,
+    reference,
+    detail: { kind: 'challenge', challenge: detail },
+    ok: g.ok as Core['ok'],
+    replay: { tf: replayTf, candles: shown.map((x) => shiftCandle(x, shift)), exitIndex },
+    ...(outcome ? { resolution: { method: outcome.method, triggerTime: outcome.triggerTime - shift, triggerTf: outcome.triggerTf } } : {}),
+  };
+}

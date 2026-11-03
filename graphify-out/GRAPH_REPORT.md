@@ -1,7 +1,7 @@
 # Graph Report - Varianto  (2026-11-03)
 
 ## Corpus Check
-- 387 files · ~199,549 words
+- 387 files · ~199,669 words
 - Verdict: corpus is large enough that graph structure adds value.
 - Unclassified: 32 file(s) not represented in the graph (top: .csv 26, (none) 4, .example 1)
 
@@ -11,7 +11,7 @@
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `def12be3`
+- Built from commit: `1872be70`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
