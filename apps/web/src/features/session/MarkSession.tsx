@@ -37,6 +37,8 @@ export interface MarkSessionProps {
   /** Модульная сводка внутри разбора. */
   resultExtra?: (flow: FlowState) => ReactNode;
   bars: number;
+  /** Окно оценки: вне него график затемнён. */
+  highlightRange?: { fromTime: number; toTime: number };
   candles: Candle[];
 }
 
@@ -71,6 +73,7 @@ export function MarkSession(p: MarkSessionProps) {
       tool={result ? 'select' : ci.tool}
       onMarksChange={result ? () => undefined : ci.setMarks}
       bars={p.bars}
+      {...(p.highlightRange ? { highlightRange: p.highlightRange } : {})}
       {...(result && showRef ? { readOnlyMarks: result.reference } : {})}
       {...(states ? { markStates: states } : {})}
       selectedId={ci.selectedId}

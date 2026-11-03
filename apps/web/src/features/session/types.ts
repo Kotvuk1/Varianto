@@ -22,6 +22,8 @@ export interface TaskPayloadBase {
 export interface MsMarkPayload extends TaskPayloadBase {
   kind: 'ms-mark';
   concepts: string[];
+  /** Явный набор проверяемых понятий (ALGO 1.1.0); у старых заданий нет. */
+  focus?: string[];
   tools: string[];
   referenceKey: string;
   window: { fromTime: number; toTime: number };

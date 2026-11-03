@@ -29,6 +29,7 @@ export interface TaskChartProps {
   onMarksChange: (m: Mark[]) => void;
   /** Сколько последних свечей показать при открытии. */
   bars: number;
+  highlightRange?: { fromTime: number; toTime: number };
   readOnlyMarks?: Mark[];
   markStates?: Record<string, MarkState>;
   selectedId?: string | null;
@@ -40,6 +41,9 @@ export interface TaskChartProps {
 /** График задания: только прошлое (ряд приходит с сервера), без догрузки истории. */
 export function TaskChart(p: TaskChartProps) {
   const series = useMemo<CandleSeries>(() => ({ symbol: p.symbol, tf: p.tf, source: 'binance-archive', candles: p.candles }), [p.symbol, p.tf, p.candles]);
+  const hf = p.highlightRange?.fromTime;
+  const ht = p.highlightRange?.toTime;
+  const hr = useMemo(() => (hf !== undefined && ht !== undefined ? { fromTime: hf, toTime: ht } : undefined), [hf, ht]);
   const visibleRange = useMemo(() => tailRange(p.candles, p.tf, p.bars), [p.candles, p.tf, p.bars]);
   return (
     <TradingChart
@@ -48,6 +52,7 @@ export function TaskChart(p: TaskChartProps) {
       tool={p.tool}
       onMarksChange={p.onMarksChange}
       {...(visibleRange ? { visibleRange } : {})}
+      {...(hr ? { highlightRange: hr } : {})}
       {...(p.readOnlyMarks ? { readOnlyMarks: p.readOnlyMarks } : {})}
       {...(p.markStates ? { markStates: p.markStates } : {})}
       selectedId={p.selectedId ?? null}

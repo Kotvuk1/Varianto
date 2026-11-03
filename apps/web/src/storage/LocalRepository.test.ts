@@ -123,4 +123,13 @@ describe('LocalRepository: попытки', () => {
     expect(s?.recent).toHaveLength(20);
     expect(s?.attempts).toBe(25);
   });
+
+  it('навык верен при correct/total >= 0.8 (OK_THRESHOLD из @tl/core)', async () => {
+    const out = (correct: number, total: number) => ({ verdict: 'partial' as const, skillOutcomes: [{ skill: 'bos', correct, total }] });
+    await repo.saveAttempt(attempt({ grade: out(4, 5), createdAt: 1 }));
+    await repo.saveAttempt(attempt({ grade: out(3, 5), createdAt: 2 }));
+    const [bos] = await repo.getSkillStats();
+    expect(bos!.recent.map((r) => r.ok)).toEqual([true, false]);
+    expect(bos!.correct).toBe(1);
+  });
 });

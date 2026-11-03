@@ -37,10 +37,26 @@ test('PA «Найди модель»: касание свечи, проверк�
 test('PA «Контекст»: ответы, проверка, разбор, следующее, главная', async ({ page }) => {
   await openSession(page, `${PA}/session?type=context&difficulty=easy&tf=1h&symbol=BTCUSDT`);
   await shot(page, 'pa-context-before');
-  await page.getByTestId('check-button').click();
-  await expect(page.getByText('Ответьте на все вопросы и выберите, значима ли модель.').first()).toBeVisible();
-  for (const id of ['sweep', 'ob', 'level', 'significant']) await page.getByTestId(`ctx-${id}`).getByRole('radio', { name: 'Нет' }).click();
-  await page.getByTestId('ctx-trend').getByRole('radio', { name: 'Вверх' }).click();
+  const mobile = (page.viewportSize()?.width ?? 0) < 1024;
+  if (mobile) {
+    // пошагово: один вопрос на шаг, график не меньше 55% высоты, «Далее/Ответить» всегда видна
+    const chartBox = await page.getByTestId('chart').boundingBox();
+    expect(chartBox!.height).toBeGreaterThanOrEqual(844 * 0.55);
+    await expect(page.getByTestId('step-counter')).toHaveText('1/5');
+    for (const id of ['sweep', 'ob', 'level']) {
+      await page.getByTestId(`ctx-${id}`).getByRole('radio', { name: 'Нет' }).click();
+      await page.getByTestId('step-next').click();
+    }
+    await page.getByTestId('ctx-trend').getByRole('radio', { name: 'Вверх' }).click();
+    await page.getByTestId('step-next').click();
+    await expect(page.getByTestId('step-counter')).toHaveText('5/5');
+    await page.getByTestId('ctx-significant').getByRole('radio', { name: 'Нет' }).click();
+  } else {
+    await page.getByTestId('check-button').click();
+    await expect(page.getByText('Ответьте на все вопросы и выберите, значима ли модель.').first()).toBeVisible();
+    for (const id of ['sweep', 'ob', 'level', 'significant']) await page.getByTestId(`ctx-${id}`).getByRole('radio', { name: 'Нет' }).click();
+    await page.getByTestId('ctx-trend').getByRole('radio', { name: 'Вверх' }).click();
+  }
   await page.getByRole('radio', { name: /Старший ТФ/ }).click();
   await expect(page.getByTestId('chart')).toHaveAttribute('data-ready', 'true');
   await checkAndSeeResult(page);

@@ -13,6 +13,7 @@ import type {
 import type { Mark } from '@tl/core';
 import type { TimeIndex } from '../geometry/timeIndex';
 import type { ChartTokens } from '../theme/chartTokens';
+import { dimSpans, type HighlightRange } from './highlight';
 import { buildGeometry, isMarkVisible, type MarkState } from './layout';
 import { lwcProjection } from './lwcProjection';
 import { drawGeometry } from './render';
@@ -35,6 +36,8 @@ export interface PrimitiveState {
   fmt: (price: number) => string;
   /** Состояния меток после проверки (id -> match/missed/extra). */
   states?: Record<string, MarkState>;
+  /** Окно оценки: вне него свечи затемнены. */
+  highlightRange?: HighlightRange;
 }
 
 const ZONE_KINDS = new Set(['order-block', 'fvg']);
@@ -84,6 +87,32 @@ export class DrawingPrimitive implements ISeriesPrimitive<Time> {
           const proj = lwcProjection(chart, series, this.getIndex(), mediaSize.width, mediaSize.height);
           let drawn = 0;
           const centers: { id: string; x: number; y: number }[] = [];
+
+          const hr = st.highlightRange;
+          if (hr) {
+            const spacing = chart.timeScale().options().barSpacing;
+            const xa = proj.timeToX(hr.fromTime);
+            const xb = proj.timeToX(hr.toTime);
+            if (Number.isFinite(xa) && Number.isFinite(xb)) {
+              context.save();
+              context.globalAlpha = 0.6;
+              context.fillStyle = st.tokens.bg;
+              for (const sp of dimSpans(xa, xb, spacing, mediaSize.width)) context.fillRect(sp.x1, 0, sp.x2 - sp.x1, mediaSize.height);
+              context.restore();
+              const edge = xa - spacing / 2;
+              if (edge > 0 && edge < mediaSize.width) {
+                context.save();
+                context.strokeStyle = st.tokens.text1;
+                context.globalAlpha = 0.5;
+                context.setLineDash([4, 4]);
+                context.beginPath();
+                context.moveTo(edge, 0);
+                context.lineTo(edge, mediaSize.height);
+                context.stroke();
+                context.restore();
+              }
+            }
+          }
 
           // Открытая (незакрытая) свеча: пунктирный контур и бейдж «Идёт».
           const oc = st.openCandle;

@@ -16,6 +16,7 @@ import {
 import { TIMEFRAME_MS, type Candle, type CandleSeries, type Mark } from '@tl/core';
 import { DrawingController, type ControllerNotice, type PointerInput } from './interaction/controller';
 import { DrawingPrimitive } from './drawing/DrawingPrimitive';
+import type { HighlightRange } from './drawing/highlight';
 import { lwcProjection } from './drawing/lwcProjection';
 import type { PointerKind } from './drawing/hit';
 import type { ToolId } from './drawing/tools';
@@ -64,6 +65,8 @@ export interface TradingChartProps {
   focus?: { time: number; nonce: number } | null;
   /** Состояния меток после проверки (id -> match/missed/extra): значок в подписи. */
   markStates?: Record<string, 'match' | 'missed' | 'extra'>;
+  /** Окно оценки задания: вне него свечи затемнены, граница окна пунктиром. */
+  highlightRange?: HighlightRange;
 }
 
 const LOCALE = 'ru-RU';
@@ -152,6 +155,7 @@ export function TradingChart(props: TradingChartProps) {
       openBadge: p.openCandleLabel ?? 'Идёт',
       fmt: fmtRef.current,
       ...(p.markStates ? { states: p.markStates } : {}),
+      ...(p.highlightRange ? { highlightRange: p.highlightRange } : {}),
     });
   };
   const pushStateRef = useRef(pushState);
@@ -509,7 +513,7 @@ export function TradingChart(props: TradingChartProps) {
   // --- Метки, выбор, инструмент ---
   useEffect(() => {
     pushStateRef.current();
-  }, [props.marks, props.readOnlyMarks, props.markStates, props.selectedId, props.openCandleLabel, tokens, ready]);
+  }, [props.marks, props.readOnlyMarks, props.markStates, props.highlightRange, props.selectedId, props.openCandleLabel, tokens, ready]);
 
   useEffect(() => {
     controllerRef.current?.reset();

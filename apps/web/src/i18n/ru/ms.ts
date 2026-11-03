@@ -24,6 +24,24 @@ export const msTx = {
 } as const;
 
 /** Что делать в задании (COPY §7), по понятиям. */
+/** Короткие названия понятий для фразы задания («Отметьте … в подсвеченной области»). */
+export const msConceptShort: Partial<Record<SkillId, string>> = {
+  swing: 'Swing High и Swing Low',
+  'structure-labels': 'HH, HL, LH и LL',
+  bos: 'BOS',
+  choch: 'CHoCH',
+  'internal-external': 'внешнюю и внутреннюю структуру',
+  sweep: 'Liquidity sweep',
+  'order-block': 'Order Block',
+  fvg: 'FVG',
+};
+
+export function msFocusTask(focus: readonly SkillId[]): string {
+  const names = focus.map((c) => msConceptShort[c]).filter((x): x is string => !!x);
+  const list = names.length > 1 ? `${names.slice(0, -1).join(', ')} и ${names[names.length - 1]}` : (names[0] ?? '');
+  return `Отметьте ${list} в подсвеченной области.`;
+}
+
 export const msConceptTask: Partial<Record<SkillId, { name: string; task: string; term: string }>> = {
   swing: {
     name: 'Swing High / Swing Low',
@@ -79,12 +97,13 @@ export const msReference = (key: string): string => {
 };
 
 type P = Record<string, string | number> | undefined;
-const fmtTime = (t: unknown) => {
-  if (typeof t !== 'number') return '';
+const DAY_MONTH = new Intl.DateTimeFormat('ru', { day: 'numeric', month: 'long' });
+/** «2 мая, 14:00»: месяц в родительном падеже, время в локальном поясе. */
+export function formatDateTimeRu(t: number): string {
   const d = new Date(t);
-  const mon = d.toLocaleDateString('ru-RU', { month: 'short' }).replace('.', '');
-  return `${d.getDate()} ${mon} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
-};
+  return `${DAY_MONTH.format(d)}, ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+}
+const fmtTime = (t: unknown) => (typeof t === 'number' ? formatDateTimeRu(t) : '');
 const fmtNum = (v: unknown) => (typeof v === 'number' ? String(v).replace(/\B(?=(\d{3})+(?!\d))/g, ' ') : String(v ?? ''));
 
 /** Ключи вопросов и вариантов, которые отдаёт сервер (ALGORITHMS §13.3). */

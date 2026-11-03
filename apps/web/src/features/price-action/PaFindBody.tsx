@@ -1,7 +1,7 @@
 'use client';
 import { useCallback, useMemo, useState } from 'react';
 import { TIMEFRAME_MS, type Mark, type PatternType } from '@tl/core';
-import { formatWhen } from '@/features/terminal/markText';
+import { formatDateTimeRu } from '@/i18n/ru/ms';
 import { paTx } from '@/i18n/ru/pa';
 import { ss } from '@/i18n/ru/session';
 import { Segmented } from '@/ui';
@@ -49,12 +49,13 @@ export function PaFindBody({ envelope, flow, base }: { envelope: TaskEnvelope<Pa
       hintDetails={
         <>
           <p>{info.hint}</p>
-          <p>{paTx.find.window(n, formatWhen(p.window.fromTime))}</p>
+          <p>{paTx.find.window(n, formatDateTimeRu(p.window.fromTime))}</p>
           {choice && <p>{paTx.find.directionHelp}</p>}
         </>
       }
       extraControls={picker}
       candles={candles}
+      highlightRange={p.window}
       bars={n + 12}
       buildAnswer={(marks) => (marks.some((m) => m.kind === 'pattern') ? paFindAnswer(marks, target, dir) : ss.input.noPattern)}
     />

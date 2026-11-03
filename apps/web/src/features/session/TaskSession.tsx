@@ -32,7 +32,7 @@ export function TaskSession({ module, body, base, loadingLabel, children }: Task
     return (
       <SessionLayout
         {...full}
-        hint={<TaskHint text={ss.errors.generic.title} />}
+        hint={null}
         chart={<TaskError error={flow.error} stage="next" onRetry={() => void flow.load()} onAnother={() => void flow.load()} backHref={base.backHref} />}
       />
     );

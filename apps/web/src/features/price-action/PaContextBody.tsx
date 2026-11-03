@@ -5,7 +5,8 @@ import { GradeGlyph } from '@/features/feedback';
 import { TF_LABEL } from '@/features/terminal/dataSource';
 import { paTx } from '@/i18n/ru/pa';
 import { ss } from '@/i18n/ru/session';
-import { Segmented } from '@/ui';
+import { Button, Segmented } from '@/ui';
+import { SubmitButton } from '../session/AnswerParts';
 import { paContextAnswer, type ContextFactors } from '../session/adapters';
 import { AnswerSession } from '../session/AnswerSession';
 import type { SessionBase } from '../session/TaskSession';
@@ -38,6 +39,7 @@ export function PaContextBody({ envelope, flow, base }: { envelope: TaskEnvelope
   const [lvl, setLvl] = useState<YN | null>(null);
   const [trend, setTrend] = useState<ContextFactors['htfTrend'] | null>(null);
   const [sig, setSig] = useState<YN | null>(null);
+  const [step, setStep] = useState(0);
   const busy = flow.phase === 'grading';
   const name = paTx.patterns[(p.pattern.meta?.patternType as keyof typeof paTx.patterns) ?? 'engulfing']?.name ?? '';
   const dir = p.pattern.direction === 'bear' ? paTx.context.dirBear : paTx.context.dirBull;
@@ -45,28 +47,52 @@ export function PaContextBody({ envelope, flow, base }: { envelope: TaskEnvelope
   const candles = envelope.series[tf] ?? envelope.series[p.tf] ?? [];
   const highlight = useMemo(() => [p.pattern], [p.pattern]);
 
+  const fields: { id: string; label: string; options: { value: string; label: string }[]; value: string | null; set: (v: string) => void }[] = [
+    { id: 'sweep', label: paTx.context.sweep, options: yn, value: sweep, set: (v) => setSweep(v as YN) },
+    { id: 'ob', label: paTx.context.orderBlock, options: yn, value: ob, set: (v) => setOb(v as YN) },
+    { id: 'level', label: paTx.context.keyLevel, options: yn, value: lvl, set: (v) => setLvl(v as YN) },
+    {
+      id: 'trend',
+      label: paTx.context.htfTrend(TF_LABEL[htf]),
+      options: (['up', 'down', 'range'] as const).map((v) => ({ value: v, label: paTx.context.trend[v] })),
+      value: trend,
+      set: (v) => setTrend(v as ContextFactors['htfTrend']),
+    },
+    { id: 'significant', label: paTx.context.significant, options: yn, value: sig, set: (v) => setSig(v as YN) },
+  ];
+  const field = (f: (typeof fields)[number]) => (
+    <Row key={f.id} id={f.id} label={f.label}>
+      <Segmented label={f.label} options={f.options} value={f.value ?? ''} onChange={f.set} />
+    </Row>
+  );
   const form = (
     <div role="group" aria-label={paTx.context.groupLabel} aria-disabled={busy || undefined}>
-      <Row id="sweep" label={paTx.context.sweep}>
-        <Segmented label={paTx.context.sweep} options={yn} value={sweep ?? ('' as YN)} onChange={setSweep} />
-      </Row>
-      <Row id="ob" label={paTx.context.orderBlock}>
-        <Segmented label={paTx.context.orderBlock} options={yn} value={ob ?? ('' as YN)} onChange={setOb} />
-      </Row>
-      <Row id="level" label={paTx.context.keyLevel}>
-        <Segmented label={paTx.context.keyLevel} options={yn} value={lvl ?? ('' as YN)} onChange={setLvl} />
-      </Row>
-      <Row id="trend" label={paTx.context.htfTrend(TF_LABEL[htf])}>
-        <Segmented
-          label={paTx.context.htfTrend(TF_LABEL[htf])}
-          options={(['up', 'down', 'range'] as const).map((v) => ({ value: v, label: paTx.context.trend[v] }))}
-          value={trend ?? ('' as 'up')}
-          onChange={setTrend}
-        />
-      </Row>
-      <Row id="significant" label={paTx.context.significant}>
-        <Segmented label={paTx.context.significant} options={yn} value={sig ?? ('' as YN)} onChange={setSig} />
-      </Row>
+      {fields.map(field)}
+    </div>
+  );
+  const cur = fields[step]!;
+  const last = step === fields.length - 1;
+  const stepper = (ctx: { submit: () => void; busy: boolean; status: React.ReactNode }) => (
+    <div data-testid="answer-panel" className="shrink-0 border-t border-border bg-surface-1 pb-[env(safe-area-inset-bottom)]">
+      <div role="group" aria-label={paTx.context.groupLabel}>
+        {field(cur)}
+      </div>
+      {ctx.status}
+      <div className="flex items-center gap-2 px-3 pb-3">
+        <Button variant="ghost" size="lg" disabled={step === 0} onClick={() => setStep(step - 1)} data-testid="step-prev">
+          {ss.prevStep}
+        </Button>
+        <span data-testid="step-counter" className="tnum min-w-10 text-center text-sm text-text-2">
+          {ss.stepCounter(step + 1, fields.length)}
+        </span>
+        {last ? (
+          <SubmitButton onClick={ctx.submit} busy={ctx.busy} label={ss.checkAnswer} className="flex-1" />
+        ) : (
+          <Button variant="primary" size="lg" className="flex-1" disabled={cur.value === null} onClick={() => setStep(step + 1)} data-testid="step-next">
+            {ss.nextStep}
+          </Button>
+        )}
+      </div>
     </div>
   );
 
@@ -145,6 +171,7 @@ export function PaContextBody({ envelope, flow, base }: { envelope: TaskEnvelope
       highlight={highlight}
       chartControls={toggle}
       form={form}
+      mobileBottom={stepper}
       buildAnswer={() =>
         sweep && ob && lvl && trend && sig
           ? paContextAnswer({ sweep: sweep === 'yes', orderBlock: ob === 'yes', keyLevel: lvl === 'yes', htfTrend: trend }, sig === 'yes')

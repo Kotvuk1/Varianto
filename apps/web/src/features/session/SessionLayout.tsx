@@ -44,7 +44,7 @@ export interface SessionLayoutProps {
   title: string;
   subtitle: string;
   counter: string;
-  hint: ReactNode;
+  hint?: ReactNode;
   /** Строка-инструкция инструмента (задания с разметкой). */
   instruction?: ReactNode;
   chart: ReactNode;
@@ -69,21 +69,17 @@ export function SessionLayout({ backHref, title, subtitle, counter, hint, instru
   const [height, setHeight] = useState<SheetHeight>('medium');
   const sheet = !desktop && result;
 
-  const collapse = () => setHeight((h) => (h === 'full' ? 'medium' : 'peek'));
-  const expand = () => setHeight((h) => (h === 'peek' ? 'medium' : 'full'));
+  const toggle = () => setHeight((h) => (h === 'peek' ? 'medium' : 'peek'));
   const sheetControls = (
-    <>
-      {height !== 'peek' && (
-        <Button size="md" variant="ghost" icon={<ChevronDown size={20} strokeWidth={1.75} />} onClick={collapse} data-testid="sheet-collapse">
-          {ss.collapseSheet}
-        </Button>
-      )}
-      {height !== 'full' && (
-        <Button size="md" variant="ghost" icon={<ChevronUp size={20} strokeWidth={1.75} />} onClick={expand} data-testid="sheet-expand">
-          {ss.expandSheet}
-        </Button>
-      )}
-    </>
+    <Button
+      size="md"
+      variant="ghost"
+      icon={height === 'peek' ? <ChevronUp size={20} strokeWidth={1.75} /> : <ChevronDown size={20} strokeWidth={1.75} />}
+      onClick={toggle}
+      data-testid="sheet-toggle"
+    >
+      {height === 'peek' ? ss.expandSheet : ss.collapseSheet}
+    </Button>
   );
 
   return (
@@ -127,7 +123,7 @@ export function SessionLayout({ backHref, title, subtitle, counter, hint, instru
       </div>
 
       {sheet && (
-        <BottomSheet open onClose={collapse} title={ss.resultTitle} height={height} modal={height === 'full'} footer={height === 'peek' ? undefined : result.footer}>
+        <BottomSheet open onClose={() => setHeight('peek')} title={ss.resultTitle} height={height} modal={false} footer={height === 'peek' ? undefined : result.footer}>
           {height === 'peek' ? (
             <div className="flex flex-wrap gap-2">
               {result.footer}

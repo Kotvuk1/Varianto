@@ -28,8 +28,10 @@ export interface AnswerSessionProps {
   highlight?: Mark[];
   /** Строка над графиком: переключатель ТФ. */
   chartControls?: ReactNode;
-  /** Форма ответа. */
+  /** Форма ответа (десктоп - правая панель; мобильный - нижняя панель, если нет mobileBottom). */
   form: ReactNode;
+  /** Своя мобильная панель (пошаговая форма): получает submit и статус. */
+  mobileBottom?: (ctx: { submit: () => void; busy: boolean; status: ReactNode }) => ReactNode;
   /** Ответ или текст ошибки ввода. */
   buildAnswer: () => Answer | string;
   submitLabel?: string;
@@ -85,6 +87,9 @@ export function AnswerSession(p: AnswerSessionProps) {
       instruction={p.chartControls}
       chart={chart}
       bottom={
+        p.mobileBottom ? (
+          p.mobileBottom({ submit, busy, status })
+        ) : (
         <div data-testid="answer-panel" className="max-h-[46dvh] overflow-y-auto border-t border-border bg-surface-1 pb-[env(safe-area-inset-bottom)]">
           {p.form}
           {status}
@@ -92,6 +97,7 @@ export function AnswerSession(p: AnswerSessionProps) {
             <SubmitButton onClick={submit} busy={busy} label={p.submitLabel ?? ss.checkAnswer} className="w-full" />
           </div>
         </div>
+        )
       }
       aside={
         <AsideSection>

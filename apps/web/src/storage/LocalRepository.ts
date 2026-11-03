@@ -1,4 +1,4 @@
-import type { Mark, Symbol } from '@tl/core';
+import { isOutcomeOk, type Mark, type Symbol } from '@tl/core';
 import { TradingLabDB } from './db';
 import {
   DEFAULT_DAILY_GOAL,
@@ -49,7 +49,7 @@ export class LocalRepository implements Repository {
           recent: [],
           updatedAt: a.createdAt,
         };
-        const ok = o.correct === o.total;
+        const ok = isOutcomeOk(o as Parameters<typeof isOutcomeOk>[0]); // правило навыка из @tl/core: correct/total >= OK_THRESHOLD (0.8)
         row.attempts += 1;
         if (ok) row.correct += 1;
         row.recent = [...row.recent, { t: a.createdAt, ok }].slice(-SKILL_WINDOW);
