@@ -552,15 +552,15 @@
     "semantic_hash": ""
   },
   "apps/web/src/chart/drawing/layout.test.ts": {
-    "mtime": 1793677594.696165,
-    "seen": 1793677917.5678856,
-    "ast_hash": "7d454eb6406393b3dd396a13c71d1628",
+    "mtime": 1793680485.4988441,
+    "seen": 1793680562.918494,
+    "ast_hash": "de222c211a942ed7f59d89967474515b",
     "semantic_hash": ""
   },
   "apps/web/src/chart/drawing/layout.ts": {
-    "mtime": 1793679427.2470121,
-    "seen": 1793680034.553379,
-    "ast_hash": "59ff2849dfb1be00388a117209627aa1",
+    "mtime": 1793680375.3593142,
+    "seen": 1793680562.9184957,
+    "ast_hash": "389105f237a8c5123d47858db53a73a8",
     "semantic_hash": ""
   },
   "apps/web/src/chart/drawing/lwcProjection.ts": {
@@ -990,15 +990,15 @@
     "semantic_hash": ""
   },
   "apps/web/src/features/terminal/TerminalScreen.tsx": {
-    "mtime": 1793679686.5365527,
-    "seen": 1793680034.5534158,
-    "ast_hash": "a70662709a7950f8514d1ac6be0fc992",
+    "mtime": 1793680375.3588777,
+    "seen": 1793680562.9185538,
+    "ast_hash": "52d7bb523ccebb1b6a08c244133591d9",
     "semantic_hash": ""
   },
   "apps/web/src/features/terminal/ToolPalette.tsx": {
-    "mtime": 1793679640.874393,
-    "seen": 1793680034.5534165,
-    "ast_hash": "0f71dc9481d841541a8957a5810a439b",
+    "mtime": 1793680143.8312688,
+    "seen": 1793680562.9185555,
+    "ast_hash": "7d3dee6259ee425e90789d5b45fae8c0",
     "semantic_hash": ""
   },
   "apps/web/src/features/terminal/toolCatalog.tsx": {
@@ -1020,21 +1020,21 @@
     "semantic_hash": ""
   },
   "e2e/terminal.helpers.ts": {
-    "mtime": 1793679754.6837225,
-    "seen": 1793680034.5534763,
-    "ast_hash": "294a62d2794a12e04bfaccaba58a71eb",
+    "mtime": 1793680454.1560955,
+    "seen": 1793680562.9186475,
+    "ast_hash": "76f1badec4529fc42beeb4fac23a0d72",
     "semantic_hash": ""
   },
   "e2e/terminal.shots.spec.ts": {
-    "mtime": 1793679775.9271455,
-    "seen": 1793680034.553477,
-    "ast_hash": "bc0215513ccc5c4b94c9e6cd79f0b6d0",
+    "mtime": 1793680395.671136,
+    "seen": 1793680562.9186492,
+    "ast_hash": "4b292886dba6459f4ac2ac755ddf8027",
     "semantic_hash": ""
   },
   "e2e/terminal.spec.ts": {
-    "mtime": 1793679944.615328,
-    "seen": 1793680034.5534782,
-    "ast_hash": "7fc575581a49e2642afcace4bc558ff4",
+    "mtime": 1793680375.3706722,
+    "seen": 1793680562.9186928,
+    "ast_hash": "86f864d409766466a8e00ff2418c5744",
     "semantic_hash": ""
   },
   "fixtures/golden/GS-1.BTCUSDT-4h-2026-09.external-n5.golden.json": {
@@ -1530,9 +1530,9 @@
     "semantic_hash": ""
   },
   "apps/web/src/i18n/ru/terminal.ts": {
-    "mtime": 1793679600.1778502,
-    "seen": 1793680034.5534284,
-    "ast_hash": "dfe56369941bec0e185723644ae4c913",
+    "mtime": 1793680375.3591433,
+    "seen": 1793680562.9185731,
+    "ast_hash": "da2c685d8321dfcace777920238ed36f",
     "semantic_hash": ""
   },
   "apps/web/src/server/deps.ts": {

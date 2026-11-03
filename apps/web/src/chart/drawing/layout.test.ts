@@ -37,6 +37,30 @@ describe('buildGeometry', () => {
     ]);
   });
 
+  it('BOS вниз: подпись по центру линии под ней; BOS вверх - над ней', () => {
+    const down = buildGeometry(mk('bos', [a(5, 300), a(15, 300)], { direction: 'bear' }), synthetic_proj);
+    const up = buildGeometry(mk('bos', [a(5, 300), a(15, 300)], { direction: 'bull' }), synthetic_proj);
+    const y = (g: typeof down) => (g.parts.find((p) => p.t === 'text') as { y: number; x: number }).y;
+    const x = (g: typeof down) => (g.parts.find((p) => p.t === 'text') as { y: number; x: number }).x;
+    expect(y(down)).toBeGreaterThan(200); // ниже линии (экранный y растёт вниз)
+    expect(y(up)).toBeLessThan(200);
+    expect(x(down)).toBe(100); // центр между x=50 и x=150
+  });
+
+  it('swing-high: маркер и подпись над high, swing-low - под low (не перекрывают свечу)', () => {
+    const hi = buildGeometry(mk('swing-high', [a(5, 300)]), synthetic_proj);
+    const lo = buildGeometry(mk('swing-low', [a(5, 300)]), synthetic_proj);
+    for (const p of hi.parts) expect((p as { y: number }).y).toBeLessThan(200);
+    for (const p of lo.parts) expect((p as { y: number }).y).toBeGreaterThan(200);
+  });
+
+  it('FVG/OB: подпись над верхней границей зоны, редактируется только опорный якорь', () => {
+    const f = buildGeometry(mk('fvg', [a(10, 320), a(20, 300)]), synthetic_proj);
+    const t = f.parts.find((p) => p.t === 'text') as { y: number };
+    expect(t.y).toBeLessThan(180);
+    expect(f.handles.map((h) => h.index)).toEqual([0]);
+  });
+
   it('CHoCH штриховой, BOS сплошной (различие формой)', () => {
     const c = buildGeometry(mk('choch', [a(5, 300), a(15, 300)]), synthetic_proj);
     expect(c.parts.find((p) => p.t === 'seg')).toMatchObject({ dash: 'dashed' });

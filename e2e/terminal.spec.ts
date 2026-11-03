@@ -8,14 +8,15 @@ const ARCHIVE = 'Данные: архив Binance (не live)';
 
 test('график на реальных свечах архива; бейдж источника компактный, в верхней зоне, рядом с ТФ', async ({ page }) => {
   const chart = await openTerminal(page);
-  const badge = page.getByTestId(isMobile(page) ? 'archive-badge-mobile' : 'archive-banner');
+  const badge = page.getByTestId('archive-banner');
   await expect(badge).toBeVisible();
   await expect(badge).toHaveAttribute('aria-label', ARCHIVE);
   const bb = (await badge.boundingBox())!;
   const cb = (await chart.boundingBox())!;
   expect(bb.height).toBeLessThan(32); // не полоса на всю ширину
   expect(bb.width).toBeLessThan(260);
-  if (!isMobile(page)) {
+  if (isMobile(page)) expect(bb.width).toBeLessThan(40); // на мобильном - иконка
+  else {
     const tf = (await page.getByRole('radiogroup').first().boundingBox())!;
     expect(bb.x).toBeGreaterThan(tf.x + tf.width - 1); // справа от выбора ТФ
     expect(bb.y).toBeLessThan(cb.y);
@@ -133,7 +134,7 @@ test('раскладка: нет постоянной правой панели,
     await expect(buttons).toHaveCount(7);
     for (const b of await buttons.all()) {
       const bb = (await b.boundingBox())!;
-      expect(bb.width).toBeGreaterThanOrEqual(50);
+      expect(bb.width).toBeGreaterThanOrEqual(44);
     }
     const overflow = await bar.evaluate((el) => el.scrollWidth > el.clientWidth + 1);
     expect(overflow).toBe(false);

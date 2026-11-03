@@ -114,7 +114,7 @@ export function buildGeometry(mark: Mark, proj: Projection, opts: GeometryOption
       const r = norm(p0.x, p0.y, p1.x, p1.y);
       parts.push({ t: 'rect', ...r, dash: kind === 'fvg' ? 'dashed' : 'solid', hatch: kind === 'fvg' });
       // подпись над верхней границей зоны, у левого края
-      parts.push({ t: 'text', text: label, x: r.x1 + textWidth(label) / 2, y: r.y1 - PILL_H / 2 - 2 });
+      parts.push({ t: 'text', text: label, x: Math.min(r.x1 + textWidth(label) / 2, proj.width - textWidth(label) / 2 - 2), y: r.y1 - PILL_H / 2 - 2 });
       break;
     }
     case 'level':

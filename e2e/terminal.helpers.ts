@@ -112,16 +112,21 @@ export async function findVisibleBos(page: Page, box: { x: number; y: number; wi
   throw new Error('нет видимого реального BOS');
 }
 
-/** Реальный трёхсвечный разрыв: средняя свеча i, видимая. */
+/** Реальный трёхсвечный разрыв: средняя свеча i, видимая. Для 'gap' берётся самый крупный видимый разрыв. */
 export async function findVisibleFvg(page: Page, box: { x: number; y: number; width: number; height: number }, want: 'gap' | 'overlap') {
   const cs = await chartCandles(page);
+  let best: { middle: RealCandle; gap: { dir: string; top: number; bottom: number } | null; pt: Pt; size: number } | null = null;
   for (let i = cs.length - 3; i >= 1; i--) {
     const a = cs[i - 1]!;
     const b = cs[i + 1]!;
     const gap = b.low > a.high ? { dir: 'bull', top: b.low, bottom: a.high } : b.high < a.low ? { dir: 'bear', top: a.low, bottom: b.high } : null;
     if ((want === 'gap') !== (gap !== null) || !b.closed) continue;
     const pt = await candlePoint(page, cs[i]!);
-    if (inBox(pt, box)) return { middle: cs[i]!, gap, pt };
+    if (!inBox(pt, box)) continue;
+    const size = gap ? gap.top - gap.bottom : 0;
+    if (want === 'overlap') return { middle: cs[i]!, gap, pt };
+    if (!best || size > best.size) best = { middle: cs[i]!, gap, pt, size };
   }
-  throw new Error(`нет видимой тройки (${want})`);
+  if (!best) throw new Error(`нет видимой тройки (${want})`);
+  return best;
 }

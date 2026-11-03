@@ -1,17 +1,17 @@
 # Graph Report - Varianto  (2026-11-03)
 
 ## Corpus Check
-- 269 files · ~154,646 words
+- 269 files · ~154,972 words
 - Verdict: corpus is large enough that graph structure adds value.
 - Unclassified: 32 file(s) not represented in the graph (top: .csv 26, (none) 4, .example 1)
 
 ## Summary
-- 2044 nodes · 4917 edges · 117 communities (111 shown, 6 thin omitted)
+- 2044 nodes · 4915 edges · 118 communities (112 shown, 6 thin omitted)
 - Extraction: 96% EXTRACTED · 4% INFERRED · 0% AMBIGUOUS · INFERRED: 173 edges (avg confidence: 0.92)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `bc5378ec`
+- Built from commit: `eca913b9`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -35,7 +35,7 @@
 - compilerOptions
 - Project Status — Trading Lab
 - Skills Registry — Trading Lab
-- resolve.test.ts
+- resolve.ts
 - chart-developer.md
 - devops-security.md
 - documentation-engineer.md
@@ -45,13 +45,13 @@
 - technical-analyst.md
 - uiux-designer.md
 - DECISIONS/README.md
-- resolve.ts
+- react
 - Candle
 - grade.ts
 - fetch-fixtures.mjs
 - grade.test.ts
 - token.ts
-- 2. `detectSwings` — фрактальные swing
+- findLevels
 - .prettierrc.json
 - e2e/tsconfig.json
 - core/tsconfig.json
@@ -72,7 +72,7 @@
 - rules.ts
 - controller.ts
 - DrawingPrimitive.ts
-- pa/index.ts
+- pa/generate.ts
 - TimeIndex
 - TradingChart
 - marks.ts
@@ -96,9 +96,9 @@
 - handlers.test.ts
 - screens.test.tsx
 - ALGORITHMS — спецификация детерминированных алгоритмов `@tl/core`
-- serialize.ts
+- src/types.ts
 - handleGrade
-- quality.ts
+- facts.ts
 - patterns.ts
 - 4. Функциональные требования
 - Команда агентов — Trading Lab
@@ -114,33 +114,34 @@
 - 7. Order Block
 - web/AGENTS.md
 - UtcMs
-- quality.test.ts
+- history/route.ts
 - format.ts
 - 12. `gradeMarks` — сравнение разметки
 - 7. User Flows
-- patterns.test.ts
+- Стратегия тестирования — Trading Lab
 - data/streak.test.ts
 - server/errors.ts
 - ADR-0008: Local-first хранилище за интерфейсом Repository; Supabase в M7
-- 3. Внутренние HTTP API
-- ADR-0007: Правила исхода сделки Challenge (drill-down)
+- mulberry32
+- context.test.ts
 - ADR-0001: Next.js 16 + TypeScript strict, pnpm monorepo, Vercel
 - 1. Обзор и цель продукта
-- 10. `findLevels` — уровни поддержки/сопротивления
+- 6. Liquidity sweep
 - ADR-0003: Живые данные грузит браузер напрямую (REST + WS), fallback — REST-polling
 - ADR-0004: История для заданий — сервер читает архив data.binance.vision
 - ADR-0006: Синхронизация таймфреймов — нативные ТФ, инвариант агрегации, sliceAt
-- 6. Внешние API Binance
+- Answer
 - 3. Область продукта
 - fixtures
+- 16. Навыки и прогресс
 
 ## God Nodes (most connected - your core abstractions)
 1. `UtcMs` - 79 edges
 2. `Candle` - 75 edges
 3. `Mark` - 53 edges
 4. `analyzeStructure()` - 38 edges
-5. `cn()` - 37 edges
-6. `react` - 35 edges
+5. `react` - 35 edges
+6. `cn()` - 35 edges
 7. `Timeframe` - 29 edges
 8. `TradingChart()` - 28 edges
 9. `ArchiveSource` - 28 edges
@@ -151,21 +152,21 @@
   .claude/agents/backend-developer.md → apps/web/src/server/handlers.test.ts
 - `5.3 Задания (stateless, без БД до M7)` --references--> `grade()`  [INFERRED]
   docs/ARCHITECTURE.md → apps/web/src/server/handlers.test.ts
-- `7. Безопасность` --references--> `grade()`  [INFERRED]
-  docs/ARCHITECTURE.md → apps/web/src/server/handlers.test.ts
 - `Решение` --references--> `grade()`  [INFERRED]
   docs/DECISIONS/0007-trade-resolution-drilldown.md → apps/web/src/server/handlers.test.ts
 - `Контекст` --references--> `grade()`  [INFERRED]
   docs/DECISIONS/0009-deterministic-core-engine.md → apps/web/src/server/handlers.test.ts
+- `3.4 Технические риски` --references--> `grade()`  [INFERRED]
+  docs/PRD.md → apps/web/src/server/handlers.test.ts
 
 ## Import Cycles
 - 2-file cycle: `packages/core/src/candles/aggregate.ts -> packages/core/src/index.ts -> packages/core/src/candles/aggregate.ts`
 
-## Communities (117 total, 6 thin omitted)
+## Communities (118 total, 6 thin omitted)
 
 ### Community 0 - "market-structure.ts"
-Cohesion: 0.11
-Nodes (29): gradeMsMark(), gradeMsQuestionTask(), atrAt(), Candidate, CONCEPTS, drawCandidate(), gradeMsQuestion(), meetsMsCriteria() (+21 more)
+Cohesion: 0.12
+Nodes (29): buildMs(), gradeMsMark(), atrAt(), Candidate, CONCEPTS, drawCandidate(), meetsMsCriteria(), MS_DEPTH (+21 more)
 
 ### Community 1 - "PRD — Trading Lab"
 Cohesion: 0.17
@@ -176,28 +177,28 @@ Cohesion: 0.06
 Nodes (50): PORT, candlePoint(), chartBox(), chartCandles(), drawTwoPoint(), findVisibleBos(), findVisibleFvg(), inBox() (+42 more)
 
 ### Community 3 - "API Contracts — Trading Lab"
-Cohesion: 0.18
-Nodes (11): 1.1 Формат ошибки, 1.2 Заголовки кэша, 1. Общие соглашения, 2.2 Расширения контрактов (предложение — фиксируются при реализации в `@tl/core`), 2. Типы `@tl/core`, используемые в контрактах, 5.1 `GradeResult`, 5.3 Коды ошибок, 5. Результат проверки и разбор (+3 more)
+Cohesion: 0.12
+Nodes (17): 1.1 Формат ошибки, 1.2 Заголовки кэша, 1. Общие соглашения, 2.2 Расширения контрактов (предложение — фиксируются при реализации в `@tl/core`), 2. Типы `@tl/core`, используемые в контрактах, 3.1 `GET /api/health`, 3.2 `GET /api/history`, 3.3 `POST /api/tasks/{module}/next` (+9 more)
 
 ### Community 4 - "ProgressScreen.tsx"
-Cohesion: 0.12
-Nodes (32): Page(), Page(), Page(), EmptyState(), ErrorState(), LoadingRows(), AsyncState, useAsync() (+24 more)
+Cohesion: 0.16
+Nodes (27): Page(), Page(), EmptyState(), ErrorState(), LoadingRows(), useAsync(), LearnScreen(), MODULES (+19 more)
 
 ### Community 5 - "with"
 Cohesion: 0.08
 Nodes (26): runs-on, steps, GITHUB_TOKEN, jobs, check, secrets-scan, name, on (+18 more)
 
 ### Community 6 - "Architecture — Trading Lab"
-Cohesion: 0.14
-Nodes (14): 10. Развёртывание, 11. Риски, 1. Ключевые ограничения, определяющие архитектуру, 2. Обзор, 3. Репозиторий (pnpm monorepo), 4.1 Синхронизация таймфреймов, 4.2 Разметка (общая модель для пользователя и алгоритма), 4.3 Алгоритмы (детерминированные, версионируемые) (+6 more)
+Cohesion: 0.15
+Nodes (13): 10. Развёртывание, 11. Риски, 1. Ключевые ограничения, определяющие архитектуру, 2. Обзор, 3. Репозиторий (pnpm monorepo), 4.1 Синхронизация таймфреймов, 4.2 Разметка (общая модель для пользователя и алгоритма), 4.3 Алгоритмы (детерминированные, версионируемые) (+5 more)
 
 ### Community 7 - "2. Карточки"
 Cohesion: 0.20
 Nodes (10): 2. Карточки, Backend Developer, Chart Developer, DevOps/Security Engineer, Documentation Engineer, Market Data Engineer, Orchestrator, QA Engineer (+2 more)
 
 ### Community 8 - "TerminalScreen.tsx"
-Cohesion: 0.19
-Nodes (20): TerminalPage(), NoticeCode, normalizeSymbolInput(), InstructionBar(), InstructionBarProps, instructionText(), MarksSheet(), describeMark() (+12 more)
+Cohesion: 0.17
+Nodes (22): TerminalPage(), validateMarks(), NoticeCode, normalizeSymbolInput(), InstructionBar(), InstructionBarProps, instructionText(), MarksSheet() (+14 more)
 
 ### Community 9 - "market-data/package.json"
 Cohesion: 0.11
@@ -224,8 +225,8 @@ Cohesion: 0.14
 Nodes (13): 1. Продукт и пользователь, 2. Модули и приоритеты, 3. Обратная связь и прогресс, 4. Интерфейс, 5. Рыночные данные, 6. Стек и инфраструктура, 7. Процесс, Interview Summary — Trading Lab (+5 more)
 
 ### Community 15 - "ui/index.ts"
-Cohesion: 0.10
-Nodes (36): ru, BadgeProps, BottomSheet(), BottomSheetProps, HEIGHT, SheetHeight, Harness(), Button() (+28 more)
+Cohesion: 0.11
+Nodes (30): Badge(), BadgeProps, BottomSheetProps, HEIGHT, SheetHeight, Button(), buttonClass(), ButtonProps (+22 more)
 
 ### Community 16 - "compilerOptions"
 Cohesion: 0.17
@@ -239,9 +240,9 @@ Nodes (7): Project Status — Trading Lab, Блокирующие проблем
 Cohesion: 0.25
 Nodes (7): Skills Registry — Trading Lab, Кандидаты — отложены до утверждения архитектуры, Отклонённые, Справочник: Public APIs, Уже доступные навыки окружения (не требуют установки), Установка в новом контейнере, Установленные инструменты
 
-### Community 19 - "resolve.test.ts"
-Cohesion: 0.15
-Nodes (10): agg, c1, c15, T0, T1, c4h, loadAggTrades(), loadKlines() (+2 more)
+### Community 19 - "resolve.ts"
+Cohesion: 0.05
+Nodes (39): status(), ADR-0007, 6.1 REST: `GET https://fapi.binance.com/fapi/v1/klines` (браузер), 6.2 WebSocket: kline stream (браузер), 6.3 Архив data.binance.vision (сервер), 6. Внешние API Binance, ADR-0007: Правила исхода сделки Challenge (drill-down), Контекст (+31 more)
 
 ### Community 20 - "chart-developer.md"
 Cohesion: 0.29
@@ -279,17 +280,17 @@ Nodes (6): graphify, Зона владения, Навыки, Обязатель
 Cohesion: 0.22
 Nodes (5): ADR-0009: Детерминированное общее ядро @tl/core; разборы по шаблонам; ИИ позже, Контекст, Последствия, Рассмотренные альтернативы, Architecture Decision Records — Trading Lab
 
-### Community 29 - "resolve.ts"
-Cohesion: 0.27
-Nodes (10): ADR-0007, Последствия, done(), Hit, priceHits(), ResolutionMethod, ResolvedTrade, resolveTrade() (+2 more)
+### Community 29 - "react"
+Cohesion: 0.10
+Nodes (23): Page(), AsyncState, wrap(), CANDLE_OPTIONS, DAILY_GOAL_MAX, DAILY_GOAL_MIN, SettingsScreen(), THEME_OPTIONS (+15 more)
 
 ### Community 30 - "Candle"
-Cohesion: 0.08
-Nodes (50): Draft, GradeCtx, TaskEnvelope, age(), CHALLENGE_STRUCTURE, computeChallengeFacts(), FactsInput, HTF (+42 more)
+Cohesion: 0.12
+Nodes (24): Draft, GradeCtx, TaskEnvelope, FactsInput, buildHints(), ChallengePickInput, DEFAULT_TFS, HTF (+16 more)
 
 ### Community 31 - "grade.ts"
-Cohesion: 0.06
-Nodes (71): Core, GradeResultApi, 5.2 `Feedback` (6 частей, FR-FB-02), 17.1 Структура и ключи, 17.2 Верность и общие принципы, 17.3 Что понято верно (`OkCode`; новые помечены *), 17.4 Ошибки (части 3–6), 17. Шаблоны разбора (источник `src/i18n/ru/feedback`) (+63 more)
+Cohesion: 0.08
+Nodes (53): Core, GradeResultApi, 5.2 `Feedback` (6 частей, FR-FB-02), 17.1 Структура и ключи, 17.2 Верность и общие принципы, 17.3 Что понято верно (`OkCode`; новые помечены *), 17.4 Ошибки (части 3–6), 17. Шаблоны разбора (источник `src/i18n/ru/feedback`) (+45 more)
 
 ### Community 32 - "fetch-fixtures.mjs"
 Cohesion: 0.10
@@ -297,15 +298,15 @@ Nodes (33): accuracyOf(), applyOutcome(), FOCUS_SIZE, generatorForSkill(), isEno
 
 ### Community 33 - "grade.test.ts"
 Cohesion: 0.10
-Nodes (23): algoOf(), ALL, at(), candles, findAlgo(), P, r, window (+15 more)
+Nodes (24): algoOf(), ALL, at(), candles, findAlgo(), P, r, window (+16 more)
 
 ### Community 34 - "token.ts"
 Cohesion: 0.11
 Nodes (25): zod@^4.0.0, ConfigError, nextTask(), toSeed(), b64(), derive(), getSigningSecret(), HeaderSchema (+17 more)
 
-### Community 35 - "2. `detectSwings` — фрактальные swing"
-Cohesion: 0.33
-Nodes (6): 2.1 Сигнатура, 2.2 Определение, 2.3 Граничные случаи, 2.4 Кандидаты у правого края (`pendingSwings`), 2.5 Псевдокод, 2. `detectSwings` — фрактальные swing
+### Community 35 - "findLevels"
+Cohesion: 0.19
+Nodes (13): 2.1 Из `ARCHITECTURE.md` §4 (дословно), Решение, 14.5 Предикаты причин (`ReasonCode`, состав без изменений), 18.2 Участки, 2.1 Сигнатура, 2.2 Определение, 2.3 Граничные случаи, 2.4 Кандидаты у правого края (`pendingSwings`) (+5 more)
 
 ### Community 36 - ".prettierrc.json"
 Cohesion: 0.40
@@ -324,12 +325,12 @@ Cohesion: 0.50
 Nodes (3): extends, include, ../../tsconfig.base.json
 
 ### Community 40 - "src/types.ts"
-Cohesion: 0.11
-Nodes (44): 2.1 Из `ARCHITECTURE.md` §4 (дословно), Решение, golden/ - эталонные участки SMC (ALGORITHMS §18), ChallengeFacts, allSwingsMap, AnalyzeOptions, analyzeStructure(), EMPTY_LAYER (+36 more)
+Cohesion: 0.17
+Nodes (27): golden/ - эталонные участки SMC (ALGORITHMS §18), allSwingsMap, AnalyzeOptions, analyzeStructure(), EMPTY_LAYER, scopeOrder(), typeOrder(), detectFvgs() (+19 more)
 
 ### Community 45 - "history/route.ts"
-Cohesion: 0.05
-Nodes (27): dynamic, errorResponse(), GET(), ISSUE_CODES, querySchema, runtime, SYMBOLS, call() (+19 more)
+Cohesion: 0.07
+Nodes (15): FIX, c4h, FIX, downloadedAt, items, m1, rec, root (+7 more)
 
 ### Community 46 - "LAYOUTS — Trading Lab"
 Cohesion: 0.07
@@ -352,12 +353,12 @@ Cohesion: 0.20
 Nodes (7): cr(), de(), lab(), lin(), lum(), rgb(), sim()
 
 ### Community 51 - "web/package.json"
-Cohesion: 0.05
-Nodes (48): dependencies, dexie@^4.0.0, lightweight-charts@~5.2.1, lucide-react@^1.66.0, react@^19.0.0, react-dom@^19.0.0, @tl/core@workspace:*, @tl/market-data@workspace:* (+40 more)
+Cohesion: 0.06
+Nodes (40): dependencies, dexie@^4.0.0, lightweight-charts@~5.2.1, lucide-react@^1.66.0, react@^19.0.0, react-dom@^19.0.0, @tl/core@workspace:*, @tl/market-data@workspace:* (+32 more)
 
 ### Community 52 - "AppShell.tsx"
-Cohesion: 0.14
-Nodes (20): metadata, plexMono, plexSans, RootLayout(), viewport, csp, nextConfig, next@^16.0.0 (+12 more)
+Cohesion: 0.16
+Nodes (17): metadata, plexMono, plexSans, RootLayout(), viewport, csp, nextConfig, next@^16.0.0 (+9 more)
 
 ### Community 53 - "rules.ts"
 Cohesion: 0.16
@@ -371,9 +372,9 @@ Nodes (17): PointerKind, constrainAnchors(), createMark(), DrawKind, FULL_WIDTH_
 Cohesion: 0.14
 Nodes (18): OpenCandleInfo, PrimitiveState, ZONE_KINDS, RenderStyle, limitCandles(), OPEN_CANDLE_ALPHA, pricePrecision(), T0 (+10 more)
 
-### Community 56 - "pa/index.ts"
-Cohesion: 0.11
-Nodes (35): gradePaLevel(), 14.5 Предикаты причин (`ReasonCode`, состав без изменений), 18.2 Участки, computeContext(), CONTEXT_STRUCTURE, ContextAnswer, ContextEvidence, ContextReference (+27 more)
+### Community 56 - "pa/generate.ts"
+Cohesion: 0.12
+Nodes (28): CONTEXT_STRUCTURE, ContextAnswer, ContextReference, HTF_OF, HtfTrend, CONTEXT_TYPES, ContextTaskPick, FIND_RULES (+20 more)
 
 ### Community 57 - "TimeIndex"
 Cohesion: 0.10
@@ -392,35 +393,35 @@ Cohesion: 0.13
 Nodes (22): ARCHIVE_MIN_AGE_MS, ARCHIVE_SYMBOLS, archiveAllowed(), archivePageSize(), archiveWindow(), HISTORY_PAGE, PRESET_SYMBOLS, resolveSourceMode() (+14 more)
 
 ### Community 61 - "Mark"
-Cohesion: 0.24
-Nodes (8): MarksSheetProps, ADR-0002: Lightweight Charts v5 + собственный слой разметки на Series Primitives, Контекст, Последствия, Рассмотренные альтернативы, Решение, Entry, Mark
+Cohesion: 0.13
+Nodes (14): anchor, KINDS, MARKS_FORMAT_VERSION, markSchema, parseMarks(), serializeMarks(), m, ADR-0002: Lightweight Charts v5 + собственный слой разметки на Series Primitives (+6 more)
 
 ### Community 62 - "tasks.ts"
-Cohesion: 0.09
-Nodes (50): depthOf(), loadClosedBefore(), buildMs(), buildPa(), ChReq, gradePaContext(), gradePaFind(), HTF_TF (+42 more)
+Cohesion: 0.11
+Nodes (29): cutoffOf(), loadClosedBefore(), buildChallenge(), ChReq, gradeMsQuestionTask(), gradePaFind(), gradePaLevel(), HTF_TF (+21 more)
 
 ### Community 63 - "ToolPalette.tsx"
-Cohesion: 0.19
-Nodes (17): ToolId, GroupId, groupOf(), GROUPS, HOTKEY_OF, HOTKEYS, ic, MOBILE_GROUPS (+9 more)
+Cohesion: 0.18
+Nodes (18): ToolId, GroupId, groupOf(), GROUPS, HOTKEY_OF, HOTKEYS, ic, MOBILE_GROUPS (+10 more)
 
 ### Community 64 - "TradingChart.tsx"
 Cohesion: 0.15
 Nodes (15): ControllerNotice, decimalsForTick(), makePriceFormatter(), TICK_TABLE, tickSizeFor(), TimeWindow, chartColors(), crosshairTimeFormatter() (+7 more)
 
 ### Community 65 - "archive.ts"
-Cohesion: 0.15
-Nodes (15): Symbol, AGG_TRADES_HEADER, AggTrade, ARCHIVE_BASE_URL, ArchiveFetch, ArchiveFileSpec, ArchiveSource, ArchiveSourceOptions (+7 more)
+Cohesion: 0.16
+Nodes (14): Symbol, AGG_TRADES_HEADER, AggTrade, ARCHIVE_BASE_URL, ArchiveFetch, ArchiveFileSpec, ArchiveSource, archiveUrl() (+6 more)
 
 ### Community 66 - "core/src/index.ts"
-Cohesion: 0.13
-Nodes (10): dynamic, GET(), aggregate(), SeriesByTf, sliceAt(), synthetic_hour(), synthetic_m1(), c4h (+2 more)
+Cohesion: 0.20
+Nodes (8): dynamic, GET(), aggregate(), SeriesByTf, sliceAt(), synthetic_hour(), synthetic_m1(), ALGO_VERSION
 
 ### Community 67 - "README.md"
 Cohesion: 0.20
 Nodes (4): Trading Lab, Документация, Запуск, Структура
 
 ### Community 68 - "Repository"
-Cohesion: 0.12
+Cohesion: 0.13
 Nodes (7): Repository, graphify, Зона владения, Навыки, Обязательно прочитай перед работой, Отчёт, Правила
 
 ### Community 70 - "schemas.ts"
@@ -456,28 +457,28 @@ Cohesion: 0.15
 Nodes (11): CH, challengeDeps(), Json, loader, mkDeps(), MS_MARK, MS_Q, next() (+3 more)
 
 ### Community 78 - "screens.test.tsx"
-Cohesion: 0.24
-Nodes (13): APPEARANCE_STORAGE_KEY, themeInitScript, applyToDom(), CandleStyle, fromStoredCandle(), Probe(), setup(), Theme (+5 more)
+Cohesion: 0.19
+Nodes (17): getDefaultRepository(), RepositoryContext, RepositoryProvider(), useRepository(), APPEARANCE_STORAGE_KEY, themeInitScript, applyToDom(), CandleStyle (+9 more)
 
 ### Community 79 - "ALGORITHMS — спецификация детерминированных алгоритмов `@tl/core`"
-Cohesion: 0.11
-Nodes (18): 15. `resolveTrade` (ADR-0007, уточнения), 16.1 Навыки, 16.2 Обновление точности, 16.3 Адаптивная подборка, 16. Навыки и прогресс, 18.1 Формат и процесс, 18.3 Что ещё размечается после утверждения (M4/M5), 18. Golden-тесты (+10 more)
+Cohesion: 0.20
+Nodes (9): 15. `resolveTrade` (ADR-0007, уточнения), 18.1 Формат и процесс, 18.3 Что ещё размечается после утверждения (M4/M5), 18. Golden-тесты, 20. Спорные места и вопросы оркестратору, 4.1 Правило, 4.2 Граничные случаи, 4. Метки HH / HL / LH / LL (+1 more)
 
-### Community 80 - "serialize.ts"
-Cohesion: 0.19
-Nodes (13): anchor, KINDS, MARKS_FORMAT_VERSION, markSchema, parseMarks(), serializeMarks(), m, validateMarks() (+5 more)
+### Community 80 - "src/types.ts"
+Cohesion: 0.21
+Nodes (17): computeContext(), ContextEvidence, externalSwings(), isSignificant(), obContainsExtreme(), ADR-0006, Level, MarkItem (+9 more)
 
 ### Community 81 - "handleGrade"
 Cohesion: 0.19
 Nodes (11): dynamic, maxDuration, POST(), runtime, dynamic, maxDuration, POST(), runtime (+3 more)
 
-### Community 82 - "quality.ts"
-Cohesion: 0.25
-Nodes (13): ChallengeDetail, dirOf(), gradeChallenge(), lastEventText(), lastInternal(), protectedLevel(), QualityPart, reasonScore() (+5 more)
+### Community 82 - "facts.ts"
+Cohesion: 0.08
+Nodes (45): age(), CHALLENGE_STRUCTURE, ChallengeFacts, computeChallengeFacts(), HTF, intersects(), lastEventSince(), poiFor() (+37 more)
 
 ### Community 83 - "patterns.ts"
-Cohesion: 0.28
-Nodes (13): body(), bodyBottom(), bodyTop(), engulfing(), isBear(), isBull(), isDoji(), isInside() (+5 more)
+Cohesion: 0.19
+Nodes (20): c(), 1.2 Термины свечи, 9.1 Состав (ответ на OQ-11), 9.2 Критерии (ATR = ATR14 последней свечи модели, если не сказано иное; модель не ищется при ATR = null или `range == 0`), 9.3 Выход, 9.4 Проверенные примеры (BTCUSDT 4h 2026-09, GS-5), 9. Свечные модели Price Action (`detectPatterns`), body() (+12 more)
 
 ### Community 84 - "4. Функциональные требования"
 Cohesion: 0.17
@@ -496,8 +497,8 @@ Cohesion: 0.33
 Nodes (6): 14.1 Факты на момент T (`ChallengeFacts`), 14.2 Эталонная сторона `refSide`, 14.3 Оценка качества 0–100 (ответ на OQ-08), независимо от исхода, 14.4 Правильность, вердикт, лимиты, 14.6 Подсказки (easy), 14. Challenge: эталон, оценка качества, WAIT, лимиты
 
 ### Community 88 - "1. Общие соглашения"
-Cohesion: 0.15
-Nodes (13): c(), 1.1 Входные свечи, 1.2 Термины свечи, 1.3 ATR, 1.4 Детерминизм и числа, 1.5 ALGO_VERSION, 1.6 Параметры по сложностям (сводка), 1. Общие соглашения (+5 more)
+Cohesion: 0.33
+Nodes (6): 1.1 Входные свечи, 1.3 ATR, 1.4 Детерминизм и числа, 1.5 ALGO_VERSION, 1.6 Параметры по сложностям (сводка), 1. Общие соглашения
 
 ### Community 89 - "5. Тренд, BOS и CHoCH"
 Cohesion: 0.33
@@ -512,8 +513,8 @@ Cohesion: 0.40
 Nodes (5): 3.1 Правило (решение), 3.2 Дедупликация, 3.3 Сигнатура `analyzeStructure`, 3.4 Отображение в `Mark` (общая модель `ARCHITECTURE.md` §4.2), 3. Внешняя и внутренняя структура
 
 ### Community 92 - "grade"
-Cohesion: 0.22
-Nodes (11): grade(), Answer, 4.1 Шкала задания, 4.2 Типы ответа (`Answer`), 4. Шкала времени заданий и ответы, ADR-0005: Stateless-задания с подписанными токенами; будущее только на сервере, Контекст, Открытые вопросы (+3 more)
+Cohesion: 0.32
+Nodes (8): grade(), 7. Безопасность, ADR-0005: Stateless-задания с подписанными токенами; будущее только на сервере, Контекст, Открытые вопросы, Последствия, Рассмотренные альтернативы, Решение
 
 ### Community 93 - "backend-developer.md"
 Cohesion: 0.29
@@ -528,16 +529,16 @@ Cohesion: 0.50
 Nodes (4): 7.1 Определение (решение, ICT: «последняя противоположная свеча перед импульсом, сломавшим структуру»), 7.2 Статус (после свечи события `k`, по закрытым свечам), 7.3 Сигнатура, 7. Order Block
 
 ### Community 97 - "UtcMs"
-Cohesion: 0.07
-Nodes (35): FixtureLoader, ARCHIVE_START, ArchiveLoader, ArchiveLoaderOptions, CandleLoader, CHALLENGE_FUTURE_MS, ChallengeZone, Chunk (+27 more)
+Cohesion: 0.08
+Nodes (30): FixtureLoader, ARCHIVE_START, ArchiveLoader, ArchiveLoaderOptions, CandleLoader, CHALLENGE_FUTURE_MS, ChallengeZone, Chunk (+22 more)
 
-### Community 98 - "quality.test.ts"
-Cohesion: 0.22
-Nodes (5): c, facts(), L41, S82, W60
+### Community 98 - "history/route.ts"
+Cohesion: 0.13
+Nodes (14): dynamic, errorResponse(), GET(), ISSUE_CODES, querySchema, runtime, SYMBOLS, call() (+6 more)
 
 ### Community 99 - "format.ts"
-Cohesion: 0.33
-Nodes (6): formatInt(), formatPercent(), formatPrice(), formatR(), MONTHS_SHORT, plural()
+Cohesion: 0.36
+Nodes (5): formatInt(), formatPercent(), formatPrice(), formatR(), MONTHS_SHORT
 
 ### Community 100 - "12. `gradeMarks` — сравнение разметки"
 Cohesion: 0.22
@@ -547,9 +548,9 @@ Nodes (9): 12.1 Сигнатура (расширение `API_CONTRACTS.md`), 12
 Cohesion: 0.25
 Nodes (8): 7.1 Первый вход, 7.2 Сессия Market Structure (режим «Разметка»), 7.3 Trading Challenge: от выбора до разбора, 7.4 Price Action «Контекст», 7.5 Терминал с проверкой разметки, 7.6 Просмотр «Слабых мест», 7.7 Продолжение на другом устройстве, 7. User Flows
 
-### Community 102 - "patterns.test.ts"
-Cohesion: 0.38
-Nodes (5): all, at(), c4h, idx(), ts()
+### Community 102 - "Стратегия тестирования — Trading Lab"
+Cohesion: 0.11
+Nodes (18): 10. Производительность, 1. Принципы, 2. Пирамида, 3. Фикстуры, 4.1 Инвариант агрегации таймфреймов, 4.2 `sliceAt(series, T)`, 4.3 Нормализация (`market-data`), 4.4 Golden-тесты SMC/PA (+10 more)
 
 ### Community 103 - "data/streak.test.ts"
 Cohesion: 0.43
@@ -563,13 +564,13 @@ Nodes (5): ApiErrorCode, errorResponse(), toApiError(), ValidationIssue, run()
 Cohesion: 0.29
 Nodes (6): ADR-0008: Local-first хранилище за интерфейсом Repository; Supabase в M7, Контекст, Открытые вопросы, Последствия, Рассмотренные альтернативы, Решение
 
-### Community 106 - "3. Внутренние HTTP API"
-Cohesion: 0.33
-Nodes (6): 3.1 `GET /api/health`, 3.2 `GET /api/history`, 3.3 `POST /api/tasks/{module}/next`, 3.4 `POST /api/tasks/{module}/grade`, 3.5 Токен задания (`taskToken`), 3. Внутренние HTTP API
+### Community 106 - "mulberry32"
+Cohesion: 0.28
+Nodes (13): depthOf(), endCandidates(), pickContextTask(), pickFindPattern(), pickLevelTask(), relaxation(), usable(), visibleCount() (+5 more)
 
-### Community 107 - "ADR-0007: Правила исхода сделки Challenge (drill-down)"
-Cohesion: 0.33
-Nodes (5): ADR-0007: Правила исхода сделки Challenge (drill-down), Контекст, Открытые вопросы (закрыты: `docs/specs/ALGORITHMS.md`), Рассмотренные альтернативы, Решение
+### Community 107 - "context.test.ts"
+Cohesion: 0.20
+Nodes (12): buildPa(), gradePaContext(), reconstructContext(), gradeContext(), htfClosedAt(), patternToMark(), c15, c4h (+4 more)
 
 ### Community 108 - "ADR-0001: Next.js 16 + TypeScript strict, pnpm monorepo, Vercel"
 Cohesion: 0.33
@@ -579,9 +580,9 @@ Nodes (5): ADR-0001: Next.js 16 + TypeScript strict, pnpm monorepo, Vercel, Ко
 Cohesion: 0.40
 Nodes (5): 1.1 Что это, 1.2 Цель, 1.3 Целевой пользователь, 1.4 Модули, 1. Обзор и цель продукта
 
-### Community 110 - "10. `findLevels` — уровни поддержки/сопротивления"
-Cohesion: 0.67
-Nodes (4): 10.1 Алгоритм, 10.2 Эталон для «Проведи уровень», 10. `findLevels` — уровни поддержки/сопротивления, touches()
+### Community 110 - "6. Liquidity sweep"
+Cohesion: 0.40
+Nodes (5): 6.1 Определение (решение), 6.2 Несколько уровней за одну свечу, 6.3 Граничные случаи, 6.4 Сигнатура, 6. Liquidity sweep
 
 ### Community 111 - "ADR-0003: Живые данные грузит браузер напрямую (REST + WS), fallback — REST-polling"
 Cohesion: 0.33
@@ -595,9 +596,9 @@ Nodes (5): ADR-0004: История для заданий — сервер чи�
 Cohesion: 0.33
 Nodes (5): ADR-0006: Синхронизация таймфреймов — нативные ТФ, инвариант агрегации, sliceAt, Контекст, Последствия, Рассмотренные альтернативы, Решение
 
-### Community 114 - "6. Внешние API Binance"
-Cohesion: 0.40
-Nodes (5): status(), 6.1 REST: `GET https://fapi.binance.com/fapi/v1/klines` (браузер), 6.2 WebSocket: kline stream (браузер), 6.3 Архив data.binance.vision (сервер), 6. Внешние API Binance
+### Community 114 - "Answer"
+Cohesion: 0.50
+Nodes (4): Answer, 4.1 Шкала задания, 4.2 Типы ответа (`Answer`), 4. Шкала времени заданий и ответы
 
 ### Community 115 - "3. Область продукта"
 Cohesion: 0.40
@@ -607,6 +608,10 @@ Nodes (5): 3.1 В MVP, 3.2 Вне MVP, 3.3 Требует исследовани
 Cohesion: 0.50
 Nodes (3): fixtures, recorded/ - записанные форматы API (fapi/fstream недоступны из облака, 451), Архивные CSV
 
+### Community 117 - "16. Навыки и прогресс"
+Cohesion: 0.50
+Nodes (4): 16.1 Навыки, 16.2 Обновление точности, 16.3 Адаптивная подборка, 16. Навыки и прогресс
+
 ## Knowledge Gaps
 - **11 isolated node(s):** `ADR-0006`, `ADR-0005`, `ADR-0005`, `../../tsconfig.base.json`, `../tsconfig.base.json` (+6 more)
   These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 803 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
@@ -615,15 +620,15 @@ Nodes (3): fixtures, recorded/ - записанные форматы API (fapi/f
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `Mark` connect `Mark` to `TerminalScreen.tsx`, `UtcMs`, `hit.ts`, `Candle`, `grade.ts`, `grade.test.ts`, `src/types.ts`, `rules.ts`, `controller.ts`, `DrawingPrimitive.ts`, `pa/index.ts`, `TimeIndex`, `TradingChart`, `marks.ts`, `tasks.ts`, `TradingChart.tsx`, `Repository`, `handlers.test.ts`, `serialize.ts`, `1. Общие соглашения`, `3. Внешняя и внутренняя структура`?**
+- **Why does `Mark` connect `Mark` to `TerminalScreen.tsx`, `UtcMs`, `hit.ts`, `Candle`, `grade.ts`, `grade.test.ts`, `rules.ts`, `controller.ts`, `DrawingPrimitive.ts`, `TimeIndex`, `TradingChart`, `marks.ts`, `tasks.ts`, `TradingChart.tsx`, `Repository`, `handlers.test.ts`, `src/types.ts`, `facts.ts`, `1. Общие соглашения`, `3. Внешняя и внутренняя структура`?**
   _High betweenness centrality (0.082) - this node is a cross-community bridge._
 - **Are the 2 inferred relationships involving `UtcMs` (e.g. with `1. Общие соглашения` and `4.1 Шкала задания`) actually correct?**
   _`UtcMs` has 2 INFERRED edges - model-reasoned connections that need verification._
 - **What connects `ADR-0006`, `ADR-0005`, `ADR-0005` to the rest of the system?**
   _11 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `market-structure.ts` be split into smaller, more focused modules?**
-  _Cohesion score 0.11363636363636363 - nodes in this community are weakly interconnected._
-- **Why does `Candle` connect `Candle` to `market-structure.ts`, `live.ts`, `resolve.test.ts`, `hit.ts`, `resolve.ts`, `grade.ts`, `grade.test.ts`, `src/types.ts`, `history/route.ts`, `rules.ts`, `controller.ts`, `DrawingPrimitive.ts`, `pa/index.ts`, `TimeIndex`, `TradingChart`, `useMarketData.ts`, `tasks.ts`, `TradingChart.tsx`, `archive.ts`, `core/src/index.ts`, `normalize.ts`, `handlers.test.ts`, `patterns.ts`, `UtcMs`, `patterns.test.ts`, `6. Внешние API Binance`?**
+  _Cohesion score 0.12096774193548387 - nodes in this community are weakly interconnected._
+- **Why does `Candle` connect `Candle` to `market-structure.ts`, `live.ts`, `resolve.ts`, `hit.ts`, `grade.ts`, `grade.test.ts`, `src/types.ts`, `history/route.ts`, `rules.ts`, `controller.ts`, `DrawingPrimitive.ts`, `pa/generate.ts`, `TimeIndex`, `TradingChart`, `useMarketData.ts`, `tasks.ts`, `TradingChart.tsx`, `archive.ts`, `core/src/index.ts`, `normalize.ts`, `handlers.test.ts`, `src/types.ts`, `facts.ts`, `patterns.ts`, `UtcMs`, `context.test.ts`?**
   _High betweenness centrality (0.079) - this node is a cross-community bridge._
 - **Are the 5 inferred relationships involving `Mark` (e.g. with `Контекст` and `Последствия`) actually correct?**
   _`Mark` has 5 INFERRED edges - model-reasoned connections that need verification._

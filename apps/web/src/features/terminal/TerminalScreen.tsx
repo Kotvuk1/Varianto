@@ -10,7 +10,7 @@ import { TradingChart } from '@/chart/TradingChart';
 import { ru } from '@/i18n/ru';
 import { DesktopTabs } from '@/shell';
 import { NAV_ITEMS } from '@/shell/routes';
-import { Badge, BottomSheet, Button, IconButton, Segmented, cn } from '@/ui';
+import { Badge, BottomSheet, Button, IconButton, Segmented } from '@/ui';
 import { normalizeSymbolInput, resolveSourceMode, TERMINAL_TIMEFRAMES, TF_LABEL } from './dataSource';
 import { InstructionBar } from './InstructionBar';
 import { MarksSheet } from './MarksSheet';
@@ -122,11 +122,14 @@ export function TerminalScreen() {
     ) : (
       <Badge>{tx.statusConnecting}</Badge>
     );
-  const archiveBadge = (testId: string, className?: string) =>
+  // Компактный бейдж справа от выбора ТФ: на мобильном только иконка (полный текст в aria-label/title).
+  const archiveBadge =
     mode === 'archive' ? (
-      <span data-testid={testId} role="status" title={tx.archiveBanner} aria-label={tx.archiveBanner} className={cn('inline-flex', className)}>
-        <Badge variant="outline" icon={<Database size={12} strokeWidth={1.75} aria-hidden />}>
-          {tx.archiveBadge}
+      <span data-testid="archive-banner" role="status" title={tx.archiveBanner} aria-label={tx.archiveBanner} className="ml-1 shrink-0">
+        <Badge variant="outline" icon={<Database size={12} strokeWidth={1.75} aria-hidden />} className="h-6">
+          <span aria-hidden className="hidden lg:inline">
+            {tx.archiveBadge}
+          </span>
         </Badge>
       </span>
     ) : null;
@@ -150,7 +153,7 @@ export function TerminalScreen() {
             onChange={setTf}
           />
         </div>
-        {archiveBadge('archive-banner', 'ml-2 hidden lg:inline-flex')}
+        {archiveBadge}
         <div className="ml-auto hidden items-center gap-2 lg:flex">
           {statusBadge}
           <Button size="sm" icon={<ListChecks size={20} strokeWidth={1.75} />} onClick={() => setMarksOpen(true)} data-testid="marks-button">
@@ -187,6 +190,15 @@ export function TerminalScreen() {
               onDelete={() => selected && deleteMark(selected.id)}
               onDeselect={() => setSelectedId(null)}
             />
+            <button
+              type="button"
+              onClick={() => setMarksOpen(true)}
+              data-testid="marks-button-mobile"
+              className="ml-1 inline-flex h-11 shrink-0 cursor-pointer items-center gap-1 rounded-md border border-border-strong px-2 text-sm font-medium lg:hidden"
+            >
+              <ListChecks size={20} strokeWidth={1.75} aria-hidden />
+              {tx.marksButton(marks.length)}
+            </button>
           </div>
           <div className="relative min-h-0 flex-1">
             {data.series && (
@@ -206,19 +218,7 @@ export function TerminalScreen() {
                 focus={focus}
               />
             )}
-            <div className="absolute top-2 right-14 z-10 flex items-center gap-2 lg:hidden">
-              {archiveBadge('archive-badge-mobile')}
-              {statusBadge}
-              <button
-                type="button"
-                onClick={() => setMarksOpen(true)}
-                data-testid="marks-button-mobile"
-                className="inline-flex h-11 cursor-pointer items-center gap-1 rounded-md border border-border-strong bg-surface-1 px-3 text-sm font-medium"
-              >
-                <ListChecks size={20} strokeWidth={1.75} aria-hidden />
-                {tx.marksButton(marks.length)}
-              </button>
-            </div>
+            <div className="pointer-events-none absolute top-2 right-14 z-10 lg:hidden">{statusBadge}</div>
             {(data.loading || data.loadingMore) && !blocking && (
               <div role="status" className="pointer-events-none absolute top-14 left-1/2 z-10 -translate-x-1/2 lg:top-2">
                 <Badge>{data.loading ? tx.loading : tx.loadingMore}</Badge>

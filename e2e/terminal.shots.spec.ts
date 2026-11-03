@@ -88,10 +88,17 @@ for (const theme of ['dark', 'light'] as const) {
       }
     }
 
-    // уровень на фитиле последнего swing (снап к high/low)
-    await selectTool(page, 'Уровень', 'Линии');
-    const lvlPt = await project(page, bos.swing.openTime, bos.level);
-    if (lvlPt) await tapAt(page, { x: lvlPt.x, y: lvlPt.y + (bull ? 5 : -5) });
+    // уровень: на фитиле второго swing (снап к high/low), отдельно от BOS
+    const sw2 = log.swing2 as { price: number; time: string } | undefined;
+    if (sw2) {
+      const p2 = cs.find((c) => iso(c.openTime) === sw2.time)!;
+      const lp = await project(page, p2.openTime, sw2.price);
+      if (lp) {
+        await selectTool(page, 'Уровень', 'Линии');
+        await tapAt(page, { x: lp.x, y: lp.y + (side2 === 'high' ? 4 : -4) });
+        log.level = { price: sw2.price, why: 'снап к фитилю (high/low) ближайшей свечи в радиусе' };
+      }
+    }
     await selectTool(page, 'Выбор');
 
     await page.evaluate((t) => document.documentElement.setAttribute('data-theme', t), theme);
