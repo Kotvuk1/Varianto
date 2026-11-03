@@ -295,7 +295,7 @@ export function gradeMarks(user: readonly Mark[], algo: AlgoMarkSet, ctx: GradeC
   }
   const pairs: Pair[] = [];
   let unmatchedU: Entry[] = [];
-  let unmatchedA: Entry[] = [];
+  const unmatchedA: Entry[] = [];
   for (const g of [...groups].sort()) {
     const U = userEntries.filter((e) => e.group === g).sort(byOrder);
     const A = algoEntries.filter((e) => e.group === g).sort(byOrder);
@@ -595,7 +595,7 @@ export function gradeMarks(user: readonly Mark[], algo: AlgoMarkSet, ctx: GradeC
     extra: extraAll.sort(keyOrd).map((e) => e.mark),
     toleranceCandles: tol,
     ignored,
-    errors: errors.map(({ key: _k, ord: _o, ...e }) => e),
+    errors: errors.map((e) => ({ code: e.code, skill: e.skill, severity: e.severity, markIds: e.markIds, params: e.params })),
     skillOutcomes,
     score,
     verdict,

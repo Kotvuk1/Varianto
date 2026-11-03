@@ -106,6 +106,11 @@ SHA-256 CSV - хэш файла в этой папке; SHA-256 zip - хэш и�
 |---|---|---|---|---|---|---|---|
 ${table}
 
+## golden/ - эталонные участки SMC (ALGORITHMS §18)
+
+\`golden/*.golden.json\` - ожидаемые значения GS-1..GS-4b, GS-7..GS-9 для \`analyzeStructure\`/\`detectSwings\`/\`detectSweeps\`: значения перенесены из \`docs/specs/ALGORITHMS.md\` §18.2 (получены Technical Analyst вручную по OHLC), а не сгенерированы кодом. Поля: \`algoVersion\`, \`source\` (CSV + SHA-256), \`params\`, \`expected\`, \`rationale\`. Время - ISO UTC (\`openTime\` свечи). Тесты: \`packages/core/src/smc/golden.*.test.ts\`. Изменение golden без смены \`ALGO_VERSION\` запрещено. SHA-256 дневного CSV SOLUSDT/BTCUSDT 15m отличается от значений в спецификации (там хэши месячных архивов): файлы здесь - дневные архивы, чьи zip сверены с \`.CHECKSUM\`.
+Дополнительные непрерывные ряды для тестов генерации заданий (\`BTCUSDT-1h-2026-08/09\`, 1464 свечи) и примеров ALGORITHMS §5.5/§7.1 (\`BTCUSDT-4h-2026-07/08\`).
+
 ## recorded/ - записанные форматы API (fapi/fstream недоступны из облака, 451)
 
 Это **реальные архивные свечи**, переупакованные в точный формат ответов Binance; выдуманных цен нет.

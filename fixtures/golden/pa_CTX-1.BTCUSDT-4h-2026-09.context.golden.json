@@ -1,0 +1,47 @@
+{
+ "id": "PA-CTX-1",
+ "algoVersion": "1.0.0",
+ "author": "backend-developer (M2-B)",
+ "date": "2026-11-03",
+ "function": "computeContext",
+ "source": {
+  "csv": "klines/BTCUSDT/4h/BTCUSDT-4h-2026-09.csv",
+  "sha256": "83ab0cd5a285a747946fcc17684ecafe368a6d982f000f1890e76136e8b3b92a"
+ },
+ "rationale": "Старший ряд — сам 4h-ряд (в репозитории нет 1d за сентябрь; для tf=1d старший тренд = тренд ряда). sweep сверен с GS-4: sweep low 09-28 04:00 (82832.0) и 09-11 12:00 (76151.9).",
+ "params": {
+  "htf": "self",
+  "structure": {
+   "nExt": 5,
+   "nInt": null
+  }
+ },
+ "expected": [
+  {
+   "pattern": {
+    "type": "pin-bar",
+    "lastTime": "2026-09-28T08:00:00Z"
+   },
+   "sweep": true,
+   "orderBlock": false,
+   "keyLevel": false,
+   "htfTrend": "up",
+   "significant": true,
+   "sweepLevel": 82832,
+   "sweepTime": "2026-09-28T04:00:00Z"
+  },
+  {
+   "pattern": {
+    "type": "engulfing",
+    "lastTime": "2026-09-11T12:00:00Z"
+   },
+   "sweep": true,
+   "orderBlock": false,
+   "keyLevel": true,
+   "htfTrend": "down",
+   "significant": false,
+   "sweepLevel": 76151.9,
+   "sweepTime": "2026-09-11T12:00:00Z"
+  }
+ ]
+}

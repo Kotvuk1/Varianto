@@ -1,0 +1,32 @@
+{
+ "id": "GS-10",
+ "algoVersion": "1.0.0",
+ "author": "technical-analyst (значения ALGORITHMS §18.2 GS-10); перенесено в golden: backend-developer (M2-B)",
+ "date": "2026-11-03",
+ "function": "resolveTrade",
+ "source": {
+  "csv": [
+   "klines/BTCUSDT/15m/BTCUSDT-15m-2026-10-20.csv",
+   "klines/BTCUSDT/15m/BTCUSDT-15m-2026-10-21.csv",
+   "klines/BTCUSDT/1m/BTCUSDT-1m-2026-10-20.csv",
+   "klines/BTCUSDT/1m/BTCUSDT-1m-2026-10-21.csv",
+   "aggTrades/BTCUSDT-aggTrades-2026-10-20.csv"
+  ],
+  "sha256": {
+   "klines/BTCUSDT/15m/BTCUSDT-15m-2026-10-20.csv": "eb9928cba154bfbdd0bf1a28ca068c47ea3c608605fcc8efc8dfa965cff86235",
+   "klines/BTCUSDT/15m/BTCUSDT-15m-2026-10-21.csv": "8eea9a9b1c1ab34efe11fd56c00161c320a334d6fc4128257bfcb531288d8fcd",
+   "klines/BTCUSDT/1m/BTCUSDT-1m-2026-10-20.csv": "e6243875c4ee2ed5863b637995752f3f7b1381047c6358158096ae9d3d7a1b1f",
+   "klines/BTCUSDT/1m/BTCUSDT-1m-2026-10-21.csv": "e5a98e8e7dd694389214c92b77db09b93721addf4f2206f3f7bb6b93a8439461",
+   "aggTrades/BTCUSDT-aggTrades-2026-10-20.csv": "f7a871e1f1d3c0ff73c351f1d81f2210255c15aa05be5d9b6bcbd10e7d401242"
+  }
+ },
+ "params": { "tf": "15m", "limitCandles": 96 },
+ "rationale": "Позиции — входные данные теста, цены свечей реальные. R1: aggTradeId 3490482886, transactTime 1792454413607, цена 81950.0 = TP (равенство — касание). R2: 1m 00:15 (H 81770.6, L 81745.8) задевает только SL. R3: SL на 15m 01:00, один уровень. R4: ни один уровень за 96 свечей, exit = close 15m 2026-10-21 00:00.",
+ "expected": [
+  { "case": "R1", "position": { "side": "LONG", "entry": 81903.3, "sl": 81895.0, "tp": 81950.0, "T": "2026-10-20T00:00:00Z" }, "result": "tp", "method": "drill-aggtrades", "exitTime": 1792454413607, "exitPrice": 81950.0, "r": 5.626506024096385 },
+  { "case": "R1s", "position": { "side": "SHORT", "entry": 81903.3, "sl": 81950.0, "tp": 81895.0, "T": "2026-10-20T00:00:00Z" }, "result": "sl", "method": "drill-aggtrades", "exitTime": 1792454413607, "exitPrice": 81950.0, "r": -1 },
+  { "case": "R2", "position": { "side": "SHORT", "entry": 81752.9, "sl": 81770.0, "tp": 81500.0, "T": "2026-10-20T00:15:00Z" }, "result": "sl", "method": "drill-1m", "exitTime": "2026-10-20T00:15:00Z", "exitPrice": 81770.0, "r": -1 },
+  { "case": "R3", "position": { "side": "LONG", "entry": 81752.9, "sl": 81300.0, "tp": 82000.0, "T": "2026-10-20T00:15:00Z" }, "result": "sl", "method": "candle", "exitTime": "2026-10-20T01:00:00Z", "exitPrice": 81300.0, "r": -1 },
+  { "case": "R4", "position": { "side": "LONG", "entry": 81752.9, "sl": 80500.0, "tp": 86000.0, "T": "2026-10-20T00:15:00Z" }, "result": "timeout", "method": "timeout", "exitTime": 1792541699999, "exitPrice": 83047.0, "r": 1.0328837097932795 }
+ ]
+}

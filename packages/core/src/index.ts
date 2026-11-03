@@ -6,3 +6,7 @@ export * from './smc';
 export * from './grading';
 export * from './tasks';
 export { mulberry32, randInt } from './rng';
+export * from './pa';
+export * from './challenge';
+export * from './progress';
+export * from './feedback';

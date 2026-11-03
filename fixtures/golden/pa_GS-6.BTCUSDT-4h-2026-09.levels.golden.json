@@ -1,0 +1,119 @@
+{
+ "id": "PA-GS-6",
+ "algoVersion": "1.0.0",
+ "author": "backend-developer (M2-B)",
+ "date": "2026-11-03",
+ "function": "findLevels",
+ "source": {
+  "csv": "klines/BTCUSDT/4h/BTCUSDT-4h-2026-09.csv",
+  "sha256": "83ab0cd5a285a747946fcc17684ecafe368a6d982f000f1890e76136e8b3b92a"
+ },
+ "rationale": "Значения совпадают с ALGORITHMS §10.2 и §18.2 GS-6: P = 83576.9, W = 480.86, четыре сильнейших уровня и девять уровней с 2 касаниями.",
+ "params": {
+  "n": 3,
+  "lookback": 300,
+  "minTouches": 2
+ },
+ "expected": {
+  "price": 83576.9,
+  "width": 480.86,
+  "levels": [
+   {
+    "center": 76208.03,
+    "low": 75975,
+    "high": 76402.9,
+    "touches": 6,
+    "type": "support",
+    "lastTouch": "2026-09-17T12:00:00Z"
+   },
+   {
+    "center": 85088,
+    "low": 84901.6,
+    "high": 85224,
+    "touches": 4,
+    "type": "resistance",
+    "lastTouch": "2026-09-27T12:00:00Z"
+   },
+   {
+    "center": 79965,
+    "low": 79737.3,
+    "high": 80167,
+    "touches": 4,
+    "type": "support",
+    "lastTouch": "2026-09-20T00:00:00Z"
+   },
+   {
+    "center": 82727.87,
+    "low": 82500.1,
+    "high": 82851.5,
+    "touches": 3,
+    "type": "support",
+    "lastTouch": "2026-09-29T16:00:00Z"
+   },
+   {
+    "center": 84452.45,
+    "low": 84350,
+    "high": 84554.9,
+    "touches": 2,
+    "type": "resistance",
+    "lastTouch": "2026-09-29T12:00:00Z"
+   },
+   {
+    "center": 83290.1,
+    "low": 83130.1,
+    "high": 83450.1,
+    "touches": 2,
+    "type": "support",
+    "lastTouch": "2026-09-25T12:00:00Z"
+   },
+   {
+    "center": 87316.2,
+    "low": 87247.3,
+    "high": 87385.1,
+    "touches": 2,
+    "type": "resistance",
+    "lastTouch": "2026-09-23T04:00:00Z"
+   },
+   {
+    "center": 82108.35,
+    "low": 81933.9,
+    "high": 82282.8,
+    "touches": 2,
+    "type": "support",
+    "lastTouch": "2026-09-19T12:00:00Z"
+   },
+   {
+    "center": 74967.2,
+    "low": 74909.4,
+    "high": 75025,
+    "touches": 2,
+    "type": "support",
+    "lastTouch": "2026-09-16T16:00:00Z"
+   },
+   {
+    "center": 79348.1,
+    "low": 79125.3,
+    "high": 79570.9,
+    "touches": 2,
+    "type": "support",
+    "lastTouch": "2026-09-14T20:00:00Z"
+   },
+   {
+    "center": 77538.75,
+    "low": 77477.4,
+    "high": 77600.1,
+    "touches": 2,
+    "type": "support",
+    "lastTouch": "2026-09-12T12:00:00Z"
+   },
+   {
+    "center": 78627.05,
+    "low": 78618.1,
+    "high": 78636,
+    "touches": 2,
+    "type": "support",
+    "lastTouch": "2026-09-07T12:00:00Z"
+   }
+  ]
+ }
+}

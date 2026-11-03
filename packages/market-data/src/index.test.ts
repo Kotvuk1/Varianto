@@ -5,6 +5,6 @@ import * as md from './index';
 describe('@tl/market-data smoke', () => {
   it('модуль загружается и видит @tl/core', () => {
     expect(md).toBeDefined();
-    expect(ALGO_VERSION).toBe('0.1.0');
+    expect(ALGO_VERSION).toMatch(/^\d+\.\d+\.\d+$/);
   });
 });

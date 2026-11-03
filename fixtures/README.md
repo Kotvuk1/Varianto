@@ -38,6 +38,11 @@ SHA-256 CSV - хэш файла в этой папке; SHA-256 zip - хэш и�
 | `klines/BTCUSDT/4h/BTCUSDT-4h-2026-08.csv` | https://data.binance.vision/data/futures/um/monthly/klines/BTCUSDT/4h/BTCUSDT-4h-2026-08.zip | BTCUSDT | 4h | 2026-08 | 2026-11-03 | `e8a295e3633bb365db324a7d08b0e1512d2eb371d4d193a29d083a2837ed14d2` | `49dce8e4d82b20a288632c245a267ca5715f53ef170ac62915aa00a75491c3aa` |
 | `aggTrades/BTCUSDT-aggTrades-2026-10-20.csv` | https://data.binance.vision/data/futures/um/daily/aggTrades/BTCUSDT/BTCUSDT-aggTrades-2026-10-20.zip | BTCUSDT | - | 2026-10-20 (первые 3000 строк данных) | 2026-11-03 | `f7a871e1f1d3c0ff73c351f1d81f2210255c15aa05be5d9b6bcbd10e7d401242` | `28a1c6f3b30e389ff5028311feb8b709d8ba85cb7c0731e301bd3e5b7a900fbf` |
 
+## golden/ - эталонные участки SMC (ALGORITHMS §18)
+
+`golden/*.golden.json` - ожидаемые значения GS-1..GS-4b, GS-7..GS-9 для `analyzeStructure`/`detectSwings`/`detectSweeps`: значения перенесены из `docs/specs/ALGORITHMS.md` §18.2 (получены Technical Analyst вручную по OHLC), а не сгенерированы кодом. Поля: `algoVersion`, `source` (CSV + SHA-256), `params`, `expected`, `rationale`. Время - ISO UTC (`openTime` свечи). Тесты: `packages/core/src/smc/golden.*.test.ts`. Изменение golden без смены `ALGO_VERSION` запрещено. SHA-256 дневного CSV SOLUSDT/BTCUSDT 15m отличается от значений в спецификации (там хэши месячных архивов): файлы здесь - дневные архивы, чьи zip сверены с `.CHECKSUM`.
+Дополнительные непрерывные ряды для тестов генерации заданий (`BTCUSDT-1h-2026-08/09`, 1464 свечи) и примеров ALGORITHMS §5.5/§7.1 (`BTCUSDT-4h-2026-07/08`).
+
 ## recorded/ - записанные форматы API (fapi/fstream недоступны из облака, 451)
 
 Это **реальные архивные свечи**, переупакованные в точный формат ответов Binance; выдуманных цен нет.

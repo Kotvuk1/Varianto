@@ -1,6 +1,6 @@
 // resolveTrade (ALGORITHMS §15, ADR-0007): исход сделки Challenge с drill-down candle -> 1m -> aggTrades -> conservative-sl.
 // Сеть не используется: будущее приходит через инъецируемый FutureProvider.
-import { TIMEFRAME_MS, type Candle, type Timeframe, type UtcMs } from '../index';
+import { TIMEFRAME_MS, type Candle, type Timeframe, type UtcMs } from '../types';
 
 export interface AggTrade {
   aggTradeId: number;

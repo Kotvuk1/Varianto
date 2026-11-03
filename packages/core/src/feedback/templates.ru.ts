@@ -510,3 +510,12 @@ export const REASON_WHY_RU: Record<string, string> = {
   'unclear-structure': 'Структура ясна: тренды ТФ совпадают и последние события не противоречат друг другу',
   'wait-other': 'При WAIT верны только причины «флэт без края» и «неясная структура»',
 };
+
+/** Русские названия моделей для `OK_PATTERN` ({pattern}) по навыку. */
+export const PATTERN_NAMES_RU: Record<string, string> = {
+  'pa-engulfing': 'Поглощение',
+  'pa-pin-bar': 'Пин-бар',
+  'pa-inside-bar': 'Внутренний бар',
+  'pa-doji': 'Доджи',
+  'pa-star': 'Утренняя/вечерняя звезда',
+};
