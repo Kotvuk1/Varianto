@@ -1,0 +1,222 @@
+{
+ "id": "GS-3",
+ "function": "analyzeStructure",
+ "source": {
+  "csv": "klines/BTCUSDT/4h/BTCUSDT-4h-2026-09.csv",
+  "sha256": "83ab0cd5a285a747946fcc17684ecafe368a6d982f000f1890e76136e8b3b92a"
+ },
+ "cases": [
+  {
+   "name": "medium",
+   "params": {
+    "nExt": 5,
+    "nInt": 3,
+    "sweepHoldK": 3,
+    "fvgMinAtr": 0.5,
+    "obDisplacementAtr": 1.2
+   },
+   "expected": {
+    "internalSwings": [
+     {
+      "time": "2026-09-01T16:00:00Z",
+      "type": "low",
+      "price": 76368.0,
+      "label": null
+     },
+     {
+      "time": "2026-09-06T12:00:00Z",
+      "type": "low",
+      "price": 79125.3,
+      "label": "HL"
+     },
+     {
+      "time": "2026-09-07T12:00:00Z",
+      "type": "low",
+      "price": 78636.0,
+      "label": "LL"
+     },
+     {
+      "time": "2026-09-10T20:00:00Z",
+      "type": "low",
+      "price": 76402.9,
+      "label": "LL"
+     },
+     {
+      "time": "2026-09-12T12:00:00Z",
+      "type": "high",
+      "price": 77477.4,
+      "label": "LH"
+     },
+     {
+      "time": "2026-09-13T08:00:00Z",
+      "type": "low",
+      "price": 76458.9,
+      "label": "HL"
+     },
+     {
+      "time": "2026-09-17T12:00:00Z",
+      "type": "low",
+      "price": 75975.0,
+      "label": "HL"
+     },
+     {
+      "time": "2026-09-22T04:00:00Z",
+      "type": "low",
+      "price": 85080.0,
+      "label": "HL"
+     },
+     {
+      "time": "2026-09-23T16:00:00Z",
+      "type": "low",
+      "price": 83450.1,
+      "label": "LL"
+     },
+     {
+      "time": "2026-09-24T12:00:00Z",
+      "type": "high",
+      "price": 84901.6,
+      "label": "LH"
+     },
+     {
+      "time": "2026-09-26T20:00:00Z",
+      "type": "low",
+      "price": 83778.4,
+      "label": "HL"
+     },
+     {
+      "time": "2026-09-28T16:00:00Z",
+      "type": "high",
+      "price": 84350.0,
+      "label": "LH"
+     },
+     {
+      "time": "2026-09-29T16:00:00Z",
+      "type": "low",
+      "price": 82851.5,
+      "label": "HL"
+     }
+    ],
+    "internalEvents": [
+     {
+      "kind": "choch",
+      "direction": "bear",
+      "breakTime": "2026-09-07T12:00:00Z",
+      "level": 79125.3
+     },
+     {
+      "kind": "choch",
+      "direction": "bull",
+      "breakTime": "2026-09-14T00:00:00Z",
+      "level": 77477.4
+     },
+     {
+      "kind": "choch",
+      "direction": "bear",
+      "breakTime": "2026-09-15T16:00:00Z",
+      "level": 76350.1
+     },
+     {
+      "kind": "choch",
+      "direction": "bear",
+      "breakTime": "2026-09-23T12:00:00Z",
+      "level": 85080.0
+     },
+     {
+      "kind": "bos",
+      "direction": "bear",
+      "breakTime": "2026-09-28T00:00:00Z",
+      "level": 83778.4
+     }
+    ],
+    "suppressed": [
+     {
+      "time": "2026-09-06T20:00:00Z",
+      "direction": "bull"
+     },
+     {
+      "time": "2026-09-08T04:00:00Z",
+      "direction": "bear"
+     },
+     {
+      "time": "2026-09-10T12:00:00Z",
+      "direction": "bear"
+     },
+     {
+      "time": "2026-09-18T12:00:00Z",
+      "direction": "bull"
+     },
+     {
+      "time": "2026-09-21T08:00:00Z",
+      "direction": "bull"
+     }
+    ]
+   }
+  },
+  {
+   "name": "hard",
+   "params": {
+    "nExt": 5,
+    "nInt": 2,
+    "sweepHoldK": 3,
+    "fvgMinAtr": 0.5,
+    "obDisplacementAtr": 1.2
+   },
+   "expected": {
+    "internalEvents": [
+     {
+      "kind": "choch",
+      "direction": "bear",
+      "breakTime": "2026-09-07T12:00:00Z",
+      "level": 79125.3
+     },
+     {
+      "kind": "bos",
+      "direction": "bear",
+      "breakTime": "2026-09-13T08:00:00Z",
+      "level": 77025.1
+     },
+     {
+      "kind": "choch",
+      "direction": "bull",
+      "breakTime": "2026-09-14T00:00:00Z",
+      "level": 77477.4
+     },
+     {
+      "kind": "choch",
+      "direction": "bear",
+      "breakTime": "2026-09-15T16:00:00Z",
+      "level": 76350.1
+     },
+     {
+      "kind": "choch",
+      "direction": "bull",
+      "breakTime": "2026-09-18T00:00:00Z",
+      "level": 77149.8
+     },
+     {
+      "kind": "choch",
+      "direction": "bear",
+      "breakTime": "2026-09-23T12:00:00Z",
+      "level": 85080.0
+     },
+     {
+      "kind": "choch",
+      "direction": "bull",
+      "breakTime": "2026-09-26T20:00:00Z",
+      "level": 84296.6
+     },
+     {
+      "kind": "choch",
+      "direction": "bear",
+      "breakTime": "2026-09-28T00:00:00Z",
+      "level": 83778.4
+     }
+    ]
+   }
+  }
+ ],
+ "rationale": "ALGORITHMS §18.2 GS-3. Подавление §3.2: внутреннее событие на свече внешнего события того же направления не выдаётся. Внутренний CHoCH bull 09-18 00:00 (hard) на 3 свечи раньше внешнего CHoCH 09-18 12:00.",
+ "algoVersion": "1.0.0",
+ "author": "technical-analyst (значения из docs/specs/ALGORITHMS.md §18, перенесены Backend)",
+ "date": "2026-11-03"
+}

@@ -30,6 +30,9 @@ for (const symbol of ['ETHUSDT', 'SOLUSDT']) {
 items.push({ kind: 'klines', period: 'daily', symbol: 'SOLUSDT', tf: '15m', date: '2026-08-09' });
 for (const d of ['2026-08-04', '2026-08-24', '2026-10-19']) items.push({ kind: 'klines', period: 'daily', symbol: 'BTCUSDT', tf: '15m', date: d });
 for (const d of ['2026-08', '2026-09']) items.push({ kind: 'klines', period: 'monthly', symbol: 'BTCUSDT', tf: '1d', date: d });
+// непрерывные ряды для тестов генерации заданий (1h: 1464 свечи) и примеров §5.5/§7.1 (4h 2026-07/08)
+for (const d of ['2026-08', '2026-09']) items.push({ kind: 'klines', period: 'monthly', symbol: 'BTCUSDT', tf: '1h', date: d });
+for (const d of ['2026-07', '2026-08']) items.push({ kind: 'klines', period: 'monthly', symbol: 'BTCUSDT', tf: '4h', date: d });
 items.push({ kind: 'aggTrades', period: 'daily', symbol: 'BTCUSDT', date: day, excerpt: AGG_LINES });
 
 const sha = (buf) => createHash('sha256').update(buf).digest('hex');

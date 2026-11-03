@@ -1,0 +1,61 @@
+{
+ "id": "GS-8",
+ "function": "analyzeStructure",
+ "source": {
+  "csv": "klines/SOLUSDT/15m/SOLUSDT-15m-2026-08-09.csv",
+  "sha256": "b8910898cd24ec8b4c21c905db4fef6ca410dccd5fd6368a20fa4d99ee7ec98f"
+ },
+ "params": {
+  "nExt": 5,
+  "nInt": null,
+  "sweepHoldK": 3,
+  "fvgMinAtr": 0.5,
+  "obDisplacementAtr": 1.2
+ },
+ "expected": {
+  "events": [
+   {
+    "kind": "bos",
+    "direction": "bull",
+    "breakTime": "2026-08-09T06:15:00Z",
+    "level": 76.11
+   },
+   {
+    "kind": "bos",
+    "direction": "bull",
+    "breakTime": "2026-08-09T13:15:00Z",
+    "level": 76.64
+   },
+   {
+    "kind": "bos",
+    "direction": "bull",
+    "breakTime": "2026-08-09T22:00:00Z",
+    "level": 77.56
+   },
+   {
+    "kind": "choch",
+    "direction": "bear",
+    "breakTime": "2026-08-09T22:45:00Z",
+    "level": 77.04
+   }
+  ],
+  "noEventAt": "2026-08-09T22:30:00Z",
+  "sweep": {
+   "side": "low",
+   "direction": "bull",
+   "time": "2026-08-09T20:00:00Z",
+   "level": 77.06,
+   "sweptSwingTime": "2026-08-09T18:15:00Z",
+   "close": 77.06
+  },
+  "pendingNotInReference": {
+   "time": "2026-08-09T23:45:00Z",
+   "type": "low",
+   "price": 76.16
+  }
+ },
+ "rationale": "ALGORITHMS §18.2 GS-8, §5.5: 22:30 close 77.04 == защищённый low 77.04 -> CHoCH нет; §6.3: close == уровень -> sweep. Swing 23:45 — кандидат у правого края (§2.3/2.4).",
+ "algoVersion": "1.0.0",
+ "author": "technical-analyst (значения из docs/specs/ALGORITHMS.md §18, перенесены Backend)",
+ "date": "2026-11-03"
+}

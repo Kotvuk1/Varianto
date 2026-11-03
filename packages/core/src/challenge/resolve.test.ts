@@ -4,7 +4,6 @@ import { loadAggTrades, loadKlines } from '../testing/fixtures-pa-challenge';
 import { resolveTrade, type AggTrade, type FutureProvider, type Position } from './resolve';
 
 const M = 60_000;
-const STEP: Record<string, number> = { '1m': M, '15m': 15 * M, '1h': 60 * M, '4h': 240 * M, '1d': 1440 * M };
 
 const c15 = [
   ...loadKlines('klines/BTCUSDT/15m/BTCUSDT-15m-2026-10-20.csv'),
@@ -193,4 +192,3 @@ describe('resolveTrade: граничные случаи', () => {
   });
 });
 
-void STEP;

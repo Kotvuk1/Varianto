@@ -106,18 +106,19 @@ export function TerminalScreen() {
     <div className="flex min-h-0 flex-1 flex-col" data-testid="terminal" data-source={mode}>
       <header className="flex h-12 shrink-0 items-center gap-1 border-b border-border bg-surface-1 px-2 lg:px-4">
         <IconButton label={tx.menu} icon={<Menu size={20} strokeWidth={1.75} />} className="lg:hidden" onClick={() => setMenuOpen(true)} />
-        <Link href="/" className="mr-2 hidden text-base font-semibold lg:block">
+        <Link href="/" className="mr-2 hidden text-base font-semibold whitespace-nowrap lg:block">
           {ru.appName}
         </Link>
         <DesktopTabs className="mr-4" />
         <PairPicker value={symbol} onChange={(s) => setSymbol(s)} />
-        <Segmented
-          label={tx.timeframe}
-          options={TERMINAL_TIMEFRAMES.map((v) => ({ value: v, label: TF_LABEL[v] }))}
-          value={tf}
-          onChange={setTf}
-          className="w-auto"
-        />
+        <div className="w-[184px] shrink-0 lg:w-60">
+          <Segmented
+            label={tx.timeframe}
+            options={TERMINAL_TIMEFRAMES.map((v) => ({ value: v, label: TF_LABEL[v] }))}
+            value={tf}
+            onChange={setTf}
+          />
+        </div>
         <div className="ml-auto hidden items-center gap-2 lg:flex">
           {statusBadge}
           <Link href="/settings" aria-label={ru.actions.settings} title={ru.actions.settings} className="flex size-11 items-center justify-center rounded-md hover:bg-surface-2">
@@ -163,7 +164,7 @@ export function TerminalScreen() {
             </div>
           )}
           {blocking && data.error && <ErrorBlock {...data.error} onRetry={data.reload} />}
-          <div className="absolute bottom-2 left-2 z-10 flex max-w-[calc(100%-1rem)] items-center gap-1 rounded-md border border-border bg-surface-1 pl-3 text-sm" data-testid="context-bar">
+          <div className="absolute bottom-10 left-2 z-10 flex max-w-[calc(100%-1rem)] items-center gap-1 rounded-md border border-border bg-surface-1 pl-3 text-sm" data-testid="context-bar">
             {selected ? (
               <>
                 <span className="font-medium">{markTitle(selected)}</span>

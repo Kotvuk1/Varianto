@@ -19,7 +19,7 @@ describe('TIMEFRAME_MS', () => {
 });
 
 describe('ALGO_VERSION', () => {
-  it('равна 0.1.0', () => {
-    expect(ALGO_VERSION).toBe('0.1.0');
+  it('равна 1.0.0', () => {
+    expect(ALGO_VERSION).toBe('1.0.0');
   });
 });

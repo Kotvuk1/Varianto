@@ -1,0 +1,51 @@
+{
+ "id": "GS-9",
+ "function": "detectSwings",
+ "source": {
+  "csv": [
+   "klines/BTCUSDT/15m/BTCUSDT-15m-2026-08-24.csv",
+   "klines/BTCUSDT/15m/BTCUSDT-15m-2026-08-04.csv"
+  ],
+  "sha256": [
+   "5da5c0b8dabaa02f269ba0a31c13c6db4399df6b9c7b7655e8c39966dfcd019a",
+   "1099d72177360c812bd782d69474520b1cabf0729fcfff847f4e685409f5b0e9"
+  ]
+ },
+ "cases": [
+  {
+   "csv": "klines/BTCUSDT/15m/BTCUSDT-15m-2026-08-24.csv",
+   "n": 5,
+   "swingHigh": {
+    "time": "2026-08-24T21:00:00Z",
+    "price": 79012.6
+   },
+   "notSwingHigh": "2026-08-24T21:45:00Z",
+   "labelOf21:00": "LH",
+   "prevHighTime": "2026-08-24T19:00:00Z",
+   "prevHighPrice": 79089.1
+  },
+  {
+   "csv": "klines/BTCUSDT/15m/BTCUSDT-15m-2026-08-04.csv",
+   "n": [
+    3,
+    2
+   ],
+   "swingHigh": {
+    "time": "2026-08-04T18:15:00Z",
+    "price": 64370.0
+   },
+   "notSwingHigh": "2026-08-04T18:30:00Z",
+   "sweepN3": {
+    "side": "high",
+    "time": "2026-08-04T19:30:00Z",
+    "level": 64370.0,
+    "high": 64388.0,
+    "close": 64351.1
+   }
+  }
+ ],
+ "rationale": "ALGORITHMS §2.3, §18.2 GS-9: равные максимумы — swing только более ранний; вторая вершина снимается sweep.",
+ "algoVersion": "1.0.0",
+ "author": "technical-analyst (значения из docs/specs/ALGORITHMS.md §18, перенесены Backend)",
+ "date": "2026-11-03"
+}

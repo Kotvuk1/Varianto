@@ -1,0 +1,164 @@
+{
+ "id": "GS-7",
+ "function": "analyzeStructure",
+ "source": {
+  "csv": [
+   "klines/BTCUSDT/15m/BTCUSDT-15m-2026-10-20.csv",
+   "klines/BTCUSDT/15m/BTCUSDT-15m-2026-10-21.csv"
+  ],
+  "sha256": [
+   "eb9928cba154bfbdd0bf1a28ca068c47ea3c608605fcc8efc8dfa965cff86235",
+   "8eea9a9b1c1ab34efe11fd56c00161c320a334d6fc4128257bfcb531288d8fcd"
+  ]
+ },
+ "params": {
+  "nExt": 5,
+  "nInt": 2,
+  "sweepHoldK": 3,
+  "fvgMinAtr": 0.5,
+  "obDisplacementAtr": 1.2
+ },
+ "expected": {
+  "externalEvents": [
+   {
+    "kind": "bos",
+    "direction": "bull",
+    "breakTime": "2026-10-20T12:30:00Z",
+    "level": 81626.4
+   },
+   {
+    "kind": "bos",
+    "direction": "bull",
+    "breakTime": "2026-10-21T09:00:00Z",
+    "level": 83420.0
+   },
+   {
+    "kind": "bos",
+    "direction": "bull",
+    "breakTime": "2026-10-21T13:00:00Z",
+    "level": 83686.2
+   }
+  ],
+  "internalEvents": [
+   {
+    "kind": "bos",
+    "direction": "bull",
+    "breakTime": "2026-10-20T03:00:00Z",
+    "level": 81823.2
+   },
+   {
+    "kind": "choch",
+    "direction": "bear",
+    "breakTime": "2026-10-20T07:30:00Z",
+    "level": 81578.2
+   },
+   {
+    "kind": "bos",
+    "direction": "bear",
+    "breakTime": "2026-10-20T12:00:00Z",
+    "level": 81436.3
+   },
+   {
+    "kind": "bos",
+    "direction": "bull",
+    "breakTime": "2026-10-20T13:45:00Z",
+    "level": 81751.7
+   },
+   {
+    "kind": "bos",
+    "direction": "bull",
+    "breakTime": "2026-10-20T16:45:00Z",
+    "level": 82684.4
+   },
+   {
+    "kind": "bos",
+    "direction": "bull",
+    "breakTime": "2026-10-20T22:00:00Z",
+    "level": 82980.0
+   },
+   {
+    "kind": "choch",
+    "direction": "bear",
+    "breakTime": "2026-10-21T01:00:00Z",
+    "level": 82824.1
+   },
+   {
+    "kind": "bos",
+    "direction": "bear",
+    "breakTime": "2026-10-21T02:00:00Z",
+    "level": 82750.4
+   },
+   {
+    "kind": "choch",
+    "direction": "bull",
+    "breakTime": "2026-10-21T05:00:00Z",
+    "level": 82837.2
+   },
+   {
+    "kind": "choch",
+    "direction": "bear",
+    "breakTime": "2026-10-21T05:30:00Z",
+    "level": 82698.9
+   },
+   {
+    "kind": "choch",
+    "direction": "bull",
+    "breakTime": "2026-10-21T07:15:00Z",
+    "level": 82881.9
+   },
+   {
+    "kind": "choch",
+    "direction": "bear",
+    "breakTime": "2026-10-21T19:00:00Z",
+    "level": 84339.9
+   },
+   {
+    "kind": "choch",
+    "direction": "bull",
+    "breakTime": "2026-10-21T20:30:00Z",
+    "level": 84568.9
+   },
+   {
+    "kind": "choch",
+    "direction": "bear",
+    "breakTime": "2026-10-21T23:00:00Z",
+    "level": 84400.0
+   }
+  ],
+  "suppressedInternal": [
+   {
+    "time": "2026-10-20T12:30:00Z",
+    "kind": "choch",
+    "direction": "bull"
+   },
+   {
+    "time": "2026-10-21T13:00:00Z",
+    "kind": "bos",
+    "direction": "bull"
+   }
+  ],
+  "finalState": {
+   "trend": "up",
+   "refHigh": {
+    "time": "2026-10-21T16:30:00Z",
+    "price": 84875.2
+   },
+   "refLow": {
+    "time": "2026-10-20T19:15:00Z",
+    "price": 82345.6
+   }
+  },
+  "orderBlock": {
+   "eventTime": "2026-10-21T09:00:00Z",
+   "time": "2026-10-21T05:45:00Z",
+   "bottom": 82594.8,
+   "top": 82770.7,
+   "valid": true,
+   "status": "fresh"
+  }
+ },
+ "rationale": "ALGORITHMS §18.2 GS-7. Защищённый low 82345.6 не сдвинут BOS 10-21 13:00 (нет внешнего swing low в (08:45, 13:00]).",
+ "algoVersion": "1.0.0",
+ "author": "technical-analyst (значения из docs/specs/ALGORITHMS.md §18, перенесены Backend)",
+ "date": "2026-11-03"
+}

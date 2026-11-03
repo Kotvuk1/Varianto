@@ -2,6 +2,7 @@ import { expect, test } from '@playwright/test';
 import { chartBox, drawTwoPoint, markPoints, openTerminal, selectTool, tapAt } from './terminal.helpers';
 
 // Реальные свечи: архив Binance (data.binance.vision) через /api/history, режим ?source=archive.
+test.setTimeout(120_000);
 
 test('график отрисован на реальных свечах архива, плашка источника показана', async ({ page }) => {
   const chart = await openTerminal(page);
@@ -15,7 +16,6 @@ test('смена ТФ перезагружает свечи и сохраняе�
   const before = Number(await chart.getAttribute('data-candle-count'));
   await page.getByRole('radio', { name: '4H' }).click();
   await expect(page.getByRole('radio', { name: '4H' })).toHaveAttribute('aria-checked', 'true');
-  await expect(chart).toHaveAttribute('aria-label', /4H/, { timeout: 0 }).catch(() => undefined);
   await expect.poll(async () => page.locator('[aria-label="BTCUSDT 4H"]').count(), { timeout: 60_000 }).toBeGreaterThan(0);
   expect(Number(await chart.getAttribute('data-candle-count'))).toBeGreaterThan(0);
   expect(before).toBeGreaterThan(0);

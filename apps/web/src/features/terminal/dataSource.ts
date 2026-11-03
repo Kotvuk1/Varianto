@@ -32,11 +32,16 @@ const DAY = 86_400_000;
 export const ARCHIVE_MIN_AGE_MS = 2 * DAY;
 export const HISTORY_PAGE = 1500;
 
+/** Размер страницы архива: ~3 месяца, чтобы холодный запрос (monthly zip) был быстрым. */
+export function archivePageSize(tf: Timeframe): number {
+  return Math.min(HISTORY_PAGE, Math.ceil((92 * DAY) / TIMEFRAME_MS[tf]));
+}
+
 /**
  * Окно запроса к /api/history. `before` - openTime самой старой имеющейся свечи (исключительно); без него -
  * последние `count` свечей, доступные в архиве на момент `now`. Границы выровнены по шагу ТФ.
  */
-export function archiveWindow(tf: Timeframe, now: number, count = HISTORY_PAGE, before?: number) {
+export function archiveWindow(tf: Timeframe, now: number, count = archivePageSize(tf), before?: number) {
   const step = TIMEFRAME_MS[tf];
   const latest = Math.floor((now - ARCHIVE_MIN_AGE_MS - step) / step) * step;
   const to = before !== undefined ? Math.min(before, latest) : latest;

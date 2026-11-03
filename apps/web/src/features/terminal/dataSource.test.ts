@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { TIMEFRAME_MS } from '@tl/core';
-import { archiveAllowed, archiveWindow, normalizeSymbolInput, resolveSourceMode } from './dataSource';
+import { archiveAllowed, archivePageSize, archiveWindow, normalizeSymbolInput, resolveSourceMode } from './dataSource';
 import { errorCopy } from './strings';
 
 describe('normalizeSymbolInput', () => {
@@ -47,6 +47,15 @@ describe('archiveWindow', () => {
     expect(older.to).toBe(first.from);
     expect(archiveWindow('1h', now, 100, now).to).toBe(first.to);
     expect(step).toBeGreaterThan(0);
+  });
+});
+
+describe('archivePageSize', () => {
+  it('15m и 1h - полные 1500 свечей, старшие ТФ - около 3 месяцев', () => {
+    expect(archivePageSize('15m')).toBe(1500);
+    expect(archivePageSize('1h')).toBe(1500);
+    expect(archivePageSize('4h')).toBe(552);
+    expect(archivePageSize('1d')).toBe(92);
   });
 });
 

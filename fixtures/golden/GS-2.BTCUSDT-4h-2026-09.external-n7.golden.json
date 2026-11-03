@@ -1,0 +1,161 @@
+{
+ "id": "GS-2",
+ "function": "analyzeStructure",
+ "source": {
+  "csv": "klines/BTCUSDT/4h/BTCUSDT-4h-2026-09.csv",
+  "sha256": "83ab0cd5a285a747946fcc17684ecafe368a6d982f000f1890e76136e8b3b92a"
+ },
+ "params": {
+  "nExt": 7,
+  "nInt": null,
+  "sweepHoldK": 3,
+  "fvgMinAtr": 0.5,
+  "obDisplacementAtr": 1.2
+ },
+ "expected": {
+  "externalSwings": [
+   {
+    "time": "2026-09-02T08:00:00Z",
+    "type": "low",
+    "price": 76151.9,
+    "label": null
+   },
+   {
+    "time": "2026-09-03T20:00:00Z",
+    "type": "high",
+    "price": 82282.8,
+    "label": null
+   },
+   {
+    "time": "2026-09-06T20:00:00Z",
+    "type": "high",
+    "price": 80536.1,
+    "label": "LH"
+   },
+   {
+    "time": "2026-09-08T12:00:00Z",
+    "type": "low",
+    "price": 77600.1,
+    "label": "HL"
+   },
+   {
+    "time": "2026-09-09T08:00:00Z",
+    "type": "high",
+    "price": 79737.3,
+    "label": "LH"
+   },
+   {
+    "time": "2026-09-11T12:00:00Z",
+    "type": "high",
+    "price": 79859.8,
+    "label": "HH"
+   },
+   {
+    "time": "2026-09-11T12:00:00Z",
+    "type": "low",
+    "price": 76000.3,
+    "label": "LL"
+   },
+   {
+    "time": "2026-09-14T00:00:00Z",
+    "type": "low",
+    "price": 76350.1,
+    "label": "HL"
+   },
+   {
+    "time": "2026-09-14T20:00:00Z",
+    "type": "high",
+    "price": 79570.9,
+    "label": "LH"
+   },
+   {
+    "time": "2026-09-15T16:00:00Z",
+    "type": "low",
+    "price": 74909.4,
+    "label": "LL"
+   },
+   {
+    "time": "2026-09-19T12:00:00Z",
+    "type": "high",
+    "price": 81933.9,
+    "label": "HH"
+   },
+   {
+    "time": "2026-09-20T00:00:00Z",
+    "type": "low",
+    "price": 80095.9,
+    "label": "HL"
+   },
+   {
+    "time": "2026-09-21T20:00:00Z",
+    "type": "high",
+    "price": 87385.1,
+    "label": "HH"
+   },
+   {
+    "time": "2026-09-23T04:00:00Z",
+    "type": "high",
+    "price": 87247.3,
+    "label": "LH"
+   },
+   {
+    "time": "2026-09-24T08:00:00Z",
+    "type": "low",
+    "price": 82832.0,
+    "label": "HL"
+   },
+   {
+    "time": "2026-09-25T08:00:00Z",
+    "type": "high",
+    "price": 85224.0,
+    "label": "LH"
+   },
+   {
+    "time": "2026-09-27T12:00:00Z",
+    "type": "high",
+    "price": 85146.4,
+    "label": "LH"
+   },
+   {
+    "time": "2026-09-28T12:00:00Z",
+    "type": "low",
+    "price": 82500.1,
+    "label": "LL"
+   }
+  ],
+  "externalEvents": [
+   {
+    "kind": "bos",
+    "direction": "bear",
+    "breakTime": "2026-09-10T12:00:00Z",
+    "level": 77600.1,
+    "brokenSwingTime": null
+   },
+   {
+    "kind": "bos",
+    "direction": "bear",
+    "breakTime": "2026-09-15T20:00:00Z",
+    "level": 76000.3,
+    "brokenSwingTime": null
+   },
+   {
+    "kind": "choch",
+    "direction": "bull",
+    "breakTime": "2026-09-18T12:00:00Z",
+    "level": 79570.9,
+    "brokenSwingTime": null
+   },
+   {
+    "kind": "bos",
+    "direction": "bull",
+    "breakTime": "2026-09-21T08:00:00Z",
+    "level": 81933.9,
+    "brokenSwingTime": null
+   }
+  ]
+ },
+ "rationale": "ALGORITHMS §18.2 GS-2: N влияет на набор swing (нет 09-04 12:00, 09-05 16:00) и событий (нет BOS 09-06 20:00).",
+ "algoVersion": "1.0.0",
+ "author": "technical-analyst (значения из docs/specs/ALGORITHMS.md §18, перенесены Backend)",
+ "date": "2026-11-03"
+}

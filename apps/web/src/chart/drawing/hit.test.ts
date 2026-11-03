@@ -84,3 +84,15 @@ describe('hitTest', () => {
     expect(hitTest(geos([bos, ob]), 10, 10, toleranceFor('touch'))).toBeNull();
   });
 });
+
+describe('производительность (цель 200 объектов)', () => {
+  it('геометрия + хит-тест 200 меток укладывается в бюджет кадра', () => {
+    const marks = Array.from({ length: 200 }, (_, i) =>
+      mk(`p${i}`, i % 2 ? 'order-block' : 'bos', [a(i, 300 + (i % 20)), a(i + 10, 290 + (i % 20))]),
+    );
+    const t0 = performance.now();
+    const g = geos(marks);
+    for (let i = 0; i < 20; i++) hitTest(g, 123, 456, toleranceFor('touch'), 'p5');
+    expect(performance.now() - t0).toBeLessThan(100);
+  });
+});

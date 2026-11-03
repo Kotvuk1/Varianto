@@ -39,7 +39,7 @@ class ArchiveHttpError extends Error {
 }
 
 async function fetchArchive(symbol: Symbol, tf: Timeframe, before?: number): Promise<Candle[]> {
-  const { from, to } = archiveWindow(tf, Date.now(), HISTORY_PAGE, before);
+  const { from, to } = archiveWindow(tf, Date.now(), undefined, before);
   const q = new URLSearchParams({ symbol, tf, from: String(from), to: String(to) });
   const res = await fetch(`/api/history?${q.toString()}`);
   if (!res.ok) throw new ArchiveHttpError(res.status);
