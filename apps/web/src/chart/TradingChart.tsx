@@ -14,6 +14,8 @@ import {
   type Time,
 } from 'lightweight-charts';
 import { TIMEFRAME_MS, type Candle, type CandleSeries, type Mark, type Scope } from '@tl/core';
+import { CountdownBadge } from './CountdownBadge';
+import type { CandleCountdown } from './countdown';
 import { DrawingController, type ControllerNotice, type PointerInput } from './interaction/controller';
 import { DrawingPrimitive } from './drawing/DrawingPrimitive';
 import type { CandleHighlight, HighlightRange } from './drawing/highlight';
@@ -68,6 +70,9 @@ export interface TradingChartProps {
   now?: number;
   /** Подпись бейджа у незакрытой свечи. */
   openCandleLabel?: string;
+  /** Таймер до закрытия последней (незакрытой) свечи; null/не задан - не показывать. Только live-режим терминала. */
+  countdown?: CandleCountdown | null;
+  countdownLabel?: string;
   ariaLabel?: string;
   className?: string;
   /** tickSize символа из exchangeInfo, если известен; иначе таблица для BTC/ETH/SOL и 2 знака по умолчанию. */
@@ -624,6 +629,17 @@ export function TradingChart(props: TradingChartProps) {
         ref={containerRef}
         style={{ position: 'absolute', inset: 0, touchAction: 'none', userSelect: 'none' }}
       />
+      {props.countdown && last && !last.closed && (
+        <CountdownBadge
+          countdown={props.countdown}
+          tf={props.series.tf}
+          {...(props.countdownLabel ? { label: props.countdownLabel } : {})}
+          chartRef={chartRef}
+          candleRef={candleRef}
+          candlesRef={candlesRef}
+          containerRef={containerRef}
+        />
+      )}
       {shown && (
         <div
           data-testid="chart-legend"

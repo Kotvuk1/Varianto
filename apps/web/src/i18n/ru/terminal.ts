@@ -26,6 +26,7 @@ export const tx = {
   closePanel: 'Закрыть разбор',
   deleteMark: 'Удалить',
   clearSelection: 'Снять выбор',
+  candleCountdown: 'До закрытия свечи',
   loading: 'Загружаю свечи…',
   loadingMore: 'Догружаю историю…',
   statusLive: 'Live',

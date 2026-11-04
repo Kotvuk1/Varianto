@@ -4,6 +4,7 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { TIMEFRAME_MS, type Candle, type CandleSeries, type Symbol, type Timeframe } from '@tl/core';
 import { LiveFeed, LiveFeedError, findGaps, mergeCandles, type LiveStatus } from '@tl/market-data';
+import { ClockSync, sniffingFetch, sniffingWebSocket } from './clockSync';
 import { archiveWindow, HISTORY_PAGE, type SourceMode } from './dataSource';
 
 export interface LoadError {
@@ -55,7 +56,19 @@ const toLoadError = (e: unknown, mode: SourceMode): LoadError => {
 };
 
 export function useMarketData(symbol: Symbol, tf: Timeframe, mode: SourceMode) {
-  const feed = useMemo(() => new LiveFeed(), []);
+  const clock = useMemo(() => new ClockSync(), []);
+  const feed = useMemo(() => {
+    const WebSocket = sniffingWebSocket(clock);
+    return new LiveFeed({ fetch: sniffingFetch(clock), ...(WebSocket ? { WebSocket } : {}) });
+  }, [clock]);
+  const [clockOffsetMs, setClockOffsetMs] = useState(0);
+  useEffect(() => {
+    // смещение обновляется состоянием, только если сдвинулось заметно (не перерисовываем на каждом сообщении)
+    clock.onChange = () => setClockOffsetMs((prev) => (Math.abs(clock.offset() - prev) > 250 ? clock.offset() : prev));
+    return () => {
+      clock.onChange = null;
+    };
+  }, [clock]);
   const [state, setState] = useState<MarketState>({
     series: null,
     loading: true,
@@ -173,5 +186,5 @@ export function useMarketData(symbol: Symbol, tf: Timeframe, mode: SourceMode) {
   );
 
   const reload = useCallback(() => setReloadKey((k) => k + 1), []);
-  return { ...state, loadMore, reload, stepMs: TIMEFRAME_MS[tf] };
+  return { ...state, clockOffsetMs, loadMore, reload, stepMs: TIMEFRAME_MS[tf] };
 }

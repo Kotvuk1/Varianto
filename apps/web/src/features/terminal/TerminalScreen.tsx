@@ -95,6 +95,12 @@ export function TerminalScreen() {
   useScopeHotkey(true, () => setScope(otherScope(scope)));
   const data = useMarketData(symbol, tf, mode);
   const shownSymbol = data.series?.symbol ?? null;
+  const lastCandle = data.series?.candles[data.series.candles.length - 1];
+  // Таймер только в live и пока последняя свеча не закрыта (архив/задания не передают countdown)
+  const countdown =
+    mode === 'live' && data.series?.source === 'binance-live' && lastCandle && !lastCandle.closed
+      ? { closeTime: lastCandle.openTime + data.stepMs, offsetMs: data.clockOffsetMs }
+      : null;
   const { marks, setMarks } = useTerminalMarks(shownSymbol);
   const fmt = useMemo(() => makePriceFormatter(tickSizeFor(shownSymbol ?? symbol)), [shownSymbol, symbol]);
 
@@ -273,6 +279,8 @@ export function TerminalScreen() {
                   if (data.hasMore) void data.loadMore(before);
                 }}
                 openCandleLabel={tx.openCandle}
+                countdown={countdown}
+                countdownLabel={tx.candleCountdown}
                 ariaLabel={`${data.series.symbol} ${TF_LABEL[data.series.tf]}`}
                 onNotice={setNotice}
                 focus={focus}
