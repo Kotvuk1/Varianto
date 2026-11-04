@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { startSession, submitDecision, waitResult } from './challenge.helpers';
+import { expandResult, startSession, submitDecision, waitResult } from './challenge.helpers';
 
 // Скриншоты приёмки. Запуск: SHOTS_DIR=/path E2E_PORT=3300 pnpm test:e2e challenge.shots
 const dir = process.env.SHOTS_DIR;
@@ -25,6 +25,12 @@ test('скриншоты: решение, проигрывание, итог', a
     await page.getByTestId('replay-pause').click();
     await page.getByTestId('replay-skip').click();
   }
-  await expect(page.getByTestId('challenge-result')).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByTestId('challenge-session')).toHaveAttribute('data-phase', 'result', { timeout: 30_000 });
+  if (await page.getByTestId('challenge-result-peek').isVisible().catch(() => false)) {
+    await page.waitForTimeout(600); // анимация шторки
+    await page.screenshot({ path: `${dir}/${name}-3-result-peek.png` });
+  }
+  await expandResult(page);
+  await page.waitForTimeout(600);
   await page.screenshot({ path: `${dir}/${name}-3-result.png` });
 });

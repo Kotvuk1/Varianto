@@ -170,7 +170,8 @@ test('«Проверить»: BOS на месте CHoCH ядра - разбор 
   const panel = page.getByTestId('check-panel');
   await expect(panel).toBeVisible();
   await expect(panel).toHaveAttribute('data-codes', /BOS_CHOCH_CONFUSED/);
-  for (const part of ['verdict', 'understood', 'mistakes', 'why', 'howto', 'principle']) await expect(panel.getByTestId(`fb-fb-${part}`)).toBeVisible();
+  await expect(panel.getByTestId('check-verdict')).toContainText(/из \d+ ваших меток подтверждено/);
+  for (const part of ['understood', 'mistakes', 'why', 'howto', 'principle']) await expect(panel.getByTestId(`fb-fb-${part}`)).toBeVisible();
   await expect(panel.getByTestId('grade-legend')).toBeVisible();
   await expect(panel).toContainText('Проверка в терминале не сохраняется');
 

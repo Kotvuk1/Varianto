@@ -111,7 +111,7 @@ export function runCheck(candles: readonly Candle[], tf: Timeframe, userMarks: r
     levelPricePct: 0.1,
     scoped: false,
   });
-  const isMissed = (e: { code: string }) => e.code.endsWith('_MISSED');
+  const isMissed = (e: { code: string }) => /_MISS(ED|ING)$/.test(e.code);
   const feedbackOf = (errors: typeof grade.errors) =>
     buildFeedback({
       module: 'market-structure',

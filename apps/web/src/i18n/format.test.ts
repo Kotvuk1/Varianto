@@ -20,3 +20,14 @@ describe('format', () => {
     expect(localDay(d.getTime())).toBe('2026-11-03');
   });
 });
+
+describe('даты и числа в разборе', () => {
+  it('родительный падеж: «5 марта, 17:00»', async () => {
+    const { formatDateTime, formatDecimal, formatPercentValue, formatRValue } = await import('./format');
+    expect(formatDateTime(new Date(2026, 2, 5, 17, 0).getTime())).toBe('5 марта, 17:00');
+    expect(formatDecimal(0.20344834672530776)).toBe('0,2');
+    expect(formatPercentValue(0.2)).toBe('0,2%');
+    expect(formatRValue(2.0000000000000338)).toBe('2 R');
+    expect(formatRValue(-1.5)).toBe('−1,5 R');
+  });
+});

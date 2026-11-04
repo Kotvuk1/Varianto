@@ -13,7 +13,7 @@ describe('формат цен', () => {
   it('таблица для трёх пар, по умолчанию 2 знака', () => {
     expect(tickSizeFor('BTCUSDT')).toBe(0.1);
     expect(tickSizeFor('ETHUSDT')).toBe(0.01);
-    expect(tickSizeFor('SOLUSDT')).toBe(0.001);
+    expect(tickSizeFor('SOLUSDT')).toBe(0.01);
     expect(tickSizeFor('XRPUSDT')).toBe(0.01);
     expect(tickSizeFor('BTCUSDT', 0.5)).toBe(0.5);
   });

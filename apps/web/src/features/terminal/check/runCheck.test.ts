@@ -67,7 +67,7 @@ describe('runCheck на реальных свечах', () => {
     const o = runCheck(candles, '1h', [asUser(choch)]);
     if (!o.ok) throw new Error('ожидался результат');
     expect(o.result.summary).toEqual({ matched: 1, total: 1 });
-    expect(o.result.feedback.mistakes.every((b) => !b.code?.endsWith('_MISSED'))).toBe(true);
+    expect(o.result.feedback.mistakes.every((b) => !/_MISS(ED|ING)$/.test(b.code ?? ''))).toBe(true);
   });
 
   it('учитываются только типы меток пользователя: при одном CHoCH нет пропусков swing', () => {

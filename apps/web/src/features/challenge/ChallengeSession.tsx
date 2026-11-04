@@ -218,7 +218,7 @@ export function ChallengeSession() {
     const d = g.detail.challenge;
     const outcome = d.outcome ? formatR(d.outcome.rMultiple) : d.waitCorrect ? ch.result.waitOk : ch.result.waitBad;
     const verdict = ch.result.verdicts[g.verdict];
-    return d.quality ? ch.result.summary(outcome, verdict, ch.result.qualityOf(Math.round(d.quality.score))) : ch.result.summaryNoQuality(outcome, verdict);
+    return d.quality ? ch.result.summary(outcome, verdict, `${Math.round(d.quality.score)}/100`) : ch.result.summaryNoQuality(outcome, verdict);
   })();
   const sheetToggle = (
     <Button
@@ -382,8 +382,13 @@ export function ChallengeSession() {
           footer={sheetH === 'peek' ? undefined : resultButtons}
         >
           {sheetH === 'peek' ? (
-            <div data-testid="challenge-summary" className="flex items-center gap-2">
-              {resultButtons}
+            <div data-testid="challenge-result-peek" className="flex items-center gap-2">
+              <Button variant="primary" size="md" className="flex-1" onClick={next} data-testid="challenge-next">
+                {ch.result.next}
+              </Button>
+              <Button variant="secondary" size="md" className="flex-1" onClick={exit} data-testid="challenge-exit">
+                {ch.result.exit}
+              </Button>
               <IconButton
                 label={ss.expandSheet}
                 icon={<ChevronUp size={20} strokeWidth={1.75} />}

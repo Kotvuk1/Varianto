@@ -20,6 +20,13 @@ test('MS «Разметка»: метка, проверка, разбор, сл�
   await openSession(page, `${MS}/session?mode=mark&difficulty=easy&tf=1h&symbol=BTCUSDT`);
   await expect(page.getByTestId('task-text')).toContainText('в подсвеченной области: ожидается');
   await shot(page, 'ms-mark-before');
+  if ((page.viewportSize()?.width ?? 0) >= 1024) {
+    // F-09: правая панель до проверки не пуста
+    await expect(page.getByTestId('task-criteria')).toBeVisible();
+  } else {
+    // F-08: условие задания не обрезается одной строкой, (i) раскрывает справку
+    await expect(page.getByTestId('task-hint-toggle')).toBeVisible();
+  }
   // набор инструментов ограничен понятиями задания (лёгкий: без Sweep, FVG, Order Block)
   await expect(page.getByRole('button', { name: 'Зоны', exact: true })).toHaveCount(0);
   await selectTool(page, 'Swing High', 'Свинги');
@@ -28,6 +35,9 @@ test('MS «Разметка»: метка, проверка, разбор, сл�
   await checkAndSeeResult(page);
   await expect(page.getByTestId('result-summary')).toContainText('Верно:');
   await shot(page, 'ms-mark-after');
+  // F-06: «Итог» идёт первым, легенда свёрнута
+  await expect(page.locator('[data-testid="feedback-view"] section').first()).toHaveAttribute('data-testid', 'fb-fb-verdict');
+  await expect(page.getByTestId('grade-legend')).toBeHidden();
   await nextThenHomeShowsDone(page, MS);
 });
 
@@ -92,4 +102,13 @@ test('MS easy: переключателя слоя нет', async ({ page }) => 
   await openSession(page, `${MS}/session?mode=mark&difficulty=medium&tf=1h&symbol=BTCUSDT`);
   await selectTool(page, 'BOS', 'Пробои').catch(() => undefined);
   await expect(page.getByTestId('scope-switch')).toHaveCount(0);
+});
+
+test('404: страница на русском со ссылками «На главную» и «Терминал»', async ({ page }) => {
+  await page.goto('/no-such-page');
+  await expect(page.getByTestId('not-found')).toContainText('Страница не найдена');
+  await expect(page.getByRole('link', { name: 'На главную' })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Терминал' }).last()).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+  await shot(page, '404');
 });

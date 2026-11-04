@@ -55,7 +55,7 @@ describe('тренд и тренировка', () => {
     expect(trainTarget(stat('choch', rep(6, false))).href).toBe('/learn/market-structure/session?mode=mark&difficulty=easy&focus=choch');
     expect(trainTarget(stat('pa-pin-bar', rep(6, false))).href).toBe('/learn/price-action/session?type=find-pattern&difficulty=easy&focus=pa-pin-bar');
     expect(trainTarget(stat('pa-level', rep(6, false))).href).toContain('type=draw-level');
-    expect(trainTarget(stat('challenge-wait', rep(6, false))).href).toBe('/learn/challenge/session?difficulty=easy');
+    expect(trainTarget(stat('challenge-wait', rep(6, false))).href).toBe('/learn/challenge/session?difficulty=easy&focus=challenge-wait');
   });
   it('при точности >= 0.8 на полном окне сложность растёт', () => {
     expect(trainTarget(stat('bos', rep(20, true))).href).toContain('difficulty=medium');

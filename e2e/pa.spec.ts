@@ -27,6 +27,9 @@ test('PA «Проведи уровень»: уровень, проверка, р
 test('PA «Найди модель»: касание свечи, проверка, разбор', async ({ page }) => {
   await openSession(page, `${PA}/session?type=find-pattern&difficulty=easy&tf=1h&symbol=BTCUSDT`);
   await shot(page, 'pa-find-before');
+  // F-01: подсказка про инструмент «Модель», а не про Swing High
+  await expect(page.getByTestId('instruction-text')).toContainText('Модель');
+  await expect(page.getByTestId('instruction-text')).not.toContainText('Swing');
   await tapCandle(page, 10);
   await expect(page.getByTestId('chart')).toHaveAttribute('data-mark-count', '1');
   await checkAndSeeResult(page);

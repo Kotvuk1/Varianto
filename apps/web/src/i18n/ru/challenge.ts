@@ -130,8 +130,8 @@ export const ch = {
     next: 'Следующий сценарий',
     exit: 'Выйти',
     show: 'Показать итог',
-    summary: (outcome: string, verdict: string, score: string) => `${outcome} · решение ${verdict} · ${score}`,
-    summaryNoQuality: (outcome: string, verdict: string) => `${outcome} · решение ${verdict}`,
+    summary: (outcome: string, verdict: string, score: string) => `${outcome} · ${verdict} · ${score}`,
+    summaryNoQuality: (outcome: string, verdict: string) => `${outcome} · ${verdict}`,
     components: {
       htf: 'Старший ТФ',
       structure: 'Структура',

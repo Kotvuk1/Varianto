@@ -43,3 +43,11 @@ export async function waitResult(page: Page) {
   await expect(page.getByTestId('challenge-session')).toHaveAttribute('data-phase', 'replay', { timeout: 90_000 });
   await expect(page.getByTestId('replay-status')).toContainText('Идёт сценарий');
 }
+
+/** Итог на мобильном: шторка открывается свёрнутой (peek) — раскрываем до разбора; на десктопе панель уже открыта. */
+export async function expandResult(page: Page) {
+  await expect(page.getByTestId('challenge-session')).toHaveAttribute('data-phase', 'result', { timeout: 90_000 });
+  const toggle = page.getByTestId('sheet-toggle');
+  if (await toggle.isVisible().catch(() => false)) await toggle.click();
+  await expect(page.getByTestId('challenge-result')).toBeVisible();
+}

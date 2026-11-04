@@ -22,7 +22,10 @@ async function pickVisible(page: Page, marks: Mark[], box: { x: number; y: numbe
   return null;
 }
 
+const THEME = process.env.SHOTS_THEME === 'light' ? 'light' : 'dark';
+
 test(`терминал: разметка из вывода ядра и разбор после «Проверить»`, async ({ page }, info) => {
+  if (THEME === 'light') await page.addInitScript(() => localStorage.setItem('tl:appearance', JSON.stringify({ theme: 'light', candleStyle: 'color' })));
   const chart = await openTerminal(page);
   const box = await chartBox(chart);
   const marks = await coreMarks(page);
@@ -56,12 +59,12 @@ test(`терминал: разметка из вывода ядра и разб�
   }
   await selectTool(page, 'Выбор');
   await page.waitForTimeout(600);
-  await page.screenshot({ path: `${dir}/${info.project.name}-dark-marks.png` });
+  await page.screenshot({ path: `${dir}/${info.project.name}-${THEME}-marks.png` });
 
   await check.click();
   await page.getByTestId('check-panel').waitFor();
   await page.waitForTimeout(500);
-  await page.screenshot({ path: `${dir}/${info.project.name}-dark-check.png` });
+  await page.screenshot({ path: `${dir}/${info.project.name}-${THEME}-check.png` });
   log.push({ checkCodes: await page.getByTestId('check-panel').getAttribute('data-codes') });
   writeFileSync(`${dir}/${info.project.name}-marks.json`, JSON.stringify(log, null, 2));
 });

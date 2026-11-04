@@ -67,3 +67,11 @@ describe('GradeLegend', () => {
     expect(l.textContent).toMatch(/Лишнее/);
   });
 });
+
+describe('числа и enum в тексте разбора', () => {
+  it('сырые float округляются, % и R с запятой, up/down словарём', () => {
+    const t = renderBlock('feedback.BOS_CHOCH_CONFUSED.howTo', { protected: 81155.4, devPct: 0.20344834672530776 }, (p) => `P${p}`);
+    expect(t).not.toMatch(/\d\.\d{4,}/);
+    expect(renderBlock('feedback.verdict.challenge.correct', { score: 85 }, (p) => `${p}`)).toContain('85');
+  });
+});

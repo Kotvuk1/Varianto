@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { DATE_LEAK, lastCandleTime, num, projectPoint, startSession, submitDecision, waitResult } from './challenge.helpers';
+import { DATE_LEAK, lastCandleTime, num, projectPoint, expandResult, startSession, submitDecision, waitResult } from './challenge.helpers';
 
 // Реальный сервер (next start): next/grade ходят в data.binance.vision. Моков данных нет.
 test.setTimeout(240_000);
@@ -53,6 +53,7 @@ test('LONG: SL/TP перетаскиванием -> проигрывание -> 
   await page.getByTestId('replay-skip').click();
 
   await expect(page.getByTestId('challenge-session')).toHaveAttribute('data-phase', 'result');
+  await expandResult(page);
   const res = page.getByTestId('challenge-result');
   await expect(res).toBeVisible();
   await expect(page.getByTestId('result-date')).toHaveText(/20(1[7-9]|2[0-6])/);
@@ -109,6 +110,7 @@ test('WAIT: без SL/TP, разбор без R', async ({ page }) => {
   await submitDecision(page, 'range-no-edge');
   await waitResult(page);
   await page.getByTestId('replay-skip').click();
+  await expandResult(page);
   const res = page.getByTestId('challenge-result');
   await expect(res).toBeVisible({ timeout: 30_000 });
   await expect(page.getByTestId('result-outcome-sub')).toHaveText('R для WAIT не считается');

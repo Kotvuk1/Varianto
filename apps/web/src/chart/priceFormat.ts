@@ -1,5 +1,5 @@
 // Единый формат цен графика, подписей меток и списка: пробел между разрядами, запятая, точность по tickSize.
-const TICK_TABLE: Readonly<Record<string, number>> = { BTCUSDT: 0.1, ETHUSDT: 0.01, SOLUSDT: 0.001 };
+const TICK_TABLE: Readonly<Record<string, number>> = { BTCUSDT: 0.1, ETHUSDT: 0.01, SOLUSDT: 0.01 };
 const DEFAULT_TICK = 0.01;
 
 /** tickSize символа: из exchangeInfo (если передан), иначе таблица для трёх пар, иначе 0.01. */
