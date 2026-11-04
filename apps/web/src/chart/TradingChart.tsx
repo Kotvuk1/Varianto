@@ -1,6 +1,6 @@
 'use client';
 // React-обёртка Lightweight Charts v5: свечи + объём, слой разметки на Series Primitive, Pointer Events.
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useImperativeHandle, useLayoutEffect, useMemo, useRef, useState, type Ref } from 'react';
 import {
   CandlestickSeries,
   ColorType,
@@ -16,7 +16,7 @@ import {
 import { TIMEFRAME_MS, type Candle, type CandleSeries, type Mark, type Scope } from '@tl/core';
 import { DrawingController, type ControllerNotice, type PointerInput } from './interaction/controller';
 import { DrawingPrimitive } from './drawing/DrawingPrimitive';
-import type { HighlightRange } from './drawing/highlight';
+import type { CandleHighlight, HighlightRange } from './drawing/highlight';
 import { lwcProjection } from './drawing/lwcProjection';
 import type { PointerKind } from './drawing/hit';
 import type { ToolId } from './drawing/tools';
@@ -24,6 +24,7 @@ import { TimeIndex } from './geometry/timeIndex';
 import { decimalsForTick, makePriceFormatter, tickSizeFor } from './priceFormat';
 import { limitCandles, toCandleData, toVolumeData } from './seriesData';
 import {
+  centeredLogicalRange,
   defaultLogicalRange,
   logicalRangeFromWindow,
   padRangeForMarks,
@@ -34,6 +35,17 @@ import { type ChartTokens } from './theme/chartTokens';
 import { useChartTokens } from './useChartTokens';
 
 export type { TimeWindow } from './sync/visibleRange';
+export type { CandleHighlight } from './drawing/highlight';
+
+/** Императивный доступ для разбора: центрирование и краткая подсветка метки. */
+export interface TradingChartHandle {
+  /** Центрирует график на времени (мс UTC), масштаб сохраняется. */
+  centerOn(time: number): void;
+  /** Центрирует на метке (из marks или readOnlyMarks) и подсвечивает её на FLASH_MS. false - метки нет. */
+  focusMark(id: string): boolean;
+}
+
+export const FLASH_MS = 1200;
 
 export interface TradingChartProps {
   series: CandleSeries;
@@ -72,6 +84,10 @@ export interface TradingChartProps {
   scope?: Scope | null;
   /** Подпись границы окна оценки. */
   windowLabel?: string;
+  /** Подсветка свечей модели (PA): полупрозрачная колонка за свечой + подпись над high. */
+  highlightCandles?: readonly CandleHighlight[];
+  /** Императивный handle (centerOn / focusMark). */
+  handleRef?: Ref<TradingChartHandle>;
 }
 
 const LOCALE = 'ru-RU';
@@ -133,6 +149,9 @@ export function TradingChart(props: TradingChartProps) {
   const requestedBefore = useRef<number | null>(null);
   const [legend, setLegend] = useState<Candle | null>(null);
   const [ready, setReady] = useState(false);
+  const [flashId, setFlashId] = useState<string | null>(null);
+  const flashRef = useRef<string | null>(null);
+  const flashTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Актуальные props для обработчиков (без пересоздания графика).
   const propsRef = useRef(props);
@@ -149,7 +168,15 @@ export function TradingChart(props: TradingChartProps) {
     const ctl = controllerRef.current;
     if (!prim || !t || !ctl) return;
     const last = candlesRef.current[candlesRef.current.length - 1];
+    const byTime = new Map(candlesRef.current.map((c) => [c.openTime, c]));
+    const hl: { time: number; tone: 'focus' | 'ref'; label?: string; high: number; low: number }[] = [];
+    for (const h of p.highlightCandles ?? []) {
+      const c = byTime.get(h.time);
+      if (c) hl.push({ ...h, high: c.high, low: c.low });
+    }
     prim.setState({
+      candleHighlights: hl,
+      flashId: flashRef.current,
       userMarks: p.marks,
       algoMarks: p.readOnlyMarks ?? [],
       selectedId: p.selectedId ?? null,
@@ -171,6 +198,7 @@ export function TradingChart(props: TradingChartProps) {
     tokensRef.current = tokens;
     pushStateRef.current = pushState;
     fmtRef.current = fmt;
+    flashRef.current = flashId;
   });
 
   // --- Создание графика (один раз, когда известны токены) ---
@@ -366,17 +394,13 @@ export function TradingChart(props: TradingChartProps) {
     };
     window.addEventListener('keydown', onKey);
 
-    // Отладочный хук для e2e (только вне production или при явном флаге).
-    const hooks = process.env.NODE_ENV !== 'production' || process.env.NEXT_PUBLIC_ENABLE_ARCHIVE_SOURCE === '1';
-    if (hooks) {
-      (window as unknown as Record<string, unknown>).__tlMarkPoints = () => {
+    // Отладочные хуки для e2e: только вне production или при явном флаге сборки NEXT_PUBLIC_E2E_HOOKS=1 (D-14).
+    if (process.env.NODE_ENV !== 'production' || process.env.NEXT_PUBLIC_E2E_HOOKS === '1') {
+      const w = window as unknown as Record<string, unknown>;
+      w.__tlMarkPoints = () => {
         const r = el.getBoundingClientRect();
         return primitive.lastCenters.map((c) => ({ id: c.id, x: r.left + c.x, y: r.top + c.y }));
       };
-    }
-
-    if (hooks) {
-      const w = window as unknown as Record<string, unknown>;
       w.__tlCandles = () => candlesRef.current;
       w.__tlProject = (time: number, price: number) => {
         const r = el.getBoundingClientRect();
@@ -395,6 +419,12 @@ export function TradingChart(props: TradingChartProps) {
       el.removeEventListener('pointercancel', onCancel, { capture: true });
       for (const type of swallowTypes) el.removeEventListener(type, swallow, { capture: true });
       chart.timeScale().unsubscribeVisibleLogicalRangeChange(onRange);
+      if (typeof window !== 'undefined') {
+        const w = window as unknown as Record<string, unknown>;
+        delete w.__tlMarkPoints;
+        delete w.__tlCandles;
+        delete w.__tlProject;
+      }
       chart.remove();
       chartRef.current = null;
       candleRef.current = null;
@@ -435,19 +465,46 @@ export function TradingChart(props: TradingChartProps) {
     pushStateRef.current();
   }, [fmt, props.series.symbol, props.tickSize, ready]);
 
-  // --- Центрирование на метке по запросу списка ---
-  const focusNonce = props.focus?.nonce;
-  useEffect(() => {
-    const f = propsRef.current.focus;
+  // --- Центрирование (проп focus и императивный handle) ---
+  const centerOn = useCallback((time: number) => {
     const chart = chartRef.current;
-    if (!f || !chart || indexRef.current.length === 0) return;
+    if (!chart || indexRef.current.length === 0) return;
     const ts = chart.timeScale();
     const lr = ts.getVisibleLogicalRange();
     if (!lr) return;
-    const w = lr.to - lr.from;
-    const l = indexRef.current.timeToLogical(f.time);
-    ts.setVisibleLogicalRange({ from: l - w / 2, to: l + w / 2 });
-  }, [focusNonce]);
+    const l = indexRef.current.timeToLogical(time);
+    if (!Number.isFinite(l)) return;
+    ts.setVisibleLogicalRange(centeredLogicalRange(lr, l));
+  }, []);
+  const focusMark = useCallback(
+    (id: string) => {
+      const p = propsRef.current;
+      const m = [...p.marks, ...(p.readOnlyMarks ?? [])].find((x) => x.id === id);
+      if (!m || m.anchors.length === 0) return false;
+      centerOn((m.anchors[0]!.time + m.anchors[m.anchors.length - 1]!.time) / 2);
+      if (flashTimer.current) clearTimeout(flashTimer.current);
+      setFlashId(id);
+      flashTimer.current = setTimeout(() => {
+        flashTimer.current = null;
+        setFlashId(null);
+      }, FLASH_MS);
+      return true;
+    },
+    [centerOn],
+  );
+  useImperativeHandle(props.handleRef, () => ({ centerOn, focusMark }), [centerOn, focusMark]);
+  useEffect(
+    () => () => {
+      if (flashTimer.current) clearTimeout(flashTimer.current);
+    },
+    [],
+  );
+
+  const focusNonce = props.focus?.nonce;
+  useEffect(() => {
+    const f = propsRef.current.focus;
+    if (f) centerOn(f.time);
+  }, [focusNonce, centerOn]);
 
   // --- Данные: смена пары/ТФ, догрузка истории, обновление хвоста ---
   useEffect(() => {
@@ -525,7 +582,7 @@ export function TradingChart(props: TradingChartProps) {
   // --- Метки, выбор, инструмент ---
   useEffect(() => {
     pushStateRef.current();
-  }, [props.marks, props.readOnlyMarks, props.markStates, props.highlightRange, props.selectedId, props.openCandleLabel, tokens, ready]);
+  }, [props.marks, props.readOnlyMarks, props.markStates, props.highlightRange, props.highlightCandles, flashId, props.selectedId, props.openCandleLabel, tokens, ready]);
 
   useEffect(() => {
     controllerRef.current?.reset();
@@ -548,6 +605,8 @@ export function TradingChart(props: TradingChartProps) {
       data-selected={props.selectedId ?? ''}
       data-last-closed={last ? String(last.closed) : ''}
       data-ready={ready ? 'true' : 'false'}
+      data-flash-id={flashId ?? ''}
+      data-highlight-count={props.highlightCandles?.length ?? 0}
     >
       <div
         ref={containerRef}

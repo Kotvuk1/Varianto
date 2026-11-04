@@ -28,9 +28,9 @@ export default defineConfig({
     // Run from the repo root so the path filter resolves to apps/web.
     cwd: '..',
     url: `http://localhost:${PORT}/api/health`,
-    // Режим ?source=archive (реальные свечи архива Binance) в production-сборке e2e.
+    // Тестовые хуки графика (window.__tl*) только в e2e-сборке (D-14); архив доступен в production без флага.
     env: {
-      NEXT_PUBLIC_ENABLE_ARCHIVE_SOURCE: '1',
+      NEXT_PUBLIC_E2E_HOOKS: '1',
       // Test-only signing secret for task tokens; never used in production.
       TASK_SIGNING_SECRET: process.env.TASK_SIGNING_SECRET ?? 'e2e-only-task-signing-secret-not-for-production',
       // Route server-side archive fetches through the container proxy when present.

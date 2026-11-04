@@ -13,7 +13,8 @@ import type {
 import type { Mark } from '@tl/core';
 import type { TimeIndex } from '../geometry/timeIndex';
 import type { ChartTokens } from '../theme/chartTokens';
-import { dimSpans, type HighlightRange } from './highlight';
+import { dimSpans, highlightColumns, labelTop, type CandleHighlight, type HighlightRange } from './highlight';
+import { withAlpha } from '../theme/chartTokens';
 import { buildGeometry, isMarkVisible, type MarkState } from './layout';
 import { lwcProjection } from './lwcProjection';
 import { drawGeometry } from './render';
@@ -43,6 +44,10 @@ export interface PrimitiveState {
   highlightRange?: HighlightRange;
   /** Подпись границы окна оценки. */
   windowLabel?: string;
+  /** Подсветка свечей модели: колонка за свечой + подпись над high. high - цена верха свечи. */
+  candleHighlights?: readonly (CandleHighlight & { high: number; low: number })[];
+  /** Метка, кратко подсвеченная по запросу (focusMark). */
+  flashId?: string | null;
 }
 
 const ZONE_KINDS = new Set(['order-block', 'fvg']);
@@ -136,6 +141,37 @@ export class DrawingPrimitive implements ISeriesPrimitive<Time> {
             }
           }
 
+          // Подписи подсвеченных свечей: над high, не перекрывают свечу (колонки рисуются в нижнем слое).
+          if (st.candleHighlights?.length) {
+            const spacing = chart.timeScale().options().barSpacing;
+            const cols = highlightColumns(st.candleHighlights, proj.timeToX, spacing, mediaSize.width);
+            context.save();
+            context.font = `600 11px ${st.tokens.fontSans}`;
+            context.textBaseline = 'middle';
+            for (const col of cols) {
+              if (!col.label) continue;
+              const info = st.candleHighlights.find((h) => h.time === col.time);
+              if (!info) continue;
+              const yh = proj.priceToY(info.high);
+              const yl = proj.priceToY(info.low);
+              if (!Number.isFinite(yh) || !Number.isFinite(yl)) continue;
+              const w = context.measureText(col.label).width + 12;
+              const bx = Math.min(Math.max(col.cx - w / 2, 2), Math.max(2, mediaSize.width - w - 2));
+              const by = labelTop(yh, yl, 18, mediaSize.height);
+              context.fillStyle = st.tokens.bg;
+              context.strokeStyle = col.tone === 'focus' ? st.tokens.markAlgo : st.tokens.text1;
+              context.lineWidth = 1;
+              context.beginPath();
+              context.rect(bx + 0.5, by + 0.5, w - 1, 17);
+              context.fill();
+              context.stroke();
+              context.fillStyle = st.tokens.text1;
+              context.textAlign = 'center';
+              context.fillText(col.label, bx + w / 2, by + 9.5);
+            }
+            context.restore();
+          }
+
           // Открытая (незакрытая) свеча: пунктирный контур и бейдж «Идёт».
           const oc = st.openCandle;
           if (oc) {
@@ -181,7 +217,7 @@ export class DrawingPrimitive implements ISeriesPrimitive<Time> {
             const state = st.states?.[m.id];
             const g = buildGeometry(m, proj, { fmt: st.fmt, ...(state ? { state } : {}) });
             if (g.parts.some((p) => Object.values(p).some((v) => typeof v === 'number' && !Number.isFinite(v)))) continue;
-            drawGeometry(context, g, { tokens: st.tokens, selected: m.id === st.selectedId, ghost: false });
+            drawGeometry(context, g, { tokens: st.tokens, selected: m.id === st.selectedId || m.id === st.flashId, ghost: false });
             drawn++;
             if (g.handles.length) {
               centers.push({
@@ -202,7 +238,30 @@ export class DrawingPrimitive implements ISeriesPrimitive<Time> {
     }),
   };
 
+  /** Нижний слой: колонки подсветки модели за свечами. */
+  private readonly bottomView: IPrimitivePaneView = {
+    zOrder: () => 'bottom',
+    renderer: (): IPrimitivePaneRenderer => ({
+      draw: (target) => {
+        const chart = this.chart;
+        const series = this.series;
+        const st = this.state;
+        if (!chart || !series || !st?.candleHighlights?.length) return;
+        target.useMediaCoordinateSpace(({ context, mediaSize }) => {
+          const proj = lwcProjection(chart, series, this.getIndex(), mediaSize.width, mediaSize.height);
+          const spacing = chart.timeScale().options().barSpacing;
+          context.save();
+          for (const col of highlightColumns(st.candleHighlights ?? [], proj.timeToX, spacing, mediaSize.width)) {
+            context.fillStyle = col.tone === 'focus' ? withAlpha(st.tokens.markAlgo, 0.2) : withAlpha(st.tokens.text1, 0.12);
+            context.fillRect(col.x1, 0, col.x2 - col.x1, mediaSize.height);
+          }
+          context.restore();
+        });
+      },
+    }),
+  };
+
   paneViews(): readonly IPrimitivePaneView[] {
-    return [this.view];
+    return [this.bottomView, this.view];
   }
 }

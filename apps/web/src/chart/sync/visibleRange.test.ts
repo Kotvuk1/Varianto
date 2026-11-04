@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { TimeIndex } from '../geometry/timeIndex';
-import { defaultLogicalRange, padRangeForMarks, logicalRangeFromWindow, windowFromLogicalRange } from './visibleRange';
+import { centeredLogicalRange, defaultLogicalRange, padRangeForMarks, logicalRangeFromWindow, windowFromLogicalRange } from './visibleRange';
 
 const T0 = Date.UTC(2025, 0, 1);
 const grid = (n: number, step: number) => new TimeIndex(Array.from({ length: n }, (_, i) => T0 + i * step), step);
@@ -47,5 +47,11 @@ describe('запас у краёв (F-13, F-22)', () => {
   });
   it('метка в середине и метка далеко вне окна окно не меняют', () => {
     expect(padRangeForMarks(idx, { from: 100, to: 200 }, [mark(150), mark(400)], 5)).toEqual({ from: 100, to: 200 });
+  });
+});
+
+describe('centeredLogicalRange', () => {
+  it('сохраняет ширину и центрирует на координате', () => {
+    expect(centeredLogicalRange({ from: 10, to: 50 }, 200)).toEqual({ from: 180, to: 220 });
   });
 });

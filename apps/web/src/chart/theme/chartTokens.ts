@@ -94,8 +94,9 @@ export function readChartTokens(root: HTMLElement = document.documentElement): C
     candleBearFill: c('--candle-bear-fill'),
     wickBull: c('--candle-wick-bull'),
     wickBear: c('--candle-wick-bear'),
-    volumeBull: c('--volume-bull'),
-    volumeBear: c('--volume-bear'),
+    // светлая тема: объём при альфе 0.3 почти не виден (F-19) - усиливаем в 1.7 раза
+    volumeBull: light ? withAlpha(c('--volume-bull'), 1.7) : c('--volume-bull'),
+    volumeBear: light ? withAlpha(c('--volume-bear'), 1.7) : c('--volume-bear'),
     markUser: c('--mark-user'),
     markUserOn: c('--mark-user-on'),
     markAlgo: c('--mark-algo'),

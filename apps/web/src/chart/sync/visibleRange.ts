@@ -58,3 +58,9 @@ export function padRangeForMarks(
   }
   return r;
 }
+
+/** Область той же ширины с центром в логической координате `center` (центрирование на времени/метке). */
+export function centeredLogicalRange(r: LogicalRange, center: number): LogicalRange {
+  const half = (r.to - r.from) / 2;
+  return { from: center - half, to: center + half };
+}
