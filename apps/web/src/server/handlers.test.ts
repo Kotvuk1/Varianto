@@ -201,6 +201,10 @@ describe('grade: круг next -> grade на эталоне из ответа AP
     expect(bad.json.reference.length).toBeGreaterThan(5);
     expect(Object.keys(bad.json.feedback).sort()).toEqual(['howTo', 'mistakes', 'principle', 'understood', 'verdict', 'why']);
     expect(bad.json.feedback.mistakes.length).toBe(bad.json.errors.length);
+    // F-02: в params разбора нет «сырых» float (цены по tickSize символа)
+    for (const b of bad.json.feedback.mistakes as Json[]) {
+      for (const v of Object.values(b.params ?? {})) if (typeof v === 'number') expect(String(v)).not.toMatch(/\.\d{5,}/);
+    }
     expect(bad.json.task).toMatchObject({ module: 'market-structure', tf: '4h', reveal: { decisionTime: t.decisionTime, shiftMs: 0 } });
     expect(bad.json.taskId).toBe(t.taskId);
     expect(bad.json.detail.kind).toBe('ms-mark');

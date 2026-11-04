@@ -562,6 +562,7 @@ export async function gradeTask(module: ModuleId, req: GradeRequest, deps: Serve
     skillOutcomes: core.skillOutcomes,
     ...(core.ok ? { ok: core.ok } : {}),
     ...(core.toleranceCandles !== undefined ? { toleranceCandles: core.toleranceCandles } : {}),
+    tickSize: TICK[symbol],
   });
   return {
     taskId: taskIdFor(module, symbol, T, deps.secret),
@@ -624,6 +625,7 @@ async function gradeMsMark(c: GradeCtx, p: Extract<Params, { kind: 'ms-mark' }>,
     iouMin: 0.5,
     levelPricePct: 0.1,
     scoped: concepts.includes('internal-external'),
+    tickSize: TICK[c.symbol],
   });
   return {
     verdict: g.verdict,
@@ -653,7 +655,7 @@ async function gradePaFind(c: GradeCtx, p: Extract<Params, { kind: 'pa-find' }>,
   const visible = await visibleFor(c, tf);
   const window = { fromIndex: visible.length - FIND_WINDOW, toIndex: visible.length - 1 };
   const algo = buildPatternAlgoMarkSet(visible, target, window);
-  const g = gradeMarks(a.marks, algo, patternGradeContext(visible, target, window));
+  const g = gradeMarks(a.marks, algo, { ...patternGradeContext(visible, target, window), tickSize: TICK[c.symbol] });
   return {
     verdict: g.verdict,
     score: g.score,
