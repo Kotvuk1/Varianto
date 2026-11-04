@@ -246,15 +246,15 @@
     "semantic_hash": ""
   },
   "README.md": {
-    "mtime": 1793752069.5098624,
-    "seen": 1793752116.7173803,
-    "ast_hash": "fa37125213d1e48465a9e43aaae9bd8f",
+    "mtime": 1793761339.5510578,
+    "seen": 1793762460.5947256,
+    "ast_hash": "64f4f7b236f8601ee68bb9207d052ea8",
     "semantic_hash": ""
   },
   "docs/AGENTS.md": {
-    "mtime": 1793675345.9431217,
-    "seen": 1793676752.097542,
-    "ast_hash": "ab58856c3c39a8d443fc91edcef2199a",
+    "mtime": 1793761339.5510578,
+    "seen": 1793762460.5947428,
+    "ast_hash": "0aa42ad53bb70f5a2e402df71417e081",
     "semantic_hash": ""
   },
   "docs/API_CONTRACTS.md": {
@@ -348,15 +348,15 @@
     "semantic_hash": ""
   },
   "docs/PROJECT_STATUS.md": {
-    "mtime": 1793678262.2179103,
-    "seen": 1793678479.743967,
-    "ast_hash": "a5c068835c8f9c78453f6f6743f6d4e7",
+    "mtime": 1793761301.179893,
+    "seen": 1793762460.5949647,
+    "ast_hash": "1453ff9db333e53daeb5170beb678f42",
     "semantic_hash": ""
   },
   "docs/ROADMAP.md": {
-    "mtime": 1793675272.6611595,
-    "seen": 1793676752.0975554,
-    "ast_hash": "ca9f1813dd341c0123d10a2d289e3124",
+    "mtime": 1793761306.2763102,
+    "seen": 1793762460.5949795,
+    "ast_hash": "586e94b44b708dd29bdd150abef0a640",
     "semantic_hash": ""
   },
   "docs/SKILLS_REGISTRY.md": {
@@ -2375,10 +2375,10 @@
     "ast_hash": "c765be643d5803b0de648e40f4488da9",
     "semantic_hash": ""
   },
-  "e2e/zz-final.shots.spec.ts": {
-    "mtime": 1793761138.7643967,
-    "seen": 1793761225.6086588,
-    "ast_hash": "94dd46e183e7aeb9610607a15652007e",
+  "docs/KNOWN_ISSUES.md": {
+    "mtime": 1793761339.5559042,
+    "seen": 1793762460.594949,
+    "ast_hash": "7737eadd6ed21efcb9d95432e0f17fdc",
     "semantic_hash": ""
   },
   "pnpm-lock.yaml": {
