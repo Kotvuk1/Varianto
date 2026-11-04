@@ -55,6 +55,7 @@ import {
   type Verdict,
 } from '@tl/core';
 import { z } from 'zod';
+import { ArchiveError } from '@tl/market-data';
 import { ApiError, validationError } from './errors';
 import { SYMBOLS, type Answer, type ChallengeAnswer, type GradeRequest, type NextRequest } from './schemas';
 import {
@@ -87,10 +88,15 @@ export interface ServerDeps {
   maxAttempts?: number;
   secret?: string;
   aggTradesTimeoutMs?: number;
+  /** Бюджет времени выбора ситуации в next, мс (по умолчанию 20 с). */
+  nextBudgetMs?: number;
 }
 
 const HTF_TF = HTF_OF as Readonly<Record<TaskTimeframe, TaskTimeframe>>;
-const MAX_TRIES = 6;
+const MAX_TRIES = 12;
+/** Сбои источника не тратят MAX_TRIES, но ограничены числом и общим бюджетом времени. */
+const MAX_SOURCE_FAILURES = 3;
+const NEXT_BUDGET_MS = 20_000;
 const TICK: Record<TaskSymbol, number> = { BTCUSDT: 0.1, ETHUSDT: 0.01, SOLUSDT: 0.01 };
 const SEGMENT_EXTRA = 300;
 const ZONE_MS = 15 * DAY_MS;
@@ -190,12 +196,32 @@ export async function nextTask(module: ModuleId, req: NextRequest, deps: ServerD
   const excluded = new Set(req.exclude ?? []);
   const idOf = (T: UtcMs) => taskIdFor(module, symbol, T, deps.secret);
 
-  for (let attempt = 0; attempt < MAX_TRIES; attempt++) {
-    const seed = toSeed(baseSeed + attempt * 0x9e3779b1);
+  const started = Date.now();
+  const budget = deps.nextBudgetMs ?? NEXT_BUDGET_MS;
+  let sourceFailure: ArchiveError | undefined;
+  let failures = 0;
+  for (let attempt = 0, n = 0; attempt < MAX_TRIES; n++) {
+    if (n > 0 && Date.now() - started > budget) break;
+    const seed = toSeed(baseSeed + n * 0x9e3779b1);
     let draft: Draft | null;
-    if (req.module === 'market-structure') draft = await buildMs(req, symbol, seed, deps, (T) => excluded.has(idOf(T)));
-    else if (req.module === 'price-action') draft = await buildPa(req, symbol, seed, deps);
-    else draft = await buildChallenge(req, symbol, seed, deps);
+    try {
+      if (req.module === 'market-structure') draft = await buildMs(req, symbol, seed, deps, (T) => excluded.has(idOf(T)));
+      else if (req.module === 'price-action') draft = await buildPa(req, symbol, seed, deps);
+      else draft = await buildChallenge(req, symbol, seed, deps);
+    } catch (e) {
+      // not_found файла - период непригоден (обычная отбраковка); недоступность источника - не «ситуация не подошла».
+      if (e instanceof ArchiveError && e.code !== 'not_found') {
+        sourceFailure = e;
+        if (++failures >= MAX_SOURCE_FAILURES) break;
+        continue;
+      }
+      if (e instanceof ArchiveError) {
+        attempt++;
+        continue;
+      }
+      throw e;
+    }
+    attempt++;
     if (!draft || excluded.has(idOf(draft.T))) continue;
 
     const { token, header } = seal({
@@ -218,6 +244,7 @@ export async function nextTask(module: ModuleId, req: NextRequest, deps: ServerD
       payload: draft.payload,
     };
   }
+  if (sourceFailure) throw new ApiError(502, 'archive_unavailable', `Archive error: ${sourceFailure.code}`);
   throw new ApiError(404, 'not_found', 'No suitable task situation found for the request');
 }
 

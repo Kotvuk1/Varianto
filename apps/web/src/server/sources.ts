@@ -12,6 +12,7 @@ import {
   type UtcMs,
 } from '@tl/core';
 import { ArchiveSource } from '@tl/market-data/archive';
+import { ArchiveError } from '@tl/market-data';
 
 export const DAY_MS = 86_400_000;
 export const MIN_AGE_MS = 2 * DAY_MS;
@@ -167,6 +168,11 @@ export interface ArchiveLoaderOptions {
   /** Предельный суммарный вес кэша в свечах (по умолчанию 250k, около 40 МБ). */
   maxWeight?: number;
   concurrency?: number;
+  /** Число повторов загрузки файла при временной ошибке источника (по умолчанию 2). */
+  retries?: number;
+  /** База экспоненциальной паузы между повторами, мс (по умолчанию 300). */
+  backoffMs?: number;
+  sleep?: (ms: number) => Promise<void>;
 }
 
 interface Chunk {
@@ -216,6 +222,9 @@ export class ArchiveLoader implements CandleLoader {
   private readonly now: () => UtcMs;
   private readonly maxWeight: number;
   private readonly concurrency: number;
+  private readonly retries: number;
+  private readonly backoffMs: number;
+  private readonly sleep: (ms: number) => Promise<void>;
   private readonly cache = new Map<string, Candle[]>();
   private readonly inflight = new Map<string, Promise<Candle[]>>();
   private weight = 0;
@@ -225,6 +234,9 @@ export class ArchiveLoader implements CandleLoader {
     this.now = opts.now ?? (() => Date.now());
     this.maxWeight = opts.maxWeight ?? 250_000;
     this.concurrency = opts.concurrency ?? 8;
+    this.retries = opts.retries ?? 2;
+    this.backoffMs = opts.backoffMs ?? 300;
+    this.sleep = opts.sleep ?? ((ms) => new Promise((r) => setTimeout(r, ms)));
   }
 
   get cacheWeight(): number {
@@ -254,8 +266,7 @@ export class ArchiveLoader implements CandleLoader {
     }
     const pending = this.inflight.get(key);
     if (pending) return pending;
-    const p = this.archive
-      .get(symbol, tf, c.from, c.to)
+    const p = this.fetchWithRetry(symbol, tf, c)
       .then((rows) => {
         this.store(key, rows);
         return rows;
@@ -263,6 +274,18 @@ export class ArchiveLoader implements CandleLoader {
       .finally(() => this.inflight.delete(key));
     this.inflight.set(key, p);
     return p;
+  }
+
+  /** Временные сбои источника (сеть/таймаут/5xx) повторяются с backoff; not_found и bad_format - нет. */
+  private async fetchWithRetry(symbol: string, tf: Timeframe, c: Chunk): Promise<Candle[]> {
+    for (let i = 0; ; i++) {
+      try {
+        return await this.archive.get(symbol, tf, c.from, c.to);
+      } catch (e) {
+        if (!(e instanceof ArchiveError && e.code === 'unavailable') || i >= this.retries) throw e;
+        await this.sleep(this.backoffMs * 2 ** i);
+      }
+    }
   }
 
   private store(key: string, rows: Candle[]): void {
