@@ -1,9 +1,9 @@
 'use client';
-import { useMemo } from 'react';
+import { useMemo, type Ref } from 'react';
 import { TIMEFRAME_MS, type Candle, type CandleSeries, type Mark, type Scope, type TaskSymbol, type TaskTimeframe } from '@tl/core';
 import type { ControllerNotice } from '@/chart/interaction/controller';
 import type { ToolId } from '@/chart/drawing/tools';
-import type { TimeWindow } from '@/chart/TradingChart';
+import type { CandleHighlight, TimeWindow, TradingChartHandle } from '@/chart/TradingChart';
 import { TradingChart } from '@/chart/TradingChart';
 import { TF_LABEL } from '@/features/terminal/dataSource';
 import { tx } from '@/features/terminal/strings';
@@ -37,6 +37,10 @@ export interface TaskChartProps {
   onNotice?: (n: ControllerNotice) => void;
   focus?: { time: number; nonce: number } | null;
   scope?: Scope | null;
+  /** Колонки подсветки свечей модели (PA). */
+  highlightCandles?: readonly CandleHighlight[];
+  /** centerOn / focusMark для разбора. */
+  handleRef?: Ref<TradingChartHandle>;
 }
 
 /** График задания: только прошлое (ряд приходит с сервера), без догрузки истории. */
@@ -62,6 +66,8 @@ export function TaskChart(p: TaskChartProps) {
       {...(p.onSelectedChange ? { onSelectedChange: p.onSelectedChange } : {})}
       {...(p.onNotice ? { onNotice: p.onNotice } : {})}
       focus={p.focus ?? null}
+      {...(p.highlightCandles ? { highlightCandles: p.highlightCandles } : {})}
+      {...(p.handleRef ? { handleRef: p.handleRef } : {})}
       openCandleLabel={tx.openCandle}
       ariaLabel={ss.chartLabel(p.symbol, TF_LABEL[p.tf])}
     />

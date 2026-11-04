@@ -186,6 +186,7 @@ export function PaContextBody({ envelope, flow, base }: { envelope: TaskEnvelope
         </>
       }
       highlight={highlight}
+      patternLabel={name.split(' (')[0] ?? ''}
       chartControls={toggle}
       form={form}
       mobileBottom={stepper}

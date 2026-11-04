@@ -1,7 +1,8 @@
 'use client';
 // Тело заданий с вариантами ответа: MS «Вопрос», PA «Контекст». График только для чтения (подсветка места), форма ответа снизу / справа.
-import { useMemo, useState, type ReactNode } from 'react';
+import { useMemo, useRef, useState, type ReactNode } from 'react';
 import type { Candle, Mark, TaskTimeframe } from '@tl/core';
+import type { TradingChartHandle } from '@/chart/TradingChart';
 import { makePriceFormatter, tickSizeFor } from '@/chart/priceFormat';
 import { ss } from '@/i18n/ru/session';
 import { Button } from '@/ui';
@@ -9,6 +10,7 @@ import { AsideSection, InputMessage, SubmitButton } from './AnswerParts';
 import { ResultBody } from './ResultView';
 import { SessionLayout, TaskHint } from './SessionLayout';
 import type { SessionBase } from './TaskSession';
+import { patternHighlights } from './highlights';
 import { TaskChart } from './TaskChart';
 import type { FlowState } from './taskFlow';
 import type { Answer, TaskEnvelope } from './types';
@@ -26,6 +28,8 @@ export interface AnswerSessionProps {
   hintDetails?: ReactNode;
   /** Метки-подсветка места на графике (до проверки). */
   highlight?: Mark[];
+  /** Модель PA: колонки за свечами до проверки (tone focus) и после (tone ref). */
+  patternLabel?: string;
   /** Строка над графиком: переключатель ТФ. */
   chartControls?: ReactNode;
   /** Форма ответа (десктоп - правая панель; мобильный - нижняя панель, если нет mobileBottom). */
@@ -45,6 +49,7 @@ export function AnswerSession(p: AnswerSessionProps) {
   const result = flow.phase === 'graded' ? flow.result : null;
   const busy = flow.phase === 'grading';
   const fmt = useMemo(() => makePriceFormatter(tickSizeFor(envelope.symbol)), [envelope.symbol]);
+  const chartRef = useRef<TradingChartHandle>(null);
   const noMarks = useMemo<Mark[]>(() => [], []);
 
   const submit = () => {
@@ -70,6 +75,8 @@ export function AnswerSession(p: AnswerSessionProps) {
       bars={p.bars}
       {...(readOnly ? { readOnlyMarks: readOnly } : {})}
       focus={ci.focus}
+      handleRef={chartRef}
+      {...(p.highlight && p.highlight.some((m) => m.kind === 'pattern') ? { highlightCandles: patternHighlights(p.highlight, p.chartTf, result ? 'ref' : 'focus') } : {})}
     />
   );
 
@@ -118,7 +125,9 @@ export function AnswerSession(p: AnswerSessionProps) {
                   fmtPrice={fmt}
                   showRef={showRef}
                   onToggleRef={() => setShowRef((v) => !v)}
-                  onFocusMarks={(ids) => ci.focusOn(ids, result.reference)}
+                  onFocusMarks={(ids) => {
+                    if (!ids.some((id) => chartRef.current?.focusMark(id))) ci.focusOn(ids, result.reference);
+                  }}
                   saveFailed={flow.saveFailed}
                   sheetControls={sheetControls}
                   extra={p.resultExtra}

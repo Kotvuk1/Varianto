@@ -1842,9 +1842,9 @@
     "semantic_hash": ""
   },
   "apps/web/src/features/price-action/PaContextBody.tsx": {
-    "mtime": 1793818432.9508994,
-    "seen": 1793818542.3412251,
-    "ast_hash": "80913629c0e4e10605dc2b8bdee2547e",
+    "mtime": 1793818584.654672,
+    "seen": 1793818750.5769572,
+    "ast_hash": "7d90be4d465d59a223b8997b74f685d6",
     "semantic_hash": ""
   },
   "apps/web/src/features/price-action/PaFindBody.tsx": {
@@ -1878,9 +1878,9 @@
     "semantic_hash": ""
   },
   "apps/web/src/features/session/AnswerSession.tsx": {
-    "mtime": 1793747198.7145014,
-    "seen": 1793747301.515105,
-    "ast_hash": "8ba12f9d0b3dcdda057cefb35ebb1d05",
+    "mtime": 1793818584.65353,
+    "seen": 1793818750.5773098,
+    "ast_hash": "09dabb990d3560fc2d16e4cc856da537",
     "semantic_hash": ""
   },
   "apps/web/src/features/session/CommonFields.tsx": {
@@ -1890,9 +1890,9 @@
     "semantic_hash": ""
   },
   "apps/web/src/features/session/MarkSession.tsx": {
-    "mtime": 1793752105.055781,
-    "seen": 1793752116.7135737,
-    "ast_hash": "c4b1e8fd69f27e8a3f71cc43633e194e",
+    "mtime": 1793818584.6544876,
+    "seen": 1793818750.5773318,
+    "ast_hash": "d78e943f80af645d094fa56c4e60ba2f",
     "semantic_hash": ""
   },
   "apps/web/src/features/session/ResultView.tsx": {
@@ -1920,9 +1920,9 @@
     "semantic_hash": ""
   },
   "apps/web/src/features/session/TaskChart.tsx": {
-    "mtime": 1793747954.2618089,
-    "seen": 1793747996.938021,
-    "ast_hash": "53bc57bc294129a600b1069aa38c27c2",
+    "mtime": 1793818584.6524985,
+    "seen": 1793818750.5774271,
+    "ast_hash": "335436cc41fd58425192b1a92d909ce7",
     "semantic_hash": ""
   },
   "apps/web/src/features/session/TaskSession.tsx": {
@@ -2448,9 +2448,21 @@
     "semantic_hash": ""
   },
   "e2e/guide.spec.ts": {
-    "mtime": 1793818410.1459029,
-    "seen": 1793818542.343603,
-    "ast_hash": "2ef372f919ab0f3e561124efc5ba7fbb",
+    "mtime": 1793818697.8781972,
+    "seen": 1793818750.579482,
+    "ast_hash": "252e980354d53afd204a159f179480b8",
+    "semantic_hash": ""
+  },
+  "apps/web/src/features/session/highlights.test.ts": {
+    "mtime": 1793818584.6410048,
+    "seen": 1793818750.5775518,
+    "ast_hash": "f61387d9a1929c93bee1163ecd70f0e7",
+    "semantic_hash": ""
+  },
+  "apps/web/src/features/session/highlights.ts": {
+    "mtime": 1793818584.6396654,
+    "seen": 1793818750.5775535,
+    "ast_hash": "fdd504e83e3bf9a418b85a3c0253838e",
     "semantic_hash": ""
   },
   "pnpm-lock.yaml": {

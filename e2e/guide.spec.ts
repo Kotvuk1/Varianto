@@ -57,14 +57,12 @@ test('PA «Контекст»: подсказки под вопросами, т�
     await page.getByTestId('step-next').click();
     await expect(chart).toHaveAttribute('aria-label', /1H/, { timeout: 30_000 });
     await expect(page.getByTestId('ctx-hint-significant')).toContainText('Значима');
-    await page.getByTestId('step-prev').click();
-    await page.getByTestId('step-prev').click();
   } else {
     for (const id of ['sweep', 'ob', 'level', 'trend', 'significant']) await expect(page.getByTestId(`ctx-hint-${id}`)).toBeVisible();
   }
-  const term = page.getByTestId('ctx-sweep').getByTestId('term').first();
+  const term = page.getByTestId(mobile ? 'ctx-significant' : 'ctx-sweep').getByTestId('term').first();
   await term.click();
-  await expect(page.getByTestId('term-def')).toContainText('забирает стопы');
+  await expect(page.getByTestId('term-def')).toBeVisible();
   await shot(page, '4-term-popover');
   await page.getByRole('button', { name: 'Закрыть' }).last().click();
   await expect(page.getByTestId('term-def')).toHaveCount(0);

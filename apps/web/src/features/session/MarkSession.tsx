@@ -1,8 +1,9 @@
 'use client';
 // Общее тело заданий «поставь метки на графике»: MS «Разметка», PA «Найди модель», PA «Проведи уровень».
-import { useMemo, useState, type ReactNode } from 'react';
+import { useMemo, useRef, useState, type ReactNode } from 'react';
 import type { Candle, Mark } from '@tl/core';
 import type { ToolId } from '@/chart/drawing/tools';
+import type { TradingChartHandle } from '@/chart/TradingChart';
 import { makePriceFormatter, tickSizeFor } from '@/chart/priceFormat';
 import { otherScope, useScopeHotkey } from '@/features/terminal/useScope';
 import { InstructionBar } from '@/features/terminal/InstructionBar';
@@ -10,6 +11,7 @@ import { ss } from '@/i18n/ru/session';
 import { Button } from '@/ui';
 import { useIsDesktop } from './useIsDesktop';
 import { statesFromGrade } from './adapters';
+import { patternHighlights } from './highlights';
 import { AsideSection, InputMessage, SubmitButton } from './AnswerParts';
 import { ResultBody } from './ResultView';
 import { SessionLayout, TaskHint } from './SessionLayout';
@@ -53,6 +55,7 @@ export function MarkSession(p: MarkSessionProps) {
   const desktop = useIsDesktop();
   const ci = useChartInteraction(p.initialTool, p.transform);
   const [showRef, setShowRef] = useState(true);
+  const chartRef = useRef<TradingChartHandle>(null);
   const result = flow.phase === 'graded' ? flow.result : null;
   const busy = flow.phase === 'grading';
   const tf = envelope.payload.tf;
@@ -90,6 +93,8 @@ export function MarkSession(p: MarkSessionProps) {
       onSelectedChange={ci.setSelectedId}
       onNotice={ci.setNotice}
       focus={ci.focus}
+      handleRef={chartRef}
+      {...(result && showRef ? { highlightCandles: patternHighlights(result.reference, tf, 'ref') } : {})}
       scope={allowScope ? ci.scope : null}
     />
   );
@@ -171,7 +176,9 @@ export function MarkSession(p: MarkSessionProps) {
                   fmtPrice={fmt}
                   showRef={showRef}
                   onToggleRef={() => setShowRef((v) => !v)}
-                  onFocusMarks={(ids) => ci.focusOn(ids, [...ci.marks, ...result.reference])}
+                  onFocusMarks={(ids) => {
+                    if (!ids.some((id) => chartRef.current?.focusMark(id))) ci.focusOn(ids, [...ci.marks, ...result.reference]);
+                  }}
                   saveFailed={flow.saveFailed}
                   sheetControls={sheetControls}
                   extra={p.resultExtra?.(flow)}
