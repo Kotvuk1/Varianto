@@ -1,8 +1,11 @@
 import { expect, test } from '@playwright/test';
-import { chartBox, coreMarks, findVisibleBos, findVisibleFvg, isMobile, markPoints, openTerminal, selectTool, tapAt, tapsForAlgoMark } from './terminal.helpers';
+import { chartBox, chartCandles, coreMarks, findVisibleBos, findVisibleFvg, isMobile, markPoints, openTerminal, project, selectTool, tapAt, tapsForAlgoMark } from './terminal.helpers';
 
 // Реальные свечи: архив Binance (data.binance.vision) через /api/history, режим ?source=archive.
 test.setTimeout(120_000);
+
+// Скриншоты: SHOTS_DIR (по умолчанию - test-results рядом с отчётом Playwright).
+const shot = (name: string) => `${process.env.SHOTS_DIR ?? '../test-results/shots'}/${name}-${test.info().project.name}.png`;
 
 const ARCHIVE = 'Данные: архив Binance (не live)';
 
@@ -179,4 +182,96 @@ test('«Проверить»: BOS на месте CHoCH ядра - разбор 
   await expect.poll(async () => (await markPoints(page)).length, { timeout: 5000 }).toBeGreaterThan(1);
   await page.getByTestId('toggle-ref').click();
   await expect.poll(async () => (await markPoints(page)).length, { timeout: 5000 }).toBe(1);
+});
+
+// ---- Недоступность живого потока: сообщения по причине (реальные коды ответов через page.route) ----
+const LIVE_URL = '/terminal?symbol=BTCUSDT&tf=1h';
+const CORS = { 'access-control-allow-origin': '*' };
+
+test('live: 451 от Binance - точное сообщение про регион/сеть, кнопка архива ведёт на ?source=archive с плашкой «не live»', async ({ page }) => {
+  await page.route('**/fapi/v1/klines*', (r) =>
+    r.fulfill({ status: 451, headers: CORS, contentType: 'application/json', body: JSON.stringify({ code: 0, msg: 'Service unavailable from a restricted location' }) }),
+  );
+  await page.goto(LIVE_URL);
+  const err = page.getByTestId('chart-error');
+  await expect(err).toBeVisible({ timeout: 30_000 });
+  await expect(err).toContainText('Binance недоступен из вашего региона/сети (ограничение Binance). Попробуйте другую сеть или VPN.');
+  await page.screenshot({ path: shot('terminal-451') });
+  await page.getByTestId('archive-fallback').click();
+  await expect(page).toHaveURL(/source=archive/);
+  await expect(page.getByTestId('archive-strip')).toContainText('Архив, не live');
+  await expect(page.getByTestId('chart')).toHaveAttribute('data-ready', 'true', { timeout: 60_000 });
+  await expect.poll(async () => Number(await page.getByTestId('chart').getAttribute('data-candle-count')), { timeout: 60_000 }).toBeGreaterThan(0);
+  await page.screenshot({ path: shot('terminal-archive-fallback') });
+});
+
+test('live: сетевая ошибка - прежний текст «Нет подключения к сети» и запасной вариант архива', async ({ page }) => {
+  await page.route('**/fapi/v1/klines*', (r) => r.abort('connectionrefused'));
+  await page.goto(LIVE_URL);
+  const err = page.getByTestId('chart-error');
+  await expect(err).toBeVisible({ timeout: 30_000 });
+  await expect(err).toContainText('Нет подключения к сети');
+  await expect(err).toContainText('Проверьте интернет');
+  await expect(page.getByTestId('archive-fallback')).toBeVisible();
+});
+
+test('live: WS не открывается, REST работает - режим опроса с бейджем «обновление раз в 3 с»', async ({ page }) => {
+  // реальные свечи архива -> тело ответа REST в формате klines (без выдумывания данных)
+  await openTerminal(page);
+  const cs = await page.evaluate(() => (window as unknown as { __tlCandles: () => { openTime: number; open: number; high: number; low: number; close: number; volume: number }[] }).__tlCandles());
+  const step = 3_600_000;
+  const rows = cs.slice(-600).map((c) => [c.openTime, String(c.open), String(c.high), String(c.low), String(c.close), String(c.volume), c.openTime + step - 1, '1', 1, '0', '0', '0']);
+  await page.addInitScript(() => {
+    // WebSocket до Binance недоступен (таймаут): сокет не открывается и не закрывается
+    (window as unknown as { WebSocket: unknown }).WebSocket = class {
+      onopen = null;
+      onclose = null;
+      onerror = null;
+      onmessage = null;
+      close() {}
+    };
+  });
+  await page.route('**/fapi/v1/klines*', (r) => r.fulfill({ status: 200, headers: CORS, contentType: 'application/json', body: JSON.stringify(rows) }));
+  await page.goto(LIVE_URL);
+  await expect(page.getByTestId('chart')).toHaveAttribute('data-ready', 'true', { timeout: 60_000 });
+  await expect(page.locator('text="Обновление раз в 3 с" >> visible=true')).toBeVisible({ timeout: 30_000 });
+  await page.screenshot({ path: shot('terminal-polling') });
+});
+
+// ---- Подсветка свечи модели и focusMark ----
+test('подсветка свечи модели: колонка + подпись над high в обеих темах; focusMark центрирует и гаснет через 1.2 с', async ({ page }) => {
+  const chart = await openTerminal(page);
+  const cs = await chartCandles(page);
+  const c = cs[cs.length - 15]!;
+  const ref = cs[cs.length - 16]!;
+  for (const theme of ['dark', 'light'] as const) {
+    await page.evaluate((t) => document.documentElement.setAttribute('data-theme', t), theme);
+    await page.evaluate(
+      ([a, b]) => (window as unknown as { __tlSetHighlight: (x: unknown) => void }).__tlSetHighlight([{ time: a, tone: 'focus', label: 'Pin bar' }, { time: b, tone: 'ref' }]),
+      [c.openTime, ref.openTime] as const,
+    );
+    await expect(chart).toHaveAttribute('data-highlight-count', '2');
+    const pt = await project(page, c.openTime, (c.high + c.low) / 2);
+    expect(pt).not.toBeNull();
+    await page.waitForTimeout(300);
+    await page.screenshot({ path: shot(`highlight-${theme}`) });
+  }
+  await page.evaluate(() => (window as unknown as { __tlSetHighlight: (x: unknown) => void }).__tlSetHighlight(null));
+  await expect(chart).toHaveAttribute('data-highlight-count', '0');
+});
+
+test('focusMark: метка подсвечивается на 1.2 с (data-flash-id) и график центрируется на ней', async ({ page }) => {
+  const chart = await openTerminal(page);
+  const box = await chartBox(chart);
+  const bos = await findVisibleBos(page, box);
+  await selectTool(page, 'BOS', 'Пробои');
+  await tapAt(page, bos.swingPt);
+  await tapAt(page, bos.breakPt);
+  await expect(chart).toHaveAttribute('data-mark-count', '1');
+  const id = (await markPoints(page))[0]!.id;
+  const t0 = Date.now();
+  expect(await page.evaluate((i) => (window as unknown as { __tlFocusMark: (i: string) => boolean }).__tlFocusMark(i), id)).toBe(true);
+  await expect(chart).toHaveAttribute('data-flash-id', id);
+  await expect(chart).toHaveAttribute('data-flash-id', '', { timeout: 3000 });
+  expect(Date.now() - t0).toBeGreaterThan(900);
 });

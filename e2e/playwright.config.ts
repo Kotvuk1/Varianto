@@ -1,6 +1,12 @@
 import { defineConfig } from '@playwright/test';
 
 const PORT = Number(process.env.E2E_PORT ?? 3100);
+const INTRO_KEYS = ['ms-mark', 'ms-question', 'pa-find', 'pa-level', 'pa-context', 'challenge'];
+/** Интро заданий отключены по умолчанию, чтобы не перекрывать график в обычных сценариях; guide.spec.ts начинает с чистого состояния. */
+export const INTRO_DISMISSED = {
+  cookies: [],
+  origins: [{ origin: `http://localhost:${PORT}`, localStorage: INTRO_KEYS.map((k) => ({ name: `tl.intro.dismissed.${k}`, value: '1' })) }],
+};
 
 export default defineConfig({
   testDir: '.',
@@ -9,6 +15,7 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,
   use: {
+    storageState: INTRO_DISMISSED,
     baseURL: `http://localhost:${PORT}`,
     trace: 'retain-on-failure',
     screenshot: 'only-on-failure',

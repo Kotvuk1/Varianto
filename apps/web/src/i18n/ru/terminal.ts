@@ -29,10 +29,12 @@ export const tx = {
   loading: 'Загружаю свечи…',
   loadingMore: 'Догружаю историю…',
   statusLive: 'Live',
-  statusPolling: 'Опрос',
+  statusPolling: 'Обновление раз в 3 с',
   statusConnecting: 'Подключение',
   statusNoLive: 'Нет живых данных',
   archiveBanner: 'Данные: архив Binance (не live)',
+  archiveFallback: 'Посмотреть на архивных данных',
+  archiveStrip: 'Архив, не live: данные не новее 2 суток, свежие свечи недоступны.',
   archiveBadge: 'Архив Binance · не live',
   details: 'Подробности',
   retry: 'Повторить',
@@ -115,7 +117,7 @@ export function errorCopy(code: number | string | undefined): ErrorCopy {
   if (code === 451)
     return {
       title: 'Binance недоступен из вашей сети',
-      text: 'Binance отклонил запрос (451): доступ ограничен для вашего региона или сети. Включите VPN или откройте Trading Lab в другой сети.',
+      text: 'Binance недоступен из вашего региона/сети (ограничение Binance). Попробуйте другую сеть или VPN.',
     };
   if (code === 400) return { title: 'Пара не найдена', text: 'Проверьте тикер, например BTCUSDT.' };
   if (code === 'network')

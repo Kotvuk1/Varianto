@@ -14,16 +14,23 @@ export function normalizeSymbolInput(raw: string): Symbol | null {
 
 export type SourceMode = 'live' | 'archive';
 
-/** Режим архива доступен вне production или при явном флаге сборки. */
-export function archiveAllowed(env: { NODE_ENV?: string; NEXT_PUBLIC_ENABLE_ARCHIVE_SOURCE?: string }): boolean {
-  return env.NODE_ENV !== 'production' || env.NEXT_PUBLIC_ENABLE_ARCHIVE_SOURCE === '1';
+/** Архивный источник доступен везде, включая production: запасной вариант, когда живой поток недоступен. Всегда помечается «не live». */
+export function archiveAllowed(): boolean {
+  return true;
 }
 
-export function resolveSourceMode(
-  param: string | null | undefined,
-  env: { NODE_ENV?: string; NEXT_PUBLIC_ENABLE_ARCHIVE_SOURCE?: string },
-): SourceMode {
-  return param === 'archive' && archiveAllowed(env) ? 'archive' : 'live';
+export function resolveSourceMode(param: string | null | undefined): SourceMode {
+  return param === 'archive' && archiveAllowed() ? 'archive' : 'live';
+}
+
+/** Предлагать ли «Посмотреть на архивных данных» при ошибке живого режима (кроме 400 - неверная пара, и архивных ошибок). */
+export function offerArchive(code: number | string | undefined, mode: SourceMode): boolean {
+  return mode === 'live' && code !== 400 && code !== 'archive';
+}
+
+/** Ссылка на тот же экран в архивном режиме. */
+export function archiveHref(symbol: Symbol, tf: Timeframe): string {
+  return `/terminal?source=archive&symbol=${encodeURIComponent(symbol)}&tf=${tf}`;
 }
 
 export const ARCHIVE_SYMBOLS: readonly string[] = PRESET_SYMBOLS;

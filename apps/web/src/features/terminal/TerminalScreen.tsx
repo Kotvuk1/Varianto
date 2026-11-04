@@ -11,7 +11,7 @@ import { ru } from '@/i18n/ru';
 import { DesktopTabs } from '@/shell';
 import { NAV_ITEMS } from '@/shell/routes';
 import { Badge, BottomSheet, Button, IconButton, Segmented } from '@/ui';
-import { normalizeSymbolInput, resolveSourceMode, TERMINAL_TIMEFRAMES, TF_LABEL } from './dataSource';
+import { archiveHref, normalizeSymbolInput, offerArchive, resolveSourceMode, TERMINAL_TIMEFRAMES, TF_LABEL } from './dataSource';
 import { CheckPanel } from './check/CheckPanel';
 import { runCheck, type CheckResult } from './check/runCheck';
 import { InstructionBar } from './InstructionBar';
@@ -24,12 +24,19 @@ import { otherScope, useScope, useScopeHotkey } from './useScope';
 import { useMarketData } from './useMarketData';
 import { useTerminalMarks } from './useTerminalMarks';
 
-const env = {
-  NODE_ENV: process.env.NODE_ENV,
-  NEXT_PUBLIC_ENABLE_ARCHIVE_SOURCE: process.env.NEXT_PUBLIC_ENABLE_ARCHIVE_SOURCE,
-};
-
-function ErrorBlock({ code, message, at, onRetry }: { code: number | string; message: string; at: number; onRetry: () => void }) {
+function ErrorBlock({
+  code,
+  message,
+  at,
+  onRetry,
+  archiveLink,
+}: {
+  code: number | string;
+  message: string;
+  at: number;
+  onRetry: () => void;
+  archiveLink?: string;
+}) {
   const c = errorCopy(code);
   const t = new Date(at);
   const host = code === 'archive' ? 'data.binance.vision' : 'fapi.binance.com';
@@ -43,6 +50,15 @@ function ErrorBlock({ code, message, at, onRetry }: { code: number | string; mes
           <Button variant="primary" onClick={onRetry}>
             {tx.retry}
           </Button>
+          {archiveLink && (
+            <Link
+              href={archiveLink}
+              data-testid="archive-fallback"
+              className="inline-flex h-11 items-center rounded-md border border-border-strong px-3 text-sm font-medium"
+            >
+              {tx.archiveFallback}
+            </Link>
+          )}
         </div>
         <details className="mt-3 text-sm text-text-2">
           <summary className="min-h-11 cursor-pointer leading-[44px]">{tx.details}</summary>
@@ -58,7 +74,7 @@ function ErrorBlock({ code, message, at, onRetry }: { code: number | string; mes
 
 export function TerminalScreen() {
   const params = useSearchParams();
-  const mode = resolveSourceMode(params.get('source'), env);
+  const mode = resolveSourceMode(params.get('source'));
   const [symbol, setSymbol] = useState<Symbol>(() => normalizeSymbolInput(params.get('symbol') ?? '') ?? 'BTCUSDT');
   const [tf, setTf] = useState<Timeframe>(() => {
     const p = params.get('tf') as Timeframe | null;
@@ -202,6 +218,16 @@ export function TerminalScreen() {
         </div>
       </header>
 
+      {mode === 'archive' && (
+        <p
+          role="status"
+          data-testid="archive-strip"
+          className="shrink-0 border-b border-border bg-surface-2 px-3 py-1 text-xs text-text-2"
+        >
+          {tx.archiveStrip}
+        </p>
+      )}
+
       <div className="flex min-h-0 flex-1">
         <DesktopRail tool={tool} onTool={changeTool} />
         <section className="relative flex min-w-0 flex-1 flex-col bg-bg" aria-label={tx.title}>
@@ -266,7 +292,13 @@ export function TerminalScreen() {
                 {tx.loading}
               </div>
             )}
-            {blocking && data.error && <ErrorBlock {...data.error} onRetry={data.reload} />}
+            {blocking && data.error && (
+              <ErrorBlock
+                {...data.error}
+                onRetry={data.reload}
+                {...(offerArchive(data.error.code, mode) ? { archiveLink: archiveHref(symbol, tf) } : {})}
+              />
+            )}
           </div>
         </section>
         <CheckPanel

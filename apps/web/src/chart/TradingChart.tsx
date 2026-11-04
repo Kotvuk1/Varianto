@@ -151,6 +151,10 @@ export function TradingChart(props: TradingChartProps) {
   const [ready, setReady] = useState(false);
   const [flashId, setFlashId] = useState<string | null>(null);
   const flashRef = useRef<string | null>(null);
+  // Только e2e-хук __tlSetHighlight: подсветка без участия родителя.
+  const [debugHl, setDebugHl] = useState<readonly CandleHighlight[] | null>(null);
+  const debugHlRef = useRef<readonly CandleHighlight[] | null>(null);
+  const handleApi = useRef<TradingChartHandle | null>(null);
   const flashTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Актуальные props для обработчиков (без пересоздания графика).
@@ -170,7 +174,7 @@ export function TradingChart(props: TradingChartProps) {
     const last = candlesRef.current[candlesRef.current.length - 1];
     const byTime = new Map(candlesRef.current.map((c) => [c.openTime, c]));
     const hl: { time: number; tone: 'focus' | 'ref'; label?: string; high: number; low: number }[] = [];
-    for (const h of p.highlightCandles ?? []) {
+    for (const h of debugHlRef.current ?? p.highlightCandles ?? []) {
       const c = byTime.get(h.time);
       if (c) hl.push({ ...h, high: c.high, low: c.low });
     }
@@ -199,6 +203,7 @@ export function TradingChart(props: TradingChartProps) {
     pushStateRef.current = pushState;
     fmtRef.current = fmt;
     flashRef.current = flashId;
+    debugHlRef.current = debugHl;
   });
 
   // --- Создание графика (один раз, когда известны токены) ---
@@ -402,6 +407,8 @@ export function TradingChart(props: TradingChartProps) {
         return primitive.lastCenters.map((c) => ({ id: c.id, x: r.left + c.x, y: r.top + c.y }));
       };
       w.__tlCandles = () => candlesRef.current;
+      w.__tlSetHighlight = (items: readonly CandleHighlight[] | null) => setDebugHl(items);
+      w.__tlFocusMark = (id: string) => handleApi.current?.focusMark(id) ?? false;
       w.__tlProject = (time: number, price: number) => {
         const r = el.getBoundingClientRect();
         const x = chart.timeScale().logicalToCoordinate(indexRef.current.timeToLogical(time) as never);
@@ -423,6 +430,8 @@ export function TradingChart(props: TradingChartProps) {
         const w = window as unknown as Record<string, unknown>;
         delete w.__tlMarkPoints;
         delete w.__tlCandles;
+        delete w.__tlSetHighlight;
+        delete w.__tlFocusMark;
         delete w.__tlProject;
       }
       chart.remove();
@@ -493,6 +502,9 @@ export function TradingChart(props: TradingChartProps) {
     [centerOn],
   );
   useImperativeHandle(props.handleRef, () => ({ centerOn, focusMark }), [centerOn, focusMark]);
+  useLayoutEffect(() => {
+    handleApi.current = { centerOn, focusMark };
+  }, [centerOn, focusMark]);
   useEffect(
     () => () => {
       if (flashTimer.current) clearTimeout(flashTimer.current);
@@ -582,7 +594,7 @@ export function TradingChart(props: TradingChartProps) {
   // --- Метки, выбор, инструмент ---
   useEffect(() => {
     pushStateRef.current();
-  }, [props.marks, props.readOnlyMarks, props.markStates, props.highlightRange, props.highlightCandles, flashId, props.selectedId, props.openCandleLabel, tokens, ready]);
+  }, [props.marks, props.readOnlyMarks, props.markStates, props.highlightRange, props.highlightCandles, debugHl, flashId, props.selectedId, props.openCandleLabel, tokens, ready]);
 
   useEffect(() => {
     controllerRef.current?.reset();
@@ -606,7 +618,7 @@ export function TradingChart(props: TradingChartProps) {
       data-last-closed={last ? String(last.closed) : ''}
       data-ready={ready ? 'true' : 'false'}
       data-flash-id={flashId ?? ''}
-      data-highlight-count={props.highlightCandles?.length ?? 0}
+      data-highlight-count={(debugHl ?? props.highlightCandles)?.length ?? 0}
     >
       <div
         ref={containerRef}
