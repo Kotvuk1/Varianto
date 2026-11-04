@@ -45,7 +45,7 @@ export function CheckPanel({ result, open, onClose, showRef, onToggleRef, fmt, o
         feedback={result.feedback}
         fmtPrice={fmt}
         onFocusMarks={onFocusMarks}
-        className="[&_[data-testid='fb-fb-verdict']]:hidden"
+        hideVerdict
       />
       {result.missedBlocks.length > 0 && (
         <details className="border-t border-border py-2" data-testid="check-more">

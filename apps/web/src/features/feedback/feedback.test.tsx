@@ -20,6 +20,12 @@ describe('FeedbackView', () => {
     expect(within(screen.getByTestId('fb-fb-understood')).getAllByRole('listitem').length).toBeGreaterThan(0);
   });
 
+  it('hideVerdict скрывает «Итог», остальные части на месте', () => {
+    render(<FeedbackView feedback={feedback} hideVerdict />);
+    expect(screen.queryByTestId('fb-fb-verdict')).toBeNull();
+    expect(screen.getByTestId('fb-fb-principle')).toBeTruthy();
+  });
+
   it('ошибка с метками кликабельна; состояние дано подписью, а не только иконкой', async () => {
     const onFocus = vi.fn();
     render(<FeedbackView feedback={feedback} onFocusMarks={onFocus} />);

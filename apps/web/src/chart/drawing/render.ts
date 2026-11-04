@@ -43,6 +43,15 @@ function drawStateGlyph(ctx: CanvasRenderingContext2D, state: 'match' | 'missed'
     if (state === 'missed') ctx.setLineDash([2, 2]);
     ctx.arc(cx, cy, r, 0, Math.PI * 2);
     ctx.stroke();
+    if (state === 'missed') {
+      ctx.setLineDash([]);
+      ctx.beginPath();
+      ctx.moveTo(cx - 2.5, cy);
+      ctx.lineTo(cx + 2.5, cy);
+      ctx.moveTo(cx, cy - 2.5);
+      ctx.lineTo(cx, cy + 2.5);
+      ctx.stroke();
+    }
     if (state === 'match') {
       ctx.setLineDash([]);
       ctx.beginPath();

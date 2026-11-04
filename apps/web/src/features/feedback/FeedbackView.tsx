@@ -16,14 +16,28 @@ export interface FeedbackViewProps {
   verdictExtra?: React.ReactNode;
   /** После шести частей (например, легенда значков). */
   footer?: React.ReactNode;
+  /** Не показывать раздел «Итог» (экран выводит свой вердикт, например терминал). */
+  hideVerdict?: boolean;
   className?: string;
 }
 
 const defaultFmt = makePriceFormatter(0.01);
 
-function Section({ id, title, children }: { id: string; title: string; children: React.ReactNode }) {
+function Section({
+  id,
+  title,
+  children,
+}: {
+  id: string;
+  title: string;
+  children: React.ReactNode;
+}) {
   return (
-    <section aria-labelledby={id} data-testid={`fb-${id}`} className="border-b border-border py-3 last:border-b-0">
+    <section
+      aria-labelledby={id}
+      data-testid={`fb-${id}`}
+      className="border-b border-border py-3 last:border-b-0"
+    >
       <h3 id={id} className="mb-1 text-sm font-semibold">
         {title}
       </h3>
@@ -33,15 +47,30 @@ function Section({ id, title, children }: { id: string; title: string; children:
 }
 
 /** Разбор из 6 частей: итог, понято верно, ошибки, почему, как правильно, принцип (ALGORITHMS §17.1). */
-export function FeedbackView({ feedback, fmtPrice = defaultFmt, onFocusMarks, summary, verdictExtra, footer, className }: FeedbackViewProps) {
+export function FeedbackView({
+  feedback,
+  fmtPrice = defaultFmt,
+  onFocusMarks,
+  summary,
+  hideVerdict,
+  verdictExtra,
+  footer,
+  className,
+}: FeedbackViewProps) {
   const text = (b: FeedbackBlock) => renderBlock(b.templateKey, b.params, fmtPrice);
   const list = (blocks: FeedbackBlock[], testId: string) => (
     <ul data-testid={testId} className="space-y-2">
       {blocks.map((b, i) => (
         <li key={`${b.templateKey}-${i}`} className="flex items-start gap-2 text-sm">
-          <span className="mt-0.5 shrink-0"><GradeGlyph kind={b.glyph} /></span>
+          <span className="mt-0.5 shrink-0">
+            <GradeGlyph kind={b.glyph} />
+          </span>
           {b.markIds?.length && onFocusMarks ? (
-            <button type="button" onClick={() => onFocusMarks(b.markIds!)} className="min-h-11 cursor-pointer text-left">
+            <button
+              type="button"
+              onClick={() => onFocusMarks(b.markIds!)}
+              className="min-h-11 cursor-pointer text-left"
+            >
               {text(b)}
             </button>
           ) : (
@@ -68,7 +97,12 @@ export function FeedbackView({ feedback, fmtPrice = defaultFmt, onFocusMarks, su
             <GradeGlyph kind="info" />
             <span>
               {t}
-              {g.places.length > 0 && <span className="text-text-2"> {fb.where}: {g.places.join(', ')}.</span>}
+              {g.places.length > 0 && (
+                <span className="text-text-2">
+                  {' '}
+                  {fb.where}: {g.places.join(', ')}.
+                </span>
+              )}
             </span>
           </li>
         ))}
@@ -77,26 +111,44 @@ export function FeedbackView({ feedback, fmtPrice = defaultFmt, onFocusMarks, su
   };
   return (
     <div className={className} data-testid="feedback-view">
-      <Section id="fb-verdict" title={fb.verdict}>
-        <p className="text-sm font-medium">{text(feedback.verdict)}</p>
-        {summary && (
-          <p className="text-sm text-text-2" data-testid="fb-summary">
-            {fb.summary(summary.matched, summary.total)}
-          </p>
-        )}
-        {verdictExtra}
-      </Section>
+      {!hideVerdict && (
+        <Section id="fb-verdict" title={fb.verdict}>
+          <p className="text-sm font-medium">{text(feedback.verdict)}</p>
+          {summary && (
+            <p className="text-sm text-text-2" data-testid="fb-summary">
+              {fb.summary(summary.matched, summary.total)}
+            </p>
+          )}
+          {verdictExtra}
+        </Section>
+      )}
       <Section id="fb-understood" title={fb.understood}>
-        {feedback.understood.length ? list(feedback.understood, 'fb-understood-list') : <p className="text-sm text-text-2">{fb.noMatches}</p>}
+        {feedback.understood.length ? (
+          list(feedback.understood, 'fb-understood-list')
+        ) : (
+          <p className="text-sm text-text-2">{fb.noMatches}</p>
+        )}
       </Section>
       <Section id="fb-mistakes" title={fb.mistakes}>
-        {feedback.mistakes.length ? list(feedback.mistakes, 'fb-mistakes-list') : <p className="text-sm text-text-2">{fb.noMistakes}</p>}
+        {feedback.mistakes.length ? (
+          list(feedback.mistakes, 'fb-mistakes-list')
+        ) : (
+          <p className="text-sm text-text-2">{fb.noMistakes}</p>
+        )}
       </Section>
       <Section id="fb-why" title={fb.why}>
-        {feedback.why.length ? dedup(feedback.why, 'fb-why-list') : <p className="text-sm text-text-2">—</p>}
+        {feedback.why.length ? (
+          dedup(feedback.why, 'fb-why-list')
+        ) : (
+          <p className="text-sm text-text-2">—</p>
+        )}
       </Section>
       <Section id="fb-howto" title={fb.howTo}>
-        {feedback.howTo.length ? dedup(feedback.howTo, 'fb-howto-list') : <p className="text-sm text-text-2">—</p>}
+        {feedback.howTo.length ? (
+          dedup(feedback.howTo, 'fb-howto-list')
+        ) : (
+          <p className="text-sm text-text-2">—</p>
+        )}
       </Section>
       <Section id="fb-principle" title={fb.principle}>
         <p className="text-sm">{text(feedback.principle)}</p>

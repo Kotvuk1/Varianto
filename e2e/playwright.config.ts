@@ -24,7 +24,7 @@ export default defineConfig({
     { name: 'desktop', use: { viewport: { width: 1440, height: 900 } } },
   ],
   webServer: {
-    command: `pnpm --filter web build && pnpm --filter web start -p ${PORT}`,
+    command: `pnpm --filter ./apps/web build && pnpm --filter ./apps/web start -p ${PORT}`,
     url: `http://localhost:${PORT}/api/health`,
     // Режим ?source=archive (реальные свечи архива Binance) в production-сборке e2e.
     env: {
