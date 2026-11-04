@@ -12,6 +12,10 @@ export interface FeedbackViewProps {
   onFocusMarks?: (ids: string[]) => void;
   /** «N из M совпало»: число верных меток и размер эталона. */
   summary?: { matched: number; total: number };
+  /** Содержимое «Итога» после основной строки: счётчики, модульная сводка. */
+  verdictExtra?: React.ReactNode;
+  /** После шести частей (например, легенда значков). */
+  footer?: React.ReactNode;
   className?: string;
 }
 
@@ -29,13 +33,13 @@ function Section({ id, title, children }: { id: string; title: string; children:
 }
 
 /** Разбор из 6 частей: итог, понято верно, ошибки, почему, как правильно, принцип (ALGORITHMS §17.1). */
-export function FeedbackView({ feedback, fmtPrice = defaultFmt, onFocusMarks, summary, className }: FeedbackViewProps) {
+export function FeedbackView({ feedback, fmtPrice = defaultFmt, onFocusMarks, summary, verdictExtra, footer, className }: FeedbackViewProps) {
   const text = (b: FeedbackBlock) => renderBlock(b.templateKey, b.params, fmtPrice);
   const list = (blocks: FeedbackBlock[], testId: string) => (
     <ul data-testid={testId} className="space-y-2">
       {blocks.map((b, i) => (
         <li key={`${b.templateKey}-${i}`} className="flex items-start gap-2 text-sm">
-          <GradeGlyph kind={b.glyph} />
+          <span className="mt-0.5 shrink-0"><GradeGlyph kind={b.glyph} /></span>
           {b.markIds?.length && onFocusMarks ? (
             <button type="button" onClick={() => onFocusMarks(b.markIds!)} className="min-h-11 cursor-pointer text-left">
               {text(b)}
@@ -80,6 +84,7 @@ export function FeedbackView({ feedback, fmtPrice = defaultFmt, onFocusMarks, su
             {fb.summary(summary.matched, summary.total)}
           </p>
         )}
+        {verdictExtra}
       </Section>
       <Section id="fb-understood" title={fb.understood}>
         {feedback.understood.length ? list(feedback.understood, 'fb-understood-list') : <p className="text-sm text-text-2">{fb.noMatches}</p>}
@@ -96,6 +101,7 @@ export function FeedbackView({ feedback, fmtPrice = defaultFmt, onFocusMarks, su
       <Section id="fb-principle" title={fb.principle}>
         <p className="text-sm">{text(feedback.principle)}</p>
       </Section>
+      {footer}
     </div>
   );
 }

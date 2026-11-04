@@ -1,5 +1,9 @@
 // Тексты сессии задания (COPY.md §2, §3, §5; FR-UI-03). Общие для Market Structure и Price Action.
 export const ss = {
+  notFound: { title: 'Страница не найдена', text: 'Проверьте адрес или вернитесь на главную.' },
+  appError: { title: 'Что-то пошло не так', text: 'Экран не загрузился. Повторите действие; если ошибка остаётся, вернитесь на главную.', retry: 'Повторить' },
+  toHome: 'На главную',
+  toTerminal: 'Терминал',
   back: 'К выбору задания',
   taskNumber: (n: number) => `Задание ${n}`,
   check: 'Проверить',
@@ -20,6 +24,13 @@ export const ss = {
   collapseSheet: 'Свернуть разбор',
   closeSheet: 'Закрыть разбор',
   details: 'Подробности',
+  aside: {
+    task: 'Задание',
+    tools: 'Инструменты',
+    toolsHelp: 'Выберите инструмент на панели слева и нажмите на график: метка встанет в точку касания. «Выбор» двигает метки, «Ластик» удаляет.',
+    criteria: 'Как оценивается',
+  },
+  sheetHeights: { peek: 'Свернуть разбор', medium: 'Средний размер разбора', full: 'Развернуть разбор на весь экран' },
   chartLabel: (symbol: string, tf: string) => `${symbol} ${tf}`,
   loadingChart: (symbol: string, tf: string) => `Загружаю свечи ${symbol} ${tf}…`,
   loadingChartAny: (tf: string) => `Загружаю свечи ${tf}…`,

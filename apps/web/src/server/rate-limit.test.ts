@@ -34,9 +34,9 @@ describe('RateLimiter', () => {
 import { rateFromEnv } from './deps';
 describe('rateFromEnv', () => {
   it('дефолт при отсутствии/мусоре, значение из env иначе', () => {
-    expect(rateFromEnv('X', 30, {} as NodeJS.ProcessEnv)).toBe(30);
-    expect(rateFromEnv('X', 30, { X: 'abc' } as NodeJS.ProcessEnv)).toBe(30);
-    expect(rateFromEnv('X', 30, { X: '-5' } as NodeJS.ProcessEnv)).toBe(30);
-    expect(rateFromEnv('X', 30, { X: '500' } as NodeJS.ProcessEnv)).toBe(500);
+    expect(rateFromEnv('X', 30, {} as unknown as NodeJS.ProcessEnv)).toBe(30);
+    expect(rateFromEnv('X', 30, { X: 'abc' } as unknown as NodeJS.ProcessEnv)).toBe(30);
+    expect(rateFromEnv('X', 30, { X: '-5' } as unknown as NodeJS.ProcessEnv)).toBe(30);
+    expect(rateFromEnv('X', 30, { X: '500' } as unknown as NodeJS.ProcessEnv)).toBe(500);
   });
 });

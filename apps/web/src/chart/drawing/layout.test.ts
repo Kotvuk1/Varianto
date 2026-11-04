@@ -142,3 +142,15 @@ describe('подписи метки', () => {
     expect(keepTextsInside([{ t: 'text', text: 'TP', x: 5, y: 0 }], 400)[0]).toMatchObject({ x: textWidth('TP') / 2 + 2 });
   });
 });
+
+describe('состояния проверки (F-16)', () => {
+  it('подпись получает state и глиф-ширину вместо текстового префикса', () => {
+    for (const st of ['match', 'missed', 'extra'] as const) {
+      const g = buildGeometry(mk('swing-high', [a(5, 300)]), synthetic_proj, { state: st });
+      const t = g.parts.find((p) => p.t === 'text');
+      expect(t).toMatchObject({ t: 'text', text: 'SwH', state: st });
+      expect(textWidth('SwH', st)).toBeGreaterThan(textWidth('SwH'));
+      expect(JSON.stringify(g.parts)).not.toMatch(/[✓✕?]/);
+    }
+  });
+});

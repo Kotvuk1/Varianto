@@ -1,9 +1,10 @@
 'use client';
-import { ChevronDown, ChevronLeft, ChevronUp, Info } from 'lucide-react';
+import { ChevronLeft, Info } from 'lucide-react';
 import Link from 'next/link';
 import { useState, type ReactNode } from 'react';
 import { ss } from '@/i18n/ru/session';
-import { BottomSheet, Button, IconButton, cn, type SheetHeight } from '@/ui';
+import { IconButton, cn } from '@/ui';
+import { ResultSheet, SHEET_PAD, type ResultSheetHeight } from './ResultSheet';
 import { useIsDesktop } from './useIsDesktop';
 
 export interface TaskHintProps {
@@ -20,11 +21,11 @@ export function TaskHint({ text, details, wrap = false }: TaskHintProps) {
   const [open, setOpen] = useState(false);
   return (
     <div data-testid="task-hint" className="shrink-0 border-b border-border bg-surface-1 px-3">
-      <div className="flex min-h-11 items-center gap-1">
-        <p data-testid="task-text" className={cn('min-w-0 flex-1 py-2 text-sm leading-5', open || wrap ? '' : 'truncate')} title={text}>
+      <div className="flex min-h-11 items-start gap-1">
+        <p data-testid="task-text" className={cn('min-w-0 flex-1 py-3 text-sm leading-5', open || wrap ? '' : 'line-clamp-2')} title={text}>
           {text}
         </p>
-        {details && (
+        {(details || !wrap) && (
           <IconButton
             label={ss.referenceToggle}
             aria-expanded={open}
@@ -61,26 +62,11 @@ export interface SessionLayoutProps {
   } | null;
 }
 
-const SHEET_PAD: Record<SheetHeight, string> = { peek: '120px', medium: '50dvh', full: '50dvh' };
-
 /** Общий каркас сессии задания: шапка, справка, график, панели; разбор - bottom sheet / боковой лист (LAYOUTS §3, §4). */
 export function SessionLayout({ backHref, title, subtitle, counter, hint, instruction, chart, rail, bottom, aside, result }: SessionLayoutProps) {
   const desktop = useIsDesktop();
-  const [height, setHeight] = useState<SheetHeight>('medium');
+  const [height, setHeight] = useState<ResultSheetHeight>('medium');
   const sheet = !desktop && result;
-
-  const toggle = () => setHeight((h) => (h === 'peek' ? 'medium' : 'peek'));
-  const sheetControls = (
-    <Button
-      size="md"
-      variant="ghost"
-      icon={height === 'peek' ? <ChevronUp size={20} strokeWidth={1.75} /> : <ChevronDown size={20} strokeWidth={1.75} />}
-      onClick={toggle}
-      data-testid="sheet-toggle"
-    >
-      {height === 'peek' ? ss.expandSheet : ss.collapseSheet}
-    </Button>
-  );
 
   return (
     <div className="flex min-h-0 flex-1 flex-col" data-testid="session" data-graded={result ? 'true' : 'false'}>
@@ -108,7 +94,7 @@ export function SessionLayout({ backHref, title, subtitle, counter, hint, instru
           {!desktop && !result && bottom}
         </section>
         {desktop && (
-          <aside aria-label={ss.resultTitle} className="flex w-[360px] shrink-0 flex-col border-l border-border bg-surface-1">
+          <aside aria-label={ss.resultTitle} className="flex w-[360px] shrink-0 flex-col overflow-y-auto border-l border-border bg-surface-1">
             {result ? (
               <>
                 <h2 className="shrink-0 border-b border-border px-4 py-3 text-lg font-semibold">{ss.resultTitle}</h2>
@@ -123,16 +109,9 @@ export function SessionLayout({ backHref, title, subtitle, counter, hint, instru
       </div>
 
       {sheet && (
-        <BottomSheet open onClose={() => setHeight('peek')} title={ss.resultTitle} height={height} modal={false} footer={height === 'peek' ? undefined : result.footer}>
-          {height === 'peek' ? (
-            <div className="flex flex-wrap gap-2">
-              {result.footer}
-              {sheetControls}
-            </div>
-          ) : (
-            result.body(sheetControls)
-          )}
-        </BottomSheet>
+        <ResultSheet title={ss.resultTitle} height={height} onHeight={setHeight} footer={result.footer}>
+          {result.body(null)}
+        </ResultSheet>
       )}
     </div>
   );

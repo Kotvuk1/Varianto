@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { analyzeStructure, msParamsFor, toMarks, type Candle, type Mark } from '@tl/core';
-import { conceptsFor, runCheck } from './runCheck';
+import { conceptsFor, RANGE_TAIL_CANDLES, runCheck } from './runCheck';
 
 // Реальные свечи BTCUSDT 1h (data.binance.vision), сентябрь 2026.
 const candles: Candle[] = readFileSync(resolve(process.cwd(), '../../fixtures/klines/BTCUSDT/1h/BTCUSDT-1h-2026-09.csv'), 'utf8')
@@ -63,11 +63,26 @@ describe('runCheck на реальных свечах', () => {
     expect(o.result.grade.errors.map((e) => e.code)).not.toContain('SWING_MISSED');
   });
 
-  it('вердикт «N из M совпало»: M - число эталонных меток, совпадает со сводкой', () => {
-    const o = runCheck(candles, '1h', [asUser(choch), { ...asUser(choch), id: 'u2', anchors: [{ time: candles[3]!.openTime, price: 1 }, { time: candles[4]!.openTime, price: 1 }] }]);
-    expect(o.ok).toBe(true);
-    if (!o.ok) return;
-    expect(o.result.feedback.verdict.params).toMatchObject({ matched: o.result.summary.matched, total: o.result.summary.total });
+  it('вердикт по меткам пользователя: N из M ваших, пропуски эталона не входят в M', () => {
+    const o = runCheck(candles, '1h', [asUser(choch)]);
+    if (!o.ok) throw new Error('ожидался результат');
+    expect(o.result.summary).toEqual({ matched: 1, total: 1 });
+    expect(o.result.feedback.mistakes.every((b) => !b.code?.endsWith('_MISSED'))).toBe(true);
+  });
+
+  it('учитываются только типы меток пользователя: при одном CHoCH нет пропусков swing', () => {
+    const o = runCheck(candles, '1h', [asUser(choch)]);
+    if (!o.ok) throw new Error('ожидался результат');
+    expect(o.result.grade.errors.map((e) => e.code)).not.toContain('SWING_MISSED');
+  });
+
+  it('диапазон: от первой метки до последней + 3 свечи', () => {
+    const o = runCheck(candles, '1h', [asUser(choch)]);
+    if (!o.ok) throw new Error('ожидался результат');
+    const w = o.result.window;
+    const lastIdx = candles.findIndex((c) => c.openTime >= Math.max(...choch.anchors.map((x) => x.time)));
+    expect(w.toIndex).toBe(lastIdx + RANGE_TAIL_CANDLES);
+    expect(w.toIndex).toBeLessThan(candles.length - 1);
   });
 
   it('метка вдали от структуры - extra, эталон показан как missed', () => {

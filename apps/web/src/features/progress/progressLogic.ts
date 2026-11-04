@@ -80,6 +80,7 @@ export function trainTarget(stat: Pick<SkillStat, 'skill' | 'recent' | 'accuracy
     return { module: gen.module, href: `/learn/price-action/session?${q}` };
   }
   q.set('difficulty', difficulty);
+  q.set('focus', stat.skill);
   return { module: 'challenge', href: `/learn/challenge/session?${q}` };
 }
 
@@ -88,6 +89,41 @@ export function recommend(stats: readonly SkillStat[]): { skill: SkillStat; targ
   const pick = selectWeak(stats)[0] ?? [...stats].filter((s) => s.recent.length > 0).sort((a, b) => (a.accuracy ?? 0) - (b.accuracy ?? 0) || a.skill.localeCompare(b.skill))[0];
   return pick ? { skill: pick, target: trainTarget(pick) } : null;
 }
+
+export interface ModuleAccuracy {
+  module: ModuleId;
+  attempts: number;
+  correct: number;
+  accuracy: number;
+  /** Ни у одного навыка модуля нет окна >= MIN_SAMPLE: показываем только итог по модулю. */
+  skillsFew: boolean;
+  /** Наибольшее число попыток среди навыков модуля (для «n из 5»). */
+  maxSkillAttempts: number;
+}
+
+/** Точность модуля целиком (F-11): пока по навыкам мало данных, это единственный вывод для пользователя. */
+export function moduleAccuracies(stats: readonly SkillStat[]): ModuleAccuracy[] {
+  return MODULE_ORDER.flatMap((module) => {
+    const own = stats.filter((s) => moduleOfSkill(s.skill) === module && s.attempts > 0);
+    const attempts = own.reduce((n, s) => n + s.attempts, 0);
+    if (attempts === 0) return [];
+    const correct = own.reduce((n, s) => n + s.correct, 0);
+    return [
+      {
+        module,
+        attempts,
+        correct,
+        accuracy: correct / attempts,
+        skillsFew: !own.some(hasEnoughData),
+        maxSkillAttempts: Math.max(...own.map((s) => s.recent.length)),
+      },
+    ];
+  });
+}
+
+/** Показывать «Тренировать»: окно достаточно или уже есть ошибки. */
+export const canTrain = (s: Pick<SkillStat, 'attempts' | 'correct' | 'recent' | 'accuracy'>): boolean =>
+  (s.recent.length >= MIN_SAMPLE && s.accuracy !== null) || s.correct < s.attempts;
 
 // ---- Журнал ошибок ----
 

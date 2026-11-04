@@ -1,6 +1,6 @@
 'use client';
 // /learn/challenge/session: загрузка сценария -> решение -> проигрывание -> итог (LAYOUTS §5).
-import { ChevronLeft } from 'lucide-react';
+import { ChevronDown, ChevronLeft, ChevronUp } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -9,6 +9,9 @@ import type { Difficulty, Mark, TaskTimeframe } from '@tl/core';
 import { TradingChart, type TimeWindow } from '@/chart/TradingChart';
 import { makePriceFormatter, tickSizeFor } from '@/chart/priceFormat';
 import { ch } from '@/i18n/ru/challenge';
+import { ss } from '@/i18n/ru/session';
+import { formatR } from '@/i18n/format';
+import { SKILL_NAMES_RU } from '@/i18n/ru/progress';
 import { useRepository } from '@/storage';
 import { Button, Segmented } from '@/ui';
 import { selectHints } from './hints';
@@ -19,12 +22,14 @@ import { DecisionPanel, ErrorBlock, ReasonsSheet, ReplayBar, ResultView, hitText
 import { RelativeAxis } from './RelativeAxis';
 import { createSessionStore } from './sessionStore';
 import { TF_LABEL, TASK_TFS, isTaskTf } from './tf';
-import { BottomSheet } from '@/ui';
+import { BottomSheet, IconButton, type SheetHeight } from '@/ui';
 
 const POS_ID = 'challenge-position';
 const EXIT_ID = 'challenge-exit';
 const BASE_TICK_MS = 700;
 const noop = () => undefined;
+const FOCUS_SKILLS = ['challenge-entry', 'challenge-risk', 'challenge-wait'] as const;
+const SHEET_PAD: Record<SheetHeight, string> = { peek: '120px', medium: '50dvh', full: '50dvh' };
 
 const toError = (e: unknown): ChallengeApiError => (e instanceof ChallengeApiError ? e : new ChallengeApiError('generic', 0));
 
@@ -46,6 +51,9 @@ export function ChallengeSession() {
   const repo = useRepository();
   const diffParam = params.get('difficulty');
   const difficulty: Difficulty = diffParam === 'medium' || diffParam === 'hard' ? diffParam : 'easy';
+  const focusParam = params.get('focus');
+  const focus = FOCUS_SKILLS.find((f) => f === focusParam) ?? null;
+  const [sheetH, setSheetH] = useState<SheetHeight>('peek');
   const tfParam = params.get('tf');
   const startTf = isTaskTf(tfParam) ? tfParam : 'auto';
 
@@ -61,7 +69,7 @@ export function ChallengeSession() {
   const load = useCallback(async () => {
     const my = ++reqId.current;
     try {
-      const task = await fetchNext(difficulty, seen.current);
+      const task = await fetchNext(difficulty, seen.current, undefined, focus ? [focus] : []);
       if (my !== reqId.current) return;
       seen.current.push(task.taskId);
       startedAt.current = Date.now();
@@ -70,7 +78,7 @@ export function ChallengeSession() {
     } catch (e) {
       if (my === reqId.current) store.getState().failed(toError(e));
     }
-  }, [store, difficulty, startTf]);
+  }, [store, difficulty, startTf, focus]);
 
   useEffect(() => {
     void load();
@@ -182,6 +190,7 @@ export function ChallengeSession() {
   }, [store, saveAttempt]);
 
   const next = () => {
+    setSheetH('peek');
     store.getState().start();
     void load();
   };
@@ -204,6 +213,24 @@ export function ChallengeSession() {
   const partial = base.length > 0 && !base[base.length - 1]!.closed;
 
   const resultBody = g && task ? <ResultView grade={g} fmt={fmt} /> : null;
+  const summary = (() => {
+    if (!g) return '';
+    const d = g.detail.challenge;
+    const outcome = d.outcome ? formatR(d.outcome.rMultiple) : d.waitCorrect ? ch.result.waitOk : ch.result.waitBad;
+    const verdict = ch.result.verdicts[g.verdict];
+    return d.quality ? ch.result.summary(outcome, verdict, ch.result.qualityOf(Math.round(d.quality.score))) : ch.result.summaryNoQuality(outcome, verdict);
+  })();
+  const sheetToggle = (
+    <Button
+      size="md"
+      variant="ghost"
+      icon={sheetH === 'full' ? <ChevronDown size={20} strokeWidth={1.75} /> : <ChevronUp size={20} strokeWidth={1.75} />}
+      onClick={() => setSheetH((h) => (h === 'peek' ? 'medium' : h === 'medium' ? 'full' : 'peek'))}
+      data-testid="sheet-toggle"
+    >
+      {sheetH === 'full' ? ss.collapseSheet : ss.expandSheet}
+    </Button>
+  );
   const resultButtons = (
     <>
       <Button variant="primary" size="lg" className="flex-1" onClick={next} data-testid="challenge-next">
@@ -234,6 +261,12 @@ export function ChallengeSession() {
           />
         </div>
       </header>
+      {focus && (
+        <p data-testid="challenge-focus" className="shrink-0 border-b border-border bg-surface-1 px-3 py-1.5 text-xs text-text-2">
+          {ch.session.focusHint(SKILL_NAMES_RU[focus])}
+          {focus === 'challenge-wait' ? ` · ${ch.session.focusWait}` : ''}
+        </p>
+      )}
 
       <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
         <section className="relative flex min-h-0 min-w-0 flex-1 flex-col bg-bg" aria-label={ch.session.chartLabel}>
@@ -247,7 +280,10 @@ export function ChallengeSession() {
               </span>
             )}
           </div>
-          <div className="relative min-h-0 flex-1">
+          <div
+            className="relative min-h-0 flex-1"
+            style={s.phase === 'result' && !desktop ? { paddingBottom: SHEET_PAD[sheetH] } : undefined}
+          >
             {task && (
               <TradingChart
                 key={task.taskId}
@@ -278,7 +314,7 @@ export function ChallengeSession() {
           </div>
         </section>
 
-        <aside className="flex max-h-[45%] shrink-0 flex-col overflow-y-auto border-t border-border bg-surface-1 lg:max-h-none lg:w-[360px] lg:border-t-0 lg:border-l" aria-label={ch.decision.group}>
+        <aside hidden={s.phase === 'result' && !desktop && !s.saveFailed} className="flex max-h-[45%] shrink-0 flex-col overflow-y-auto border-t border-border bg-surface-1 lg:max-h-none lg:w-[360px] lg:border-t-0 lg:border-l" aria-label={ch.decision.group}>
           {(s.phase === 'decide' || s.phase === 'grading') && task && (
             <DecisionPanel
               side={s.side}
@@ -313,14 +349,6 @@ export function ChallengeSession() {
               <div className="flex shrink-0 gap-2 border-t border-border p-3">{resultButtons}</div>
             </div>
           )}
-          {s.phase === 'result' && !desktop && (
-            <div className="flex flex-col gap-2 p-3">
-              <Button variant="primary" size="lg" onClick={() => store.getState().setResultOpen(true)} data-testid="challenge-show-result">
-                {ch.result.show}
-              </Button>
-              <div className="flex gap-2">{resultButtons}</div>
-            </div>
-          )}
           {s.saveFailed && (
             <p role="status" className="px-3 pb-3 text-sm text-text-2" data-testid="save-failed">
               {ch.errors.saveFailed.title}. {ch.errors.saveFailed.text}
@@ -345,8 +373,30 @@ export function ChallengeSession() {
         />
       )}
       {!desktop && (
-        <BottomSheet open={s.phase === 'result' && s.resultOpen} onClose={() => store.getState().setResultOpen(false)} title={ch.result.title} height="full" footer={resultButtons}>
-          {resultBody}
+        <BottomSheet
+          open={s.phase === 'result'}
+          onClose={() => setSheetH('peek')}
+          title={sheetH === 'peek' ? summary : ch.result.title}
+          height={sheetH}
+          modal={false}
+          footer={sheetH === 'peek' ? undefined : resultButtons}
+        >
+          {sheetH === 'peek' ? (
+            <div data-testid="challenge-summary" className="flex items-center gap-2">
+              {resultButtons}
+              <IconButton
+                label={ss.expandSheet}
+                icon={<ChevronUp size={20} strokeWidth={1.75} />}
+                onClick={() => setSheetH('medium')}
+                data-testid="sheet-toggle"
+              />
+            </div>
+          ) : (
+            <>
+              <div className="mb-2">{sheetToggle}</div>
+              {resultBody}
+            </>
+          )}
         </BottomSheet>
       )}
     </div>

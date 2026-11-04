@@ -30,7 +30,7 @@ export function LearnScreen() {
       </section>
 
       <section aria-labelledby="today-h" className={`${SECTION} order-3 lg:order-2 lg:col-span-1`}>
-        <h2 id="today-h" className="mb-2 text-lg font-semibold">
+        <h2 id="today-h" className="sr-only">
           {ru.home.todayTitle}
         </h2>
         <DailyGoal />

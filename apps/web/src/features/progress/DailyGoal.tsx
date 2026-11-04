@@ -13,7 +13,7 @@ export function DailyGoal() {
   const { done, goal, streak } = p.data;
   return (
     <div className="flex flex-col gap-2">
-      <p className="tnum text-sm">{ru.home.goalLine(done, goal)}</p>
+      <p className="tnum text-xl font-semibold">{ru.home.goalLine(done, goal)}</p>
       <ProgressBar value={done} max={goal} label={ru.home.goalBar} />
       <p className="tnum text-sm text-text-2">
         {ru.home.streak(streak, plural(streak, ru.plural.days))}

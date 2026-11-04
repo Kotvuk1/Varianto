@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { TimeIndex } from '../geometry/timeIndex';
-import { defaultLogicalRange, logicalRangeFromWindow, windowFromLogicalRange } from './visibleRange';
+import { defaultLogicalRange, padRangeForMarks, logicalRangeFromWindow, windowFromLogicalRange } from './visibleRange';
 
 const T0 = Date.UTC(2025, 0, 1);
 const grid = (n: number, step: number) => new TimeIndex(Array.from({ length: n }, (_, i) => T0 + i * step), step);
@@ -31,5 +31,21 @@ describe('сохранение области времени при смене �
   it('defaultLogicalRange показывает последние N баров с запасом справа', () => {
     const r = defaultLogicalRange(grid(1000, H), 100, 5);
     expect(r).toEqual({ from: 1000 - 100, to: 999 + 5 });
+  });
+});
+
+describe('запас у краёв (F-13, F-22)', () => {
+  const idx = grid(500, H);
+  const mark = (i: number) => ({ anchors: [{ time: T0 + i * H }] });
+  it('метка у левого края сдвигает окно, ширина сохраняется', () => {
+    const r = padRangeForMarks(idx, { from: 100, to: 200 }, [mark(101)], 5);
+    expect(r).toEqual({ from: 96, to: 196 });
+  });
+  it('метка у правого края сдвигает окно вправо', () => {
+    const r = padRangeForMarks(idx, { from: 100, to: 200 }, [mark(199)], 5);
+    expect(r).toEqual({ from: 104, to: 204 });
+  });
+  it('метка в середине и метка далеко вне окна окно не меняют', () => {
+    expect(padRangeForMarks(idx, { from: 100, to: 200 }, [mark(150), mark(400)], 5)).toEqual({ from: 100, to: 200 });
   });
 });

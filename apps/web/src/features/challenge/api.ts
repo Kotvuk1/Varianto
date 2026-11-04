@@ -54,8 +54,12 @@ async function post<T>(path: string, body: unknown, signal?: AbortSignal): Promi
   return (await res.json()) as T;
 }
 
-export function fetchNext(difficulty: Difficulty, exclude: string[] = [], signal?: AbortSignal): Promise<ChallengeTaskEnvelope> {
-  return post('/api/tasks/challenge/next', { difficulty, ...(exclude.length ? { exclude: exclude.slice(-200) } : {}) }, signal);
+export function fetchNext(difficulty: Difficulty, exclude: string[] = [], signal?: AbortSignal, focus: string[] = []): Promise<ChallengeTaskEnvelope> {
+  return post(
+    '/api/tasks/challenge/next',
+    { difficulty, ...(exclude.length ? { exclude: exclude.slice(-200) } : {}), ...(focus.length ? { focus } : {}) },
+    signal,
+  );
 }
 
 export function gradeChallenge(taskToken: string, answer: ChallengeAnswerBody): Promise<ChallengeGradeResult> {

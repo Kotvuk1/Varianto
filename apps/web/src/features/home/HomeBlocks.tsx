@@ -8,7 +8,8 @@ import { pr } from '@/i18n/ru/progress';
 import { ButtonLink } from '@/ui';
 import { EmptyState, ErrorState, LoadingRows } from '../common/StateBlock';
 import { useSkillStats } from '../progress/progressData';
-import { recommend, selectWeak } from '../progress/progressLogic';
+import { MIN_SAMPLE, moduleAccuracies, recommend, selectWeak } from '../progress/progressLogic';
+import { ModuleAccuracy } from '../progress/ModuleAccuracy';
 import { skillName, WeakSkillList } from '../progress/WeakSkillList';
 
 /** «Продолжить»: рекомендованное задание по слабейшему навыку. Без попыток — старт с Market Structure. */
@@ -52,7 +53,23 @@ export function HomeWeakSpots() {
   if (stats.status === 'error')
     return <ErrorState title={ru.states.storageErrorTitle} text={ru.states.storageErrorText} onRetry={stats.reload} />;
   const weak = selectWeak(stats.data, 3);
-  if (weak.length === 0) return <EmptyState title={ru.empty.weakTitle} text={ru.empty.weakText} />;
+  if (weak.length === 0) {
+    const mods = moduleAccuracies(stats.data);
+    if (mods.length === 0) return <EmptyState title={ru.empty.weakTitle} text={ru.empty.weakText} />;
+    const done = mods.reduce((n, m) => n + m.attempts, 0);
+    return (
+      <>
+        <p className="mb-2 text-sm text-text-2" data-testid="home-few-data">
+          {pr.homeFewData(done, MIN_SAMPLE)}
+        </p>
+        <ModuleAccuracy stats={stats.data} />
+        <Link href="/progress" className="flex min-h-11 items-center justify-between text-sm text-text-2 hover:text-text-1">
+          <span>{pr.weakAll}</span>
+          <ChevronRight size={20} strokeWidth={1.75} aria-hidden />
+        </Link>
+      </>
+    );
+  }
   return (
     <>
       <WeakSkillList skills={weak} />

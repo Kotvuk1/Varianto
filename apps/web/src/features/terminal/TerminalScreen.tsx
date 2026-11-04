@@ -265,21 +265,21 @@ export function TerminalScreen() {
                 {tx.loading}
               </div>
             )}
-            <CheckPanel
-              result={check}
-              open={checkOpen}
-              onClose={() => setCheckOpen(false)}
-              showRef={showRef}
-              onToggleRef={() => setShowRef((v) => !v)}
-              fmt={fmt}
-              onFocusMarks={(ids) => {
-                const m = [...marks, ...(check?.algoMarks ?? [])].find((x) => ids.includes(x.id));
-                if (m) setFocus((f) => ({ time: (m.anchors[0]!.time + m.anchors[m.anchors.length - 1]!.time) / 2, nonce: (f?.nonce ?? 0) + 1 }));
-              }}
-            />
             {blocking && data.error && <ErrorBlock {...data.error} onRetry={data.reload} />}
           </div>
         </section>
+        <CheckPanel
+          result={check}
+          open={checkOpen}
+          onClose={() => setCheckOpen(false)}
+          showRef={showRef}
+          onToggleRef={() => setShowRef((v) => !v)}
+          fmt={fmt}
+          onFocusMarks={(ids) => {
+            const m = [...marks, ...(check?.algoMarks ?? [])].find((x) => ids.includes(x.id));
+            if (m) setFocus((f) => ({ time: (m.anchors[0]!.time + m.anchors[m.anchors.length - 1]!.time) / 2, nonce: (f?.nonce ?? 0) + 1 }));
+          }}
+        />
       </div>
 
       <MobileToolbar tool={tool} onTool={changeTool} onCheck={runCheckNow} />

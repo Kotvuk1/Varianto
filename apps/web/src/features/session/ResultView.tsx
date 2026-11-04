@@ -1,7 +1,7 @@
 'use client';
 import { Eye, EyeOff } from 'lucide-react';
 import type { ReactNode } from 'react';
-import { FeedbackView, GradeLegend } from '@/features/feedback';
+import { FeedbackView, GradeLegendToggle } from '@/features/feedback';
 import { ss } from '@/i18n/ru/session';
 import { Button } from '@/ui';
 import { countsFromGrade } from './adapters';
@@ -20,7 +20,7 @@ export interface ResultBodyProps {
   sheetControls?: ReactNode;
 }
 
-/** Содержимое разбора: переключатель эталона, итоговая строка, легенда, 6 частей FeedbackView. */
+/** Содержимое разбора: переключатель эталона, Итог первым, затем части 2-6, легенда внизу. */
 export function ResultBody({ result, fmtPrice, showRef, onToggleRef, onFocusMarks, saveFailed, extra, sheetControls }: ResultBodyProps) {
   const counts = countsFromGrade(result);
   const hasRef = result.reference.length > 0;
@@ -41,14 +41,22 @@ export function ResultBody({ result, fmtPrice, showRef, onToggleRef, onFocusMark
         )}
         {sheetControls}
       </div>
-      {counts && (
-        <p data-testid="result-summary" className="tnum mb-1 text-sm font-medium">
-          {ss.summary(counts.match, counts.missed, counts.extra)}
-        </p>
-      )}
-      {counts && <GradeLegend className="mb-2" />}
-      {extra}
-      <FeedbackView feedback={result.feedback} fmtPrice={fmtPrice} onFocusMarks={onFocusMarks} />
+      <FeedbackView
+        feedback={result.feedback}
+        fmtPrice={fmtPrice}
+        onFocusMarks={onFocusMarks}
+        verdictExtra={
+          <>
+            {counts && (
+              <p data-testid="result-summary" className="tnum mt-1 text-sm text-text-2">
+                {ss.summary(counts.match, counts.missed, counts.extra)}
+              </p>
+            )}
+            {extra}
+          </>
+        }
+        footer={counts ? <GradeLegendToggle className="pt-1" /> : null}
+      />
       {saveFailed && (
         <p role="status" data-testid="save-failed" className="mt-2 text-sm text-text-2">
           {ss.saveFailed}

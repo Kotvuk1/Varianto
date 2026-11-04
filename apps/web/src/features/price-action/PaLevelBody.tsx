@@ -1,5 +1,6 @@
 'use client';
 import { useMemo } from 'react';
+import { formatPercentValue } from '@/i18n/format';
 import { makePriceFormatter, tickSizeFor } from '@/chart/priceFormat';
 import { paTx } from '@/i18n/ru/pa';
 import { ss } from '@/i18n/ru/session';
@@ -23,13 +24,11 @@ export function PaLevelBody({ envelope, flow, base }: { envelope: TaskEnvelope<P
       <ul data-testid="level-detail" className="tnum mb-2 space-y-1 text-sm">
         <li className="flex items-start gap-2">
           <GradeGlyph kind={result!.verdict === 'correct' ? 'match' : 'extra'} />
-          <span>Ваш уровень: {fmt(d.userPrice)}</span>
+          <span>{paTx.level.yours(fmt(d.userPrice))}</span>
         </li>
         <li className="flex items-start gap-2">
           <GradeGlyph kind="info" />
-          <span>
-            Эталон: {fmt(d.referencePrice)} · отклонение {d.deviationPct.toFixed(2)}% (допуск {d.tolerancePct}%)
-          </span>
+          <span>{paTx.level.reference(fmt(d.referencePrice), formatPercentValue(d.deviationPct), formatPercentValue(d.tolerancePct))}</span>
         </li>
       </ul>
     ) : null;
@@ -42,6 +41,7 @@ export function PaLevelBody({ envelope, flow, base }: { envelope: TaskEnvelope<P
       initialTool="level"
       transform={keepSingleLevel}
       hintText={paTx.level[p.levelType]}
+      hintDetails={<p>{paTx.level.details}</p>}
       candles={envelope.series[p.tf] ?? []}
       bars={120}
       buildAnswer={(marks) => paLevelAnswer(marks) ?? ss.input.noLevel}

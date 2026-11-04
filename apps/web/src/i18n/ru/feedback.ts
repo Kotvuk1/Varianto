@@ -9,6 +9,7 @@ export const fb = {
   principle: 'Принцип',
   noMistakes: 'Ошибок нет.',
   legend: 'Обозначения',
+  legendToggle: 'Что означают значки',
   match: 'Совпало',
   matchHelp: 'метка совпала с эталоном',
   missed: 'Пропущено',

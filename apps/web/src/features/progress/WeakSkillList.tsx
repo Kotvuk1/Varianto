@@ -4,7 +4,7 @@ import { pr, SKILL_NAMES_RU } from '@/i18n/ru/progress';
 import type { SkillId } from '@tl/core';
 import type { SkillStat } from '@/storage';
 import { ButtonLink, ProgressBar } from '@/ui';
-import { MIN_SAMPLE, trainTarget, trendOf } from './progressLogic';
+import { canTrain, MIN_SAMPLE, trainTarget, trendOf } from './progressLogic';
 
 export const skillName = (skill: string): string => SKILL_NAMES_RU[skill as SkillId] ?? skill;
 
@@ -29,10 +29,10 @@ export function WeakSkillList({ skills, showTrain = true }: { skills: readonly S
                 <span className="tnum text-xs text-text-2">
                   {enough
                     ? `${formatPercent(s.accuracy ?? 0)} · ${s.recent.length} ${plural(s.recent.length, ru.plural.attempts)}${trend ? ` · ${pr.trendLabel}: ${pr.trend[trend].toLowerCase()}` : ''}`
-                    : pr.fewData(s.recent.length, MIN_SAMPLE)}
+                    : `${pr.fewData(s.recent.length, MIN_SAMPLE)} · ${pr.prelim(s.correct, s.attempts)}`}
                 </span>
               </div>
-              {showTrain && (
+              {showTrain && canTrain(s) && (
                 <ButtonLink
                   href={trainTarget(s).href}
                   variant="secondary"

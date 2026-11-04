@@ -46,6 +46,7 @@ export function PaFindBody({ envelope, flow, base }: { envelope: TaskEnvelope<Pa
       initialTool={PATTERN_TAP_TOOL}
       transform={transform}
       hintText={paTx.find.task(info.name)}
+      toolText={paTx.find.toolHelp(info.name)}
       hintDetails={
         <>
           <p>{info.hint}</p>

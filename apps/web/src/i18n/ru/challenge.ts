@@ -16,7 +16,7 @@ export const ch = {
   offlineHint: 'Нужна сеть, чтобы загрузить сценарий',
   stats: {
     title: 'Ваша статистика',
-    winRate: 'Win rate',
+    winRate: 'Доля прибыльных',
     avgR: 'Средний R',
     waitCorrect: 'Верные WAIT',
     curve: 'Результат по сценариям, R',
@@ -32,6 +32,8 @@ export const ch = {
     recentRow: (date: string, pair: string, side: string, r: string) => `${date} · ${pair} · ${side} · ${r}`,
   },
   session: {
+    focusHint: (name: string) => `Тренировка: ${name}`,
+    focusWait: 'чаще сценарии, где верный ответ WAIT',
     title: (difficulty: string) => `Challenge · ${difficulty}`,
     titleShort: (difficulty: string) => difficulty,
     timeframe: 'Таймфрейм',
@@ -128,6 +130,8 @@ export const ch = {
     next: 'Следующий сценарий',
     exit: 'Выйти',
     show: 'Показать итог',
+    summary: (outcome: string, verdict: string, score: string) => `${outcome} · решение ${verdict} · ${score}`,
+    summaryNoQuality: (outcome: string, verdict: string) => `${outcome} · решение ${verdict}`,
     components: {
       htf: 'Старший ТФ',
       structure: 'Структура',

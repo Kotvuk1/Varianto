@@ -51,7 +51,7 @@ export const ru = {
     attemptsHeader: 'Попытки',
     errorLog: 'Журнал ошибок',
     skillsEmpty: 'Навыки появятся после первых заданий.',
-    challengeStats: { winRate: 'Win rate', avgR: 'Средний R', waitCorrect: 'Верные WAIT' },
+    challengeStats: { winRate: 'Доля прибыльных', avgR: 'Средний R', waitCorrect: 'Верные WAIT' },
     recentScenarios: 'Последние сценарии',
   },
   settings: {
@@ -65,6 +65,8 @@ export const ru = {
     dailyGoal: 'Дневная цель',
     dailyGoalUnit: 'заданий в день',
     saved: 'Настройки сохранены',
+    sync: 'Аккаунт',
+    signIn: 'Войти / синхронизация',
   },
   empty: {
     weakTitle: 'Пока нет данных',

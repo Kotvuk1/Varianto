@@ -2,8 +2,8 @@
 import { Eye, EyeOff, X } from 'lucide-react';
 import { useSyncExternalStore } from 'react';
 import { BottomSheet, Button, IconButton } from '@/ui';
-import { FeedbackView, GradeLegend } from '../../feedback';
-import { tx } from '../strings';
+import { FeedbackView, GradeGlyph, GradeLegend, renderBlock } from '../../feedback';
+import { cx, tx } from '../strings';
 import type { CheckResult } from './runCheck';
 
 const Q = '(min-width: 1024px)';
@@ -29,15 +29,44 @@ export interface CheckPanelProps {
   onFocusMarks: (ids: string[]) => void;
 }
 
-/** Разбор проверки: боковой лист на десктопе, шторка (без скрима, график виден) на мобильном. */
+/** Разбор проверки: колонка 360 px справа на десктопе (график сужается), шторка (без скрима, график виден) на мобильном. */
 export function CheckPanel({ result, open, onClose, showRef, onToggleRef, fmt, onFocusMarks }: CheckPanelProps) {
   const desktop = useDesktop();
   if (!result || !open) return null;
   const codes = result.grade.errors.map((e) => e.code).join(' ');
   const body = (
     <>
-      <GradeLegend className="mb-2 border-b border-border pb-2" />
-      <FeedbackView feedback={result.feedback} fmtPrice={fmt} onFocusMarks={onFocusMarks} summary={result.summary} />
+      <div className="border-b border-border pb-2" data-testid="check-verdict">
+        <p className="text-base font-semibold">{cx.verdict(result.summary.matched, result.summary.total)}</p>
+        <p className="mt-1 text-xs text-text-2">{cx.range}</p>
+      </div>
+      {/* Итог ядра («Верно: N из M эталона») не показываем: вердикт терминала считается по меткам пользователя. */}
+      <FeedbackView
+        feedback={result.feedback}
+        fmtPrice={fmt}
+        onFocusMarks={onFocusMarks}
+        className="[&_[data-testid='fb-fb-verdict']]:hidden"
+      />
+      {result.missedBlocks.length > 0 && (
+        <details className="border-t border-border py-2" data-testid="check-more">
+          <summary className="min-h-11 cursor-pointer text-sm font-semibold leading-[44px]">{cx.more(result.missedBlocks.length)}</summary>
+          <ul className="space-y-2">
+            {result.missedBlocks.map((b, i) => (
+              <li key={`${b.templateKey}-${i}`} className="flex items-start gap-2 text-sm">
+                <GradeGlyph kind="miss" />
+                {b.markIds?.length ? (
+                  <button type="button" onClick={() => onFocusMarks(b.markIds!)} className="min-h-11 cursor-pointer text-left">
+                    {renderBlock(b.templateKey, b.params, fmt)}
+                  </button>
+                ) : (
+                  <span>{renderBlock(b.templateKey, b.params, fmt)}</span>
+                )}
+              </li>
+            ))}
+          </ul>
+        </details>
+      )}
+      <GradeLegend className="mt-2 border-t border-border pt-2" />
       <p className="mt-2 text-xs text-text-2">{tx.checkNote}</p>
     </>
   );
@@ -54,7 +83,7 @@ export function CheckPanel({ result, open, onClose, showRef, onToggleRef, fmt, o
     );
   }
   return (
-    <aside aria-label={tx.checkTitle} data-testid="check-panel" data-codes={codes} className="absolute top-0 right-0 bottom-0 z-30 flex w-[400px] max-w-full flex-col border-l border-border-strong bg-surface-1 shadow-lg">
+    <aside aria-label={tx.checkTitle} data-testid="check-panel" data-codes={codes} className="flex w-[360px] shrink-0 flex-col border-l border-border-strong bg-surface-1">
       <div className="flex items-center justify-between border-b border-border px-4">
         <h2 className="text-base font-semibold">{tx.checkTitle}</h2>
         <IconButton label={tx.closePanel} icon={<X size={20} strokeWidth={1.75} />} onClick={onClose} />

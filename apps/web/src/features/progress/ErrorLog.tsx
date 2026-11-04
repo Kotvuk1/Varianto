@@ -3,15 +3,17 @@
 import type { Feedback } from '@tl/core';
 import { useState } from 'react';
 import { FeedbackView, renderBlock } from '@/features/feedback';
-import { formatDayShort, formatTime, plural } from '@/i18n/format';
+import { formatDayShort, formatPrice, formatTime, plural } from '@/i18n/format';
 import { ru } from '@/i18n/ru';
-import { pr } from '@/i18n/ru/progress';
+import { ERROR_NAMES_RU, pr } from '@/i18n/ru/progress';
 import type { Attempt } from '@/storage';
 import { BottomSheet } from '@/ui';
 import { EmptyState } from '../common/StateBlock';
 import { buildErrorLog, type ErrorExample } from './progressLogic';
 
-const fmtPrice = (p: number) => String(Math.round(p * 100) / 100);
+const fmtPrice = (p: number) => formatPrice(p, Number.isInteger(p) ? 0 : p >= 100 ? 1 : 2);
+
+export const errorName = (code: string): string => (ERROR_NAMES_RU as Record<string, string>)[code] ?? pr.unknownError;
 
 const textOf = (e: ErrorExample) => renderBlock(e.templateKey, e.params, fmtPrice);
 
@@ -42,7 +44,7 @@ export function ErrorLog({ attempts }: { attempts: readonly Attempt[] }) {
                     onClick={() => setOpen(expanded ? null : g.code)}
                     className="flex min-h-14 w-full cursor-pointer items-center justify-between gap-3 py-2 text-left"
                   >
-                    <span className="text-sm font-medium">{textOf(g.examples[0]!)}</span>
+                    <span className="text-sm font-medium">{errorName(g.code)}</span>
                     <span className="tnum shrink-0 text-xs text-text-2">{pr.errorCount(g.count, plural(g.count, pr.caseForms))}</span>
                   </button>
                   {expanded && (

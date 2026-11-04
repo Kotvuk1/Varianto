@@ -9,6 +9,7 @@ import {
   msParamsFor,
   type Candle,
   type Feedback,
+  type FeedbackBlock,
   type Mark,
   type MarkGradeResult,
   type SkillId,
@@ -24,11 +25,16 @@ export interface CheckResult {
   algoMarks: Mark[];
   /** Состояние каждой метки: id метки пользователя или эталона -> match/missed/extra. */
   states: Record<string, CheckState>;
-  /** Верных меток и размер эталона для «N из M совпало». */
+  /** «N из M ваших меток подтверждено»: M - метки пользователя, учтённые в проверке (F-05). */
   summary: { matched: number; total: number };
+  /** Пропуски эталона в диапазоне: блоки «Пропущено ...» для свёрнутого раздела (K = missedBlocks.length). */
+  missedBlocks: FeedbackBlock[];
   /** Окно оценки (индексы закрытых свечей). */
   window: { fromIndex: number; toIndex: number };
 }
+
+/** Запас после последней метки пользователя, свечей. */
+export const RANGE_TAIL_CANDLES = 3;
 
 const CONCEPT_OF: Partial<Record<Mark['kind'], SkillId>> = {
   'swing-high': 'swing',
@@ -74,12 +80,23 @@ export function runCheck(candles: readonly Candle[], tf: Timeframe, userMarks: r
   const first = Math.min(...scored.map((m) => Math.min(...m.anchors.map((a) => a.time))));
   let from = closed.findIndex((c) => c.openTime >= first);
   if (from < 0) from = closed.length - 1;
-  const window = { fromIndex: from, toIndex: closed.length - 1 };
+  // Диапазон оценки (решение F-05): [первая метка пользователя, последняя + 3 свечи].
+  // SYNC-CORE: когда Core добавит опции range/kinds в buildAlgoMarkSet/gradeMarks, перейти на них; пока фильтруем здесь.
+  const lastT = Math.max(...scored.map((m) => Math.max(...m.anchors.map((a) => a.time))));
+  let lastIdx = closed.findIndex((c) => c.openTime >= lastT);
+  if (lastIdx < 0) lastIdx = closed.length - 1;
+  const window = { fromIndex: from, toIndex: Math.min(closed.length - 1, Math.max(from, lastIdx) + RANGE_TAIL_CANDLES) };
   const r = analyzeStructure(closed, msParamsFor('medium'), { tf });
   // Внутренняя (internal) структура: пробои (BOS/CHoCH) обязательны наравне с внешними - иначе BOS на месте
   // внутреннего CHoCH нельзя разобрать; остальные внутренние объекты допустимы, но не обязательны.
   const full = buildAlgoMarkSet(r, { concepts: [...concepts, 'internal-external'], window });
-  const optional = (m: Mark) => m.scope === 'internal' && m.kind !== 'bos' && m.kind !== 'choch';
+  // Только типы меток, поставленные пользователем (BOS и CHoCH различаются только вместе).
+  const kinds = new Set<Mark['kind']>(scored.map((m) => m.kind));
+  if (kinds.has('bos') || kinds.has('choch')) {
+    kinds.add('bos');
+    kinds.add('choch');
+  }
+  const optional = (m: Mark) => (m.scope === 'internal' && m.kind !== 'bos' && m.kind !== 'choch') || !kinds.has(m.kind);
   const algo = {
     ...full,
     required: full.required.filter((m) => !optional(m)),
@@ -94,20 +111,19 @@ export function runCheck(candles: readonly Candle[], tf: Timeframe, userMarks: r
     levelPricePct: 0.1,
     scoped: false,
   });
-  const summary = { matched: grade.okPairs.length, total: algo.required.length };
-  const built = buildFeedback({
-    module: 'market-structure',
-    verdict: grade.verdict,
-    score: grade.score,
-    errors: grade.errors,
-    skillOutcomes: grade.skillOutcomes,
-    toleranceCandles: grade.toleranceCandles,
-  });
-  // «N из M совпало»: M - число эталонных меток (без лишних меток пользователя), N - верные из них;
-  // то же число показывается в итоге и в сводке.
-  const vp = built.verdict.params;
-  const feedback =
-    vp && 'matched' in vp && 'total' in vp ? { ...built, verdict: { ...built.verdict, params: { ...vp, matched: summary.matched, total: summary.total } } } : built;
+  const isMissed = (e: { code: string }) => e.code.endsWith('_MISSED');
+  const feedbackOf = (errors: typeof grade.errors) =>
+    buildFeedback({
+      module: 'market-structure',
+      verdict: grade.verdict,
+      score: grade.score,
+      errors,
+      skillOutcomes: grade.skillOutcomes,
+      toleranceCandles: grade.toleranceCandles,
+    });
+  // Разбор по ошибкам пользователя; пропуски эталона уходят в свёрнутый раздел.
+  const feedback = feedbackOf(grade.errors.filter((e) => !isMissed(e)));
+  const missedBlocks = feedbackOf(grade.errors.filter(isMissed)).mistakes;
   const states: Record<string, CheckState> = {};
   for (const p of grade.okPairs) {
     states[p.userMarkId] = 'match';
@@ -131,7 +147,9 @@ export function runCheck(candles: readonly Candle[], tf: Timeframe, userMarks: r
     const a = [...algo.required, ...algo.tolerated].find((x) => x.id === m.algoMarkId);
     if (a) shown.set(a.id, a);
   }
-  return { ok: true, result: { grade, feedback,
+  const userIds = new Set(scored.map((m) => m.id));
+  const summary = { matched: scored.filter((m) => states[m.id] === 'match').length, total: userIds.size };
+  return { ok: true, result: { grade, feedback, missedBlocks,
       algoMarks: [...shown.values()],
       states,
       summary,

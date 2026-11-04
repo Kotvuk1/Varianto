@@ -10,6 +10,7 @@ import { ButtonLink, ProgressBar, Segmented, Stat } from '@/ui';
 import { RCurve } from '../challenge/RCurve';
 import { computeChallengeStats, sideOf } from '../challenge/stats';
 import { EmptyState, ErrorState, LoadingRows } from '../common/StateBlock';
+import { ModuleAccuracy } from './ModuleAccuracy';
 import { DailyGoal } from './DailyGoal';
 import { ErrorLog } from './ErrorLog';
 import { useAttempts, useSkillStats } from './progressData';
@@ -68,11 +69,12 @@ function WeakBody({ stats }: { stats: Parameters<typeof selectWeak>[0] }) {
     );
   return (
     <>
+      <ModuleAccuracy stats={stats} />
       {weak.length > 0 && <WeakSkillList skills={weak} />}
       {few.length > 0 && (
         <>
           <h3 className="mt-4 mb-1 text-sm font-semibold">{pr.fewDataTitle}</h3>
-          <WeakSkillList skills={few} showTrain={false} />
+          <WeakSkillList skills={few} />
         </>
       )}
     </>
@@ -84,7 +86,7 @@ function SkillsTab() {
   return (
     <>
       <section aria-labelledby="today-h" className="border-b border-border py-4">
-        <h2 id="today-h" className="mb-2 text-lg font-semibold">
+        <h2 id="today-h" className="sr-only">
           {ru.home.todayTitle}
         </h2>
         <DailyGoal />
@@ -97,6 +99,8 @@ function SkillsTab() {
         {stats.status === 'error' && storageError(stats.reload)}
         {stats.status === 'ready' && stats.data.length === 0 && <EmptyState title={ru.empty.weakTitle} text={ru.progress.skillsEmpty} />}
         {stats.status === 'ready' && stats.data.length > 0 && (
+          <>
+          <ModuleAccuracy stats={stats.data} />
           <div className="lg:grid lg:grid-cols-3 lg:gap-x-8">
             {groupByModule(stats.data).map((g) => (
               <div key={g.module} data-testid="skill-group" data-module={g.module}>
@@ -111,7 +115,7 @@ function SkillsTab() {
                           <span className="tnum text-xs text-text-2">
                             {enough
                               ? `${formatPercent(s.accuracy ?? 0)} · ${s.recent.length} ${plural(s.recent.length, ru.plural.attempts)}`
-                              : pr.fewData(s.recent.length, MIN_SAMPLE)}
+                              : `${pr.fewData(s.recent.length, MIN_SAMPLE)} · ${pr.prelim(s.correct, s.attempts)}`}
                           </span>
                         </div>
                         {enough && <ProgressBar value={Math.round((s.accuracy ?? 0) * 100)} max={100} label={skillName(s.skill)} size="sm" />}
@@ -122,6 +126,7 @@ function SkillsTab() {
               </div>
             ))}
           </div>
+          </>
         )}
       </section>
     </>

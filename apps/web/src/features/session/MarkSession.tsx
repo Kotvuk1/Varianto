@@ -8,6 +8,7 @@ import { otherScope, useScopeHotkey } from '@/features/terminal/useScope';
 import { InstructionBar } from '@/features/terminal/InstructionBar';
 import { ss } from '@/i18n/ru/session';
 import { Button } from '@/ui';
+import { useIsDesktop } from './useIsDesktop';
 import { statesFromGrade } from './adapters';
 import { AsideSection, InputMessage, SubmitButton } from './AnswerParts';
 import { ResultBody } from './ResultView';
@@ -28,6 +29,8 @@ export interface MarkSessionProps {
   initialTool: ToolId;
   hintText: string;
   hintDetails?: ReactNode;
+  /** Строка-инструкция активного инструмента, если стандартная (по ToolId) не подходит (PA «Найди модель»). */
+  toolText?: string;
   /** Строит ответ из меток; строка - текст ошибки ввода. */
   buildAnswer: (marks: Mark[]) => Answer | string;
   /** Нормализация набора меток после каждого изменения (одиночный уровень, превращение в pattern). */
@@ -47,6 +50,7 @@ export interface MarkSessionProps {
 
 export function MarkSession(p: MarkSessionProps) {
   const { envelope, flow, base } = p;
+  const desktop = useIsDesktop();
   const ci = useChartInteraction(p.initialTool, p.transform);
   const [showRef, setShowRef] = useState(true);
   const result = flow.phase === 'graded' ? flow.result : null;
@@ -90,7 +94,17 @@ export function MarkSession(p: MarkSessionProps) {
     />
   );
 
-  const instruction = (
+  const quiet = !ci.selected && !ci.notice.code && !message;
+  // «Выбор» без выделения и сообщений: подсказка дублирует очевидное и отнимает высоту графика (F-08).
+  const showInstruction = !result && !(quiet && ci.tool === 'select');
+  const ownText = p.toolText !== undefined && quiet && ci.tool !== 'select' && ci.tool !== 'eraser';
+  const instruction = ownText ? (
+    <div data-testid="instruction-bar" className="flex min-h-11 min-w-0 flex-1 items-center">
+      <p data-testid="instruction-text" className="min-w-0 flex-1 py-2 text-sm leading-5 text-text-2">
+        {p.toolText}
+      </p>
+    </div>
+  ) : (
     <InstructionBar
       tool={result ? 'select' : ci.tool}
       step={ci.notice.step}
@@ -110,8 +124,8 @@ export function MarkSession(p: MarkSessionProps) {
   return (
     <SessionLayout
       {...base}
-      hint={<TaskHint text={p.hintText} {...(p.hintDetails ? { details: p.hintDetails } : {})} />}
-      instruction={result ? undefined : instruction}
+      hint={desktop ? undefined : <TaskHint text={p.hintText} {...(p.hintDetails ? { details: p.hintDetails } : {})} />}
+      instruction={showInstruction ? instruction : undefined}
       chart={chart}
       rail={<TaskToolRail groups={p.groups} tool={ci.tool} onTool={ci.setTool} />}
       bottom={
@@ -123,6 +137,11 @@ export function MarkSession(p: MarkSessionProps) {
       aside={
         <>
           {p.asideIntro}
+          <AsideSection title={ss.aside.task}>
+            <p data-testid="task-text" className="text-sm leading-5">
+              {p.hintText}
+            </p>
+          </AsideSection>
           <AsideSection>
             {p.extraControls}
             <div className="flex flex-col gap-2">
@@ -131,6 +150,16 @@ export function MarkSession(p: MarkSessionProps) {
               <SubmitButton onClick={submit} busy={busy} />
             </div>
           </AsideSection>
+          <AsideSection title={ss.aside.tools}>
+            <p className="text-sm text-text-2">{ss.aside.toolsHelp}</p>
+          </AsideSection>
+          {p.hintDetails && (
+            <AsideSection title={ss.aside.criteria}>
+              <div data-testid="task-criteria" className="space-y-2 text-sm text-text-2">
+                {p.hintDetails}
+              </div>
+            </AsideSection>
+          )}
         </>
       }
       result={

@@ -9,11 +9,11 @@
 |---|----------|---------|--------|
 | 1 | high | Open redirect в `/auth/callback` через `next=/%09/evil.com` | исправлено |
 | 2 | medium | `clientKey` брал первый (клиентский) элемент `X-Forwarded-For` | исправлено частично (см. ниже) |
-| 3 | medium | `/api/history` без rate limit и без нижней границы `from` | открыто |
-| 4 | low | Keepalive: сравнение секрета не в постоянном времени; RLS делает пинг "502" | открыто |
-| 5 | low | Миграция: `jsonb`-поля клиента без ограничения размера | открыто |
-| 6 | low | Нет HSTS в `next.config` (Vercel добавляет сам на `*.vercel.app`) | открыто |
-| 7 | low | Минимальная длина `TASK_SIGNING_SECRET` 16; dev-ключ при NODE_ENV != production | открыто |
+| 3 | medium | `/api/history` без rate limit и без нижней границы `from` | исправлено (M8-fix) |
+| 4 | low | Keepalive: сравнение секрета не в постоянном времени; RLS делает пинг "502" | исправлено (M8-fix) |
+| 5 | low | Миграция: `jsonb`-поля клиента без ограничения размера | исправлено (миграция 0002) |
+| 6 | low | Нет HSTS в `next.config` (Vercel добавляет сам на `*.vercel.app`) | исправлено (только production) |
+| 7 | low | Минимальная длина `TASK_SIGNING_SECRET` 16; dev-ключ при NODE_ENV != production | исправлено (мин. 32, падение при VERCEL) |
 | 8 | info | Challenge: цены/форма свечей позволяют вычислить дату сопоставлением с историей | принято |
 
 Critical: не найдено. Секретов в репозитории и истории нет.
@@ -72,3 +72,11 @@ Critical: не найдено. Секретов в репозитории и и�
 
 ## Запросы к оркестратору
 Rate limit и нижняя граница `from` для `app/api/history`; `timingSafeEqual` и трактовка 401/403 в keepalive; миграция 0002 с ограничениями размера jsonb; шаг gitleaks в CI; падение при отсутствии секрета на Vercel независимо от NODE_ENV.
+
+## Статус исправлений M8-fix (DevOps)
+- п. 3: лимит `/api/history` 120/мин (env `RATE_LIMIT_HISTORY_PER_MIN`), `from >= 2019-09-01` (400 OUT_OF_RANGE; для ETH/SOL более поздний листинг даёт 404 архива). Лимит заданий: `RATE_LIMIT_TASKS_PER_MIN` (30). `redirect: 'error'` в ArchiveSource - зона packages/market-data, не менялось (открыто, запрос оркестратору).
+- п. 4: `timingSafeEqual` по SHA-256; пинг через `POST /rest/v1/rpc/keepalive` (функция из 0002, execute для anon), проверено в postgres:16.
+- п. 5: check `pg_column_size <= 256 КБ` для answer/grade/task_token_payload/marks/settings.data, тест в `rls.test.sql` (RLS TESTS PASSED).
+- п. 6: HSTS `max-age=63072000; includeSubDomains; preload` только в production.
+- п. 7: `TASK_SIGNING_SECRET` >= 32; при `VERCEL`/`VERCEL_ENV` или production без него ConfigError. Документация: README, `.env.example`.
+- gitleaks в CI уже есть (job `secrets-scan`).

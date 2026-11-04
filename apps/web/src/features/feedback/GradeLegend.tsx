@@ -1,3 +1,4 @@
+import { CircleHelp } from 'lucide-react';
 import { fb } from '@/i18n/ru/feedback';
 import { GradeGlyph } from './GradeGlyph';
 
@@ -19,5 +20,18 @@ export function GradeLegend({ className }: { className?: string }) {
         </li>
       ))}
     </ul>
+  );
+}
+
+/** Компактная легенда: свёрнута под значком «?», раскрывается по нажатию. */
+export function GradeLegendToggle({ className }: { className?: string }) {
+  return (
+    <details data-testid="grade-legend-toggle" className={className}>
+      <summary className="flex min-h-11 cursor-pointer items-center gap-2 text-sm text-text-2">
+        <CircleHelp size={20} strokeWidth={1.75} aria-hidden />
+        {fb.legendToggle}
+      </summary>
+      <GradeLegend />
+    </details>
   );
 }

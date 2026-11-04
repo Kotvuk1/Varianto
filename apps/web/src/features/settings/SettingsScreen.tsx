@@ -2,6 +2,8 @@
 
 import { Minus, Plus } from 'lucide-react';
 import { useCallback, useState } from 'react';
+import Link from 'next/link';
+import { useAuth } from '@/auth';
 import { ru } from '@/i18n/ru';
 import { useRepository } from '@/storage';
 import { useTheme } from '@/theme';
@@ -75,6 +77,7 @@ function DailyGoalStepper() {
 /** Настройки: тема и стиль свечей применяются сразу и сохраняются в Repository. */
 export function SettingsScreen() {
   const { theme, candleStyle, setTheme, setCandleStyle } = useTheme();
+  const auth = useAuth();
   return (
     <div className="mx-auto w-full max-w-[480px] px-4 pb-6 lg:pt-4">
       <h1 className="py-3 text-xl font-semibold">{ru.settings.title}</h1>
@@ -96,6 +99,14 @@ export function SettingsScreen() {
         <span className="text-sm font-medium">{ru.settings.dailyGoal}</span>
         <DailyGoalStepper />
       </div>
+      {auth.enabled && (
+        <div className={ROW}>
+          <span className="text-sm font-medium">{ru.settings.sync}</span>
+          <Link href="/auth/sign-in" className="flex min-h-11 items-center text-sm underline underline-offset-2" data-testid="settings-sign-in">
+            {ru.settings.signIn}
+          </Link>
+        </div>
+      )}
     </div>
   );
 }
