@@ -66,7 +66,7 @@ describe('ArchiveLoader: ретраи', () => {
       if (n++ < failures) throw new ArchiveError('unavailable', 'net', 'u');
       return rows;
     });
-    const sleep = vi.fn(async (_ms: number) => {});
+    const sleep = vi.fn(async (ms: number) => { void ms; });
     const loader = new ArchiveLoader({ archive: { get } as unknown as ArchiveSource, now: () => NOW, sleep });
     return { get, sleep, loader };
   };
