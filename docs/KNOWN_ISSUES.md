@@ -37,3 +37,4 @@
 ## Не проверено вообще (среда)
 
 Живой REST/WebSocket Binance с устройства пользователя, Supabase/Google OAuth/Vercel, реальный телефон, дальтонизм, 360x640, состояния загрузки/офлайна. См. `docs/PROJECT_STATUS.md`.
+| E2E-FLAKE | terminal.spec focusMark (mobile) иногда не укладывается в окно 1.2 с под нагрузкой полного прогона; отдельно 10/10 | P3 | тест |
