@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { Mark } from '@tl/core';
 import type { Projection } from './projection';
-import { buildGeometry, isMarkVisible, keepTextsInside, textWidth } from './layout';
+import { patternLabel, buildGeometry, isMarkVisible, keepTextsInside, textWidth } from './layout';
 
 const T0 = Date.UTC(2025, 0, 1);
 const H = 3_600_000;
@@ -152,5 +152,16 @@ describe('состояния проверки (F-16)', () => {
       expect(textWidth('SwH', st)).toBeGreaterThan(textWidth('SwH'));
       expect(JSON.stringify(g.parts)).not.toMatch(/[✓✕?]/);
     }
+  });
+});
+
+describe('подписи моделей', () => {
+  it('сырые id заменяются отображаемыми именами', () => {
+    expect(patternLabel('pin-bar')).toBe('Pin bar');
+    expect(patternLabel('inside-bar')).toBe('Inside bar');
+    expect(patternLabel('doji')).toBe('Doji');
+    expect(patternLabel('morning-star')).toBe('Morning star');
+    const g = buildGeometry(mk('pattern', [a(5, 300)], { meta: { patternType: 'pin-bar' } }), synthetic_proj);
+    expect(g.parts.find((p) => p.t === 'text')).toMatchObject({ text: 'Pin bar' });
   });
 });

@@ -26,6 +26,21 @@ export interface MarkGeometry {
   handles: Handle[];
 }
 
+/** Короткие подписи моделей на графике (вместо сырых id вроде «pin-bar»). */
+export const PATTERN_LABELS: Readonly<Record<string, string>> = {
+  engulfing: 'Engulfing',
+  'pin-bar': 'Pin bar',
+  'inside-bar': 'Inside bar',
+  doji: 'Doji',
+  'morning-star': 'Morning star',
+  'evening-star': 'Evening star',
+  star: 'Star',
+};
+export const patternLabel = (id: unknown): string => {
+  const k = String(id ?? '');
+  return PATTERN_LABELS[k] ?? PATTERN_LABELS[k.replace(/^pa-/, '')] ?? (k ? k.charAt(0).toUpperCase() + k.slice(1).replace(/-/g, ' ') : 'Pattern');
+};
+
 export const GLYPH_OFFSET = 14;
 export const CHAR_W = 6.6;
 export const PILL_H = 18;
@@ -91,7 +106,7 @@ export function buildGeometry(mark: Mark, proj: Projection, opts: GeometryOption
   const parts: Part[] = [];
   const p0 = pts[0];
   const p1 = pts[1];
-  const baseLabel = kind in TOOL_DEFS ? TOOL_DEFS[kind as DrawKind].label : (String(mark.meta?.patternType ?? 'Pattern'));
+  const baseLabel = kind in TOOL_DEFS ? TOOL_DEFS[kind as DrawKind].label : patternLabel(mark.meta?.patternType);
   // Метка эталона может лежать ровно на метке пользователя: её подпись уходит на другую сторону, чтобы не накладываться.
   const algo = mark.author === 'algo';
   // internal-слой: общепринятая SMC-нотация iBOS / iCHoCH

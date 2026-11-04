@@ -1,4 +1,5 @@
 import type { Mark } from '@tl/core';
+import { patternLabel } from '@/chart/drawing/layout';
 import { formatDateTime } from '@/i18n/format';
 import { tx } from './strings';
 
@@ -17,7 +18,7 @@ export function markName(m: Mark): string {
     case 'sweep':
       return m.direction ? `${tx.tools_.sweep} ${m.direction === 'bear' ? d.sweepHigh : d.sweepLow}` : tx.tools_.sweep;
     case 'pattern':
-      return String(m.meta?.['patternType'] ?? 'Pattern');
+      return patternLabel(m.meta?.['patternType']);
     default:
       return tx.tools_[m.kind];
   }
