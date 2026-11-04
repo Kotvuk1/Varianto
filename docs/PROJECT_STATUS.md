@@ -26,7 +26,7 @@
 - `pnpm lint`, `pnpm typecheck` — без ошибок.
 - Unit: core 300, market-data 67 (+2 сетевых skipped), web 360 — все зелёные.
 - `pnpm build` (production) — успешен.
-- E2E на production-сборке: 83 passed, 7 skipped (скриншотные, нужен `SHOTS_DIR`), 2 failed. Оба падения — Challenge «переключение ТФ»: 404 «нет сценариев» на холодном сервере; на прогретом сервере 8/8. Причина исправлена в `050bfd2` (ретраи загрузки архива, 12 попыток в бюджете 20 с, сбой источника не расходует попытки сценария). Полный повторный прогон e2e после этого коммита не зафиксирован.
+- E2E на production-сборке (итоговый прогон 2026-11-04, после полировки): **85 passed, 0 failed**, 7 skipped (скриншотные, нужен `SHOTS_DIR`), mobile 390x844 + desktop 1440x900. Ранее наблюдавшийся 404 «нет сценариев» на холодном сервере исправлен в `050bfd2`.
 - RLS (AC-16, уровень БД): `supabase/tests/rls.test.sql` на Postgres 16 — `RLS TESTS PASSED` (QA_REPORT).
 - Security: open redirect, rate limit `/api/history`, keepalive, лимиты jsonb, HSTS, строгий секрет — закрыты (`docs/SECURITY_REVIEW.md`).
 
@@ -60,7 +60,7 @@
 
 ## Следующие действия
 
-1. Завершить полировку UI (Frontend, параллельно) и повторить полный прогон lint/typecheck/unit/build/e2e на итоговом коммите.
+1. Подключить Vercel и Supabase по `docs/SETUP_SUPABASE_VERCEL.md` и проверить живые данные Binance на телефоне (единственное, что нельзя проверить из облака разработки).
 2. Пользователь: Supabase и Vercel по инструкции, затем проверка на телефоне (OQ-01, AC-02 вживую, AC-13, AC-16 end-to-end).
 3. Закрыть открытые P2/P3: `docs/KNOWN_ISSUES.md`.
 4. Приёмка MVP пользователем, слияние PR в `main`.
