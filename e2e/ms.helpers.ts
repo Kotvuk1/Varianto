@@ -40,6 +40,8 @@ export async function checkAndSeeResult(page: Page) {
   await page.getByTestId('check-button').click();
   await expect(page.getByTestId('result')).toBeVisible({ timeout: 60_000 });
   await expect(page.getByTestId('feedback-view')).toBeVisible();
+  // шторка выезжает с анимацией: ждём конца, чтобы измерения и скриншоты были стабильны
+  await page.waitForTimeout(600);
 }
 
 /** Следующее задание и возврат на главную: цель дня показывает выполненное задание. */

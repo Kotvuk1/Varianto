@@ -112,3 +112,29 @@ test('404: страница на русском со ссылками «На г�
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
   await shot(page, '404');
 });
+
+test('мобильная шторка разбора: график занимает всё над ней на трёх высотах', async ({ page }) => {
+  test.skip((page.viewportSize()?.width ?? 0) >= 1024, 'только мобильный');
+  await openSession(page, `${MS}/session?mode=mark&difficulty=easy&tf=1h&symbol=BTCUSDT`);
+  await selectTool(page, 'Swing High', 'Свинги');
+  await tapCandle(page, 20);
+  await checkAndSeeResult(page);
+  const vh = page.viewportSize()!.height;
+  const sheet = page.getByTestId('result-sheet');
+  for (const [h, share] of [['medium', 0.55], ['peek', 0.25], ['full', 0.9]] as const) {
+    if (h === 'peek') await page.getByTestId('sheet-collapse').click();
+    if (h === 'full') {
+      await page.getByTestId('sheet-expand').click();
+      await page.getByTestId('sheet-expand').click();
+    }
+    await expect(sheet).toHaveAttribute('data-height', h);
+    await page.waitForTimeout(400);
+    const s = (await sheet.boundingBox())!;
+    const c = (await page.getByTestId('chart').boundingBox())!;
+    expect(s.height).toBeGreaterThanOrEqual(vh * share * 0.95);
+    expect(s.y + s.height).toBeGreaterThanOrEqual(vh - 2);
+    // зазор между низом графика и верхом шторки не больше 8 px (на полной высоте график уходит под шторку)
+    expect(s.y - (c.y + c.height)).toBeLessThanOrEqual(8);
+    expect(c.height).toBeGreaterThan(150);
+  }
+});
