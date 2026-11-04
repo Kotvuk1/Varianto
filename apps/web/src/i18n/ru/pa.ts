@@ -59,7 +59,7 @@ export const paTx = {
     viewLabel: 'Таймфрейм графика',
     viewHtf: (tf: string) => `Старший ТФ ${tf}`,
     viewBase: (tf: string) => `Рабочий ТФ ${tf}`,
-    significanceHelp: 'Значима: модель по направлению старшего тренда и у зоны интереса (sweep, Order Block, уровень).',
+    significanceHelp: 'Значима, если модель по направлению старшего тренда и у зоны интереса: Liquidity sweep, Order Block или уровня. В боковике нужны минимум два из трёх. Против тренда модель не значима.',
     patternHighlight: 'Модель подсвечена на графике.',
   },
 } as const;

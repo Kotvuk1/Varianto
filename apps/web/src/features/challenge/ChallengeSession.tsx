@@ -1,6 +1,6 @@
 'use client';
 // /learn/challenge/session: загрузка сценария -> решение -> проигрывание -> итог (LAYOUTS §5).
-import { ChevronDown, ChevronLeft, ChevronUp } from 'lucide-react';
+import { ChevronDown, ChevronLeft, ChevronUp, CircleHelp } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -14,6 +14,8 @@ import { formatR } from '@/i18n/format';
 import { SKILL_NAMES_RU } from '@/i18n/ru/progress';
 import { useRepository } from '@/storage';
 import { Button, Segmented } from '@/ui';
+import { TaskIntro, useTaskIntro } from '@/features/guide';
+import { guide } from '@/i18n/ru/guide';
 import { selectHints } from './hints';
 import { buildAttempt } from './attempt';
 import { ChallengeApiError, fetchNext, gradeChallenge } from './api';
@@ -60,6 +62,7 @@ export function ChallengeSession() {
   const [store] = useState(createSessionStore);
   const s = useStore(store);
   const desktop = useDesktop();
+  const intro = useTaskIntro('challenge');
   const [win, setWin] = useState<TimeWindow | null>(null);
   const seen = useRef<string[]>([]);
   const startedAt = useRef(0);
@@ -260,7 +263,9 @@ export function ChallengeSession() {
             options={TASK_TFS.map((v) => ({ value: v, label: TF_LABEL[v], disabled: !hasMultiple || (locked && v !== s.tf) }))}
           />
         </div>
+        <IconButton label={guide.intro.open} icon={<CircleHelp size={20} strokeWidth={1.75} />} onClick={intro.show} data-testid="intro-open" />
       </header>
+      <TaskIntro introKey="challenge" open={intro.open} onClose={intro.close} onNever={intro.never} />
       {focus && (
         <p data-testid="challenge-focus" className="shrink-0 border-b border-border bg-surface-1 px-3 py-1.5 text-xs text-text-2">
           {ch.session.focusHint(SKILL_NAMES_RU[focus])}

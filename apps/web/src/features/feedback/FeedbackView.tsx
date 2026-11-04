@@ -1,6 +1,7 @@
 import type { Feedback, FeedbackBlock } from '@tl/core';
 import { fb } from '@/i18n/ru/feedback';
 import { makePriceFormatter } from '@/chart/priceFormat';
+import { Annotated } from '@/features/guide';
 import { GradeGlyph } from './GradeGlyph';
 import { placeOf, renderBlock } from './format';
 
@@ -77,7 +78,9 @@ export function FeedbackView({
               {textOf(b)}
             </button>
           ) : (
-            <span>{textOf(b)}</span>
+            <span>
+              <Annotated text={textOf(b)} />
+            </span>
           )}
         </li>
       ))}
@@ -99,7 +102,7 @@ export function FeedbackView({
           <li key={t} className="flex items-start gap-2 text-sm">
             <GradeGlyph kind="info" />
             <span>
-              {t}
+              <Annotated text={t} />
               {g.places.length > 0 && (
                 <span className="text-text-2">
                   {' '}
@@ -154,7 +157,9 @@ export function FeedbackView({
         )}
       </Section>
       <Section id="fb-principle" title={fb.principle}>
-        <p className="text-sm">{text(feedback.principle)}</p>
+        <p className="text-sm">
+          <Annotated text={text(feedback.principle)} />
+        </p>
       </Section>
       {footer}
     </div>

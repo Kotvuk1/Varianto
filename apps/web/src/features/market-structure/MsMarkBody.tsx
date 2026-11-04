@@ -3,6 +3,7 @@ import { useMemo } from 'react';
 import { TIMEFRAME_MS, type SkillId } from '@tl/core';
 import { formatDateTimeRu, msConceptTask, msFocusTask, msReference } from '@/i18n/ru/ms';
 import { ss } from '@/i18n/ru/session';
+import { Annotated } from '@/features/guide';
 import { msMarkAnswer } from '../session/adapters';
 import { MarkSession } from '../session/MarkSession';
 import type { SessionBase } from '../session/TaskSession';
@@ -28,13 +29,13 @@ export function MsMarkBody({ envelope, flow, base }: { envelope: TaskEnvelope<Ms
           const t = msConceptTask[c];
           return t ? (
             <li key={c}>
-              <p className="text-text-1">{t.task}</p>
-              <p>{t.term}</p>
+              <p className="text-text-1"><Annotated text={t.task} /></p>
+              <p><Annotated text={t.term} /></p>
             </li>
           ) : null;
         })}
       </ul>
-      <p>{msReference(p.referenceKey)}</p>
+      <p><Annotated text={msReference(p.referenceKey)} /></p>
       <p data-testid="window-note">{ss.windowNote(windowBars, formatDateTimeRu(p.window.fromTime))}</p>
     </>
   );

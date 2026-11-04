@@ -24,7 +24,7 @@ describe('splitTerms', () => {
 describe('Term', () => {
   it('нажатие открывает определение из словаря', async () => {
     render(<Annotated text="Был Liquidity sweep?" />);
-    await userEvent.click(screen.getByRole('button', { name: /Определение/ }));
+    await userEvent.click(screen.getByTestId('term'));
     expect(screen.getByTestId('term-def').textContent).toContain('забирает стопы');
   });
 });

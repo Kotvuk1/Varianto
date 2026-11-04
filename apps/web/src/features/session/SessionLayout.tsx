@@ -1,7 +1,9 @@
 'use client';
-import { ChevronLeft, Info } from 'lucide-react';
+import { ChevronLeft, CircleHelp, Info } from 'lucide-react';
 import Link from 'next/link';
 import { useState, type ReactNode } from 'react';
+import { Annotated } from '@/features/guide';
+import { guide } from '@/i18n/ru/guide';
 import { ss } from '@/i18n/ru/session';
 import { IconButton, cn } from '@/ui';
 import { ResultSheet, SHEET_PAD, type ResultSheetHeight } from './ResultSheet';
@@ -23,7 +25,7 @@ export function TaskHint({ text, details, wrap = false }: TaskHintProps) {
     <div data-testid="task-hint" className="shrink-0 border-b border-border bg-surface-1 px-3">
       <div className="flex min-h-11 items-start gap-1">
         <p data-testid="task-text" className={cn('min-w-0 flex-1 py-3 text-sm leading-5', open || wrap ? '' : 'line-clamp-2')} title={text}>
-          {text}
+          <Annotated text={text} />
         </p>
         {(details || !wrap) && (
           <IconButton
@@ -45,6 +47,7 @@ export interface SessionLayoutProps {
   title: string;
   subtitle: string;
   counter: string;
+  onIntro?: () => void;
   hint?: ReactNode;
   /** Строка-инструкция инструмента (задания с разметкой). */
   instruction?: ReactNode;
@@ -63,7 +66,7 @@ export interface SessionLayoutProps {
 }
 
 /** Общий каркас сессии задания: шапка, справка, график, панели; разбор - bottom sheet / боковой лист (LAYOUTS §3, §4). */
-export function SessionLayout({ backHref, title, subtitle, counter, hint, instruction, chart, rail, bottom, aside, result }: SessionLayoutProps) {
+export function SessionLayout({ backHref, title, subtitle, counter, onIntro, hint, instruction, chart, rail, bottom, aside, result }: SessionLayoutProps) {
   const desktop = useIsDesktop();
   const [height, setHeight] = useState<ResultSheetHeight>('medium');
   const sheet = !desktop && result;
@@ -78,9 +81,12 @@ export function SessionLayout({ backHref, title, subtitle, counter, hint, instru
           {title}
           <span className="font-normal text-text-2"> · {subtitle}</span>
         </h1>
-        <span data-testid="task-counter" className="tnum shrink-0 pr-2 text-sm text-text-2">
+        <span data-testid="task-counter" className="tnum shrink-0 pr-1 text-sm text-text-2">
           {counter}
         </span>
+        {onIntro && (
+          <IconButton label={guide.intro.open} icon={<CircleHelp size={20} strokeWidth={1.75} />} onClick={onIntro} data-testid="intro-open" />
+        )}
       </header>
 
       <div className="flex min-h-0 flex-1">

@@ -21,6 +21,7 @@ export function MsSessionScreen() {
       body={msBody(params)}
       base={{ backHref: '/learn/market-structure', title: msTx.title, subtitle: msTx.sessionTitle[params.mode] }}
       loadingLabel={loading}
+      intro={params.mode === 'question' ? 'ms-question' : 'ms-mark'}
     >
       {({ envelope, flow, base }) =>
         envelope.payload.kind === 'ms-mark' ? (

@@ -1,5 +1,6 @@
 'use client';
 import { useState, type ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 import { glossary, guide, type TermDef } from '@/i18n/ru/guide';
 import { BottomSheet, Button } from '@/ui';
 
@@ -11,7 +12,10 @@ const WORD = '(?<![\\p{L}\\p{N}_])';
 const WORD_END = '(?![\\p{L}\\p{N}_])';
 // Длинные варианты первыми: «R:R» раньше «R», «Swing High» раньше «Swing».
 const pattern = new RegExp(
-  `${WORD}(${[...byAlias.keys()].sort((a, b) => b.length - a.length).map(esc).join('|')})${WORD_END}`,
+  `${WORD}(${[...byAlias.keys()]
+    .sort((a, b) => b.length - a.length)
+    .map(esc)
+    .join('|')})${WORD_END}`,
   'gu',
 );
 
@@ -49,21 +53,25 @@ export function Term({ def, children }: { def: TermDef; children: ReactNode }) {
       >
         {children}
       </button>
-      <BottomSheet
-        open={open}
-        onClose={() => setOpen(false)}
-        title={def.title}
-        height="medium"
-        footer={
-          <Button variant="secondary" className="w-full" onClick={() => setOpen(false)}>
-            {guide.term.close}
-          </Button>
-        }
-      >
-        <p data-testid="term-def" className="text-base text-text-2">
-          {def.def}
-        </p>
-      </BottomSheet>
+      {open &&
+        createPortal(
+          <BottomSheet
+            open={open}
+            onClose={() => setOpen(false)}
+            title={def.title}
+            height="medium"
+            footer={
+              <Button variant="secondary" className="w-full" onClick={() => setOpen(false)}>
+                {guide.term.close}
+              </Button>
+            }
+          >
+            <p data-testid="term-def" className="text-base text-text-2">
+              {def.def}
+            </p>
+          </BottomSheet>,
+          document.body,
+        )}
     </>
   );
 }
@@ -72,7 +80,15 @@ export function Term({ def, children }: { def: TermDef; children: ReactNode }) {
 export function Annotated({ text }: { text: string }) {
   return (
     <>
-      {splitTerms(text).map((s, i) => (s.term ? <Term key={i} def={s.term}>{s.text}</Term> : <span key={i}>{s.text}</span>))}
+      {splitTerms(text).map((s, i) =>
+        s.term ? (
+          <Term key={i} def={s.term}>
+            {s.text}
+          </Term>
+        ) : (
+          <span key={i}>{s.text}</span>
+        ),
+      )}
     </>
   );
 }

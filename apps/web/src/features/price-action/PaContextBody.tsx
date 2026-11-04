@@ -1,7 +1,8 @@
 'use client';
-import type { TaskTimeframe } from '@tl/core';
 import { useMemo, useState } from 'react';
 import { GradeGlyph } from '@/features/feedback';
+import { Annotated } from '@/features/guide';
+import { guide } from '@/i18n/ru/guide';
 import { TF_LABEL } from '@/features/terminal/dataSource';
 import { paTx } from '@/i18n/ru/pa';
 import { ss } from '@/i18n/ru/session';
@@ -12,18 +13,23 @@ import { AnswerSession } from '../session/AnswerSession';
 import type { SessionBase } from '../session/TaskSession';
 import type { FlowState } from '../session/taskFlow';
 import type { PaContextPayload, TaskEnvelope } from '../session/types';
+import { CONTEXT_FIELD_IDS, CONTEXT_HTF, viewForField } from './contextFlow';
 
-const HTF: Record<TaskTimeframe, TaskTimeframe> = { '15m': '1h', '1h': '4h', '4h': '1d', '1d': '1d' };
 type YN = 'yes' | 'no';
 const yn = [
   { value: 'yes' as YN, label: paTx.context.yes },
   { value: 'no' as YN, label: paTx.context.no },
 ];
 
-function Row({ label, children, id }: { label: string; children: React.ReactNode; id: string }) {
+function Row({ label, hint, children, id }: { label: string; hint: string; children: React.ReactNode; id: string }) {
   return (
     <div className="px-3 py-1.5" data-testid={`ctx-${id}`}>
-      <p className="mb-1 text-sm">{label}</p>
+      <p className="text-sm">
+        <Annotated text={label} />
+      </p>
+      <p data-testid={`ctx-hint-${id}`} className="mb-1 text-xs leading-4 text-text-2">
+        <Annotated text={hint} />
+      </p>
       {children}
     </div>
   );
@@ -32,7 +38,7 @@ function Row({ label, children, id }: { label: string; children: React.ReactNode
 /** PA «Контекст»: модель подсвечена; ответы - sweep / OB / уровень / старший тренд + значимость (ALGORITHMS §11). */
 export function PaContextBody({ envelope, flow, base }: { envelope: TaskEnvelope<PaContextPayload>; flow: FlowState; base: SessionBase }) {
   const p = envelope.payload;
-  const htf = HTF[p.tf];
+  const htf = CONTEXT_HTF[p.tf];
   const [view, setView] = useState<'base' | 'htf'>('base');
   const [sweep, setSweep] = useState<YN | null>(null);
   const [ob, setOb] = useState<YN | null>(null);
@@ -40,6 +46,7 @@ export function PaContextBody({ envelope, flow, base }: { envelope: TaskEnvelope
   const [trend, setTrend] = useState<ContextFactors['htfTrend'] | null>(null);
   const [sig, setSig] = useState<YN | null>(null);
   const [step, setStep] = useState(0);
+  const bull = p.pattern.direction !== 'bear';
   const busy = flow.phase === 'grading';
   const name = paTx.patterns[(p.pattern.meta?.patternType as keyof typeof paTx.patterns) ?? 'engulfing']?.name ?? '';
   const dir = p.pattern.direction === 'bear' ? paTx.context.dirBear : paTx.context.dirBull;
@@ -47,21 +54,22 @@ export function PaContextBody({ envelope, flow, base }: { envelope: TaskEnvelope
   const candles = envelope.series[tf] ?? envelope.series[p.tf] ?? [];
   const highlight = useMemo(() => [p.pattern], [p.pattern]);
 
-  const fields: { id: string; label: string; options: { value: string; label: string }[]; value: string | null; set: (v: string) => void }[] = [
-    { id: 'sweep', label: paTx.context.sweep, options: yn, value: sweep, set: (v) => setSweep(v as YN) },
-    { id: 'ob', label: paTx.context.orderBlock, options: yn, value: ob, set: (v) => setOb(v as YN) },
-    { id: 'level', label: paTx.context.keyLevel, options: yn, value: lvl, set: (v) => setLvl(v as YN) },
+  const fields: { id: (typeof CONTEXT_FIELD_IDS)[number]; label: string; hint: string; options: { value: string; label: string }[]; value: string | null; set: (v: string) => void }[] = [
+    { id: 'sweep', label: paTx.context.sweep, hint: guide.context.sweep(bull), options: yn, value: sweep, set: (v) => setSweep(v as YN) },
+    { id: 'ob', label: paTx.context.orderBlock, hint: guide.context.orderBlock(bull), options: yn, value: ob, set: (v) => setOb(v as YN) },
+    { id: 'level', label: paTx.context.keyLevel, hint: guide.context.keyLevel(bull), options: yn, value: lvl, set: (v) => setLvl(v as YN) },
     {
       id: 'trend',
       label: paTx.context.htfTrend(TF_LABEL[htf]),
+      hint: guide.context.htfTrend,
       options: (['up', 'down', 'range'] as const).map((v) => ({ value: v, label: paTx.context.trend[v] })),
       value: trend,
       set: (v) => setTrend(v as ContextFactors['htfTrend']),
     },
-    { id: 'significant', label: paTx.context.significant, options: yn, value: sig, set: (v) => setSig(v as YN) },
+    { id: 'significant', label: paTx.context.significant, hint: guide.context.significant, options: yn, value: sig, set: (v) => setSig(v as YN) },
   ];
   const field = (f: (typeof fields)[number]) => (
-    <Row key={f.id} id={f.id} label={f.label}>
+    <Row key={f.id} id={f.id} label={f.label} hint={f.hint}>
       <Segmented label={f.label} options={f.options} value={f.value ?? ''} onChange={f.set} />
     </Row>
   );
@@ -72,6 +80,11 @@ export function PaContextBody({ envelope, flow, base }: { envelope: TaskEnvelope
   );
   const cur = fields[step]!;
   const last = step === fields.length - 1;
+  /** Шаг мобильной формы; на шаге «Тренд» график сам показывает старший ТФ, при уходе - рабочий. */
+  const goStep = (n: number) => {
+    setStep(n);
+    if (htf !== p.tf) setView(viewForField(fields[n]!.id));
+  };
   const stepper = (ctx: { submit: () => void; busy: boolean; status: React.ReactNode }) => (
     <div data-testid="answer-panel" className="shrink-0 border-t border-border bg-surface-1 pb-[env(safe-area-inset-bottom)]">
       <div role="group" aria-label={paTx.context.groupLabel}>
@@ -79,7 +92,7 @@ export function PaContextBody({ envelope, flow, base }: { envelope: TaskEnvelope
       </div>
       {ctx.status}
       <div className="flex items-center gap-2 px-3 pb-3">
-        <Button variant="ghost" size="lg" disabled={step === 0} onClick={() => setStep(step - 1)} data-testid="step-prev">
+        <Button variant="ghost" size="lg" disabled={step === 0} onClick={() => goStep(step - 1)} data-testid="step-prev">
           {ss.prevStep}
         </Button>
         <span data-testid="step-counter" className="tnum min-w-10 text-center text-sm text-text-2">
@@ -88,7 +101,7 @@ export function PaContextBody({ envelope, flow, base }: { envelope: TaskEnvelope
         {last ? (
           <SubmitButton onClick={ctx.submit} busy={ctx.busy} label={ss.checkAnswer} className="flex-1" />
         ) : (
-          <Button variant="primary" size="lg" className="flex-1" disabled={cur.value === null} onClick={() => setStep(step + 1)} data-testid="step-next">
+          <Button variant="primary" size="lg" className="flex-1" disabled={cur.value === null} onClick={() => goStep(step + 1)} data-testid="step-next">
             {ss.nextStep}
           </Button>
         )}
@@ -164,8 +177,12 @@ export function PaContextBody({ envelope, flow, base }: { envelope: TaskEnvelope
       hintText={paTx.context.task(name, dir)}
       hintDetails={
         <>
-          <p>{paTx.context.taskShort}</p>
-          <p>{paTx.context.significanceHelp}</p>
+          <p>
+            <Annotated text={paTx.context.taskShort} />
+          </p>
+          <p>
+            <Annotated text={paTx.context.significanceHelp} />
+          </p>
         </>
       }
       highlight={highlight}

@@ -1,5 +1,7 @@
 'use client';
 import type { ReactNode } from 'react';
+import { TaskIntro, useTaskIntro } from '@/features/guide';
+import type { IntroKey } from '@/i18n/ru/guide';
 import { ss } from '@/i18n/ru/session';
 import { ChartSkeleton, TaskError } from './States';
 import { SessionLayout, TaskHint } from './SessionLayout';
@@ -12,6 +14,8 @@ export interface SessionBase {
   title: string;
   subtitle: string;
   counter: string;
+  /** Открыть интро типа задания (кнопка (i) в шапке). */
+  onIntro?: () => void;
 }
 
 export interface TaskSessionProps {
@@ -20,25 +24,44 @@ export interface TaskSessionProps {
   base: Omit<SessionBase, 'counter'>;
   /** Подпись загрузки, например «Загружаю свечи BTCUSDT 1H…» (пара может быть неизвестна заранее). */
   loadingLabel: string;
+  /** Интро типа задания: открывается при первом входе, повторно - по (i). */
+  intro?: IntroKey;
   children: (ctx: { envelope: TaskEnvelope; flow: FlowState; base: SessionBase }) => ReactNode;
 }
 
 /** Каркас жизненного цикла: загрузка -> задание (children) / ошибка. Тело задания пересоздаётся на каждое новое задание. */
-export function TaskSession({ module, body, base, loadingLabel, children }: TaskSessionProps) {
+export function TaskSession({ module, body, base, loadingLabel, intro, children }: TaskSessionProps) {
   const flow = useTaskFlow(module, body);
-  const full: SessionBase = { ...base, counter: ss.taskNumber(flow.solved + (flow.phase === 'graded' ? 0 : 1)) };
+  const guide = useTaskIntro(intro);
+  const full: SessionBase = {
+    ...base,
+    counter: ss.taskNumber(flow.solved + (flow.phase === 'graded' ? 0 : 1)),
+    ...(intro ? { onIntro: guide.show } : {}),
+  };
+  const sheet = intro ? <TaskIntro introKey={intro} open={guide.open} onClose={guide.close} onNever={guide.never} /> : null;
 
+  let content: ReactNode;
   if (flow.phase === 'failed' && flow.error) {
-    return (
+    content = (
       <SessionLayout
         {...full}
         hint={null}
         chart={<TaskError error={flow.error} stage="next" onRetry={() => void flow.load()} onAnother={() => void flow.load()} backHref={base.backHref} />}
       />
     );
+  } else if (!flow.envelope) {
+    content = <SessionLayout {...full} hint={<TaskHint text={ss.loadingTask} />} chart={<ChartSkeleton label={loadingLabel} backHref={base.backHref} />} />;
+  } else {
+    content = (
+      <div className="flex min-h-0 flex-1 flex-col" key={flow.envelope.taskId}>
+        {children({ envelope: flow.envelope, flow, base: full })}
+      </div>
+    );
   }
-  if (!flow.envelope) {
-    return <SessionLayout {...full} hint={<TaskHint text={ss.loadingTask} />} chart={<ChartSkeleton label={loadingLabel} backHref={base.backHref} />} />;
-  }
-  return <div className="flex min-h-0 flex-1 flex-col" key={flow.envelope.taskId}>{children({ envelope: flow.envelope, flow, base: full })}</div>;
+  return (
+    <>
+      {content}
+      {sheet}
+    </>
+  );
 }

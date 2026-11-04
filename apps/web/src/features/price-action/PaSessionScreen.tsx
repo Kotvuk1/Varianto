@@ -10,6 +10,8 @@ import { PaContextBody } from './PaContextBody';
 import { PaFindBody } from './PaFindBody';
 import { PaLevelBody } from './PaLevelBody';
 
+const INTRO = { 'find-pattern': 'pa-find', 'draw-level': 'pa-level', context: 'pa-context' } as const;
+
 /** /learn/price-action/session?type=find-pattern|draw-level|context&difficulty=&tf=&symbol= */
 export function PaSessionScreen() {
   const sp = useSearchParams();
@@ -22,6 +24,7 @@ export function PaSessionScreen() {
       body={paBody(params)}
       base={{ backHref: '/learn/price-action', title: paTx.title, subtitle: paTx.types[params.type] }}
       loadingLabel={loading}
+      intro={INTRO[params.type]}
     >
       {({ envelope, flow, base }) => {
         const k = envelope.payload.kind;
