@@ -121,12 +121,9 @@ test('мобильная шторка разбора: график занима�
   await checkAndSeeResult(page);
   const vh = page.viewportSize()!.height;
   const sheet = page.getByTestId('result-sheet');
-  for (const [h, share] of [['medium', 0.55], ['peek', 0.25], ['full', 0.9]] as const) {
-    if (h === 'peek') await page.getByTestId('sheet-collapse').click();
-    if (h === 'full') {
-      await page.getByTestId('sheet-expand').click();
-      await page.getByTestId('sheet-expand').click();
-    }
+  for (const [h, share] of [['medium', 0.55], ['full', 0.9], ['peek', 0.25]] as const) {
+    // единый переключатель: medium -> full -> peek -> medium
+    if (h !== 'medium') await page.getByTestId('sheet-toggle').click();
     await expect(sheet).toHaveAttribute('data-height', h);
     await page.waitForTimeout(400);
     const s = (await sheet.boundingBox())!;

@@ -68,18 +68,10 @@ export function ResultSheet({ title, height, onHeight, children, footer }: Resul
           </h2>
           <div className="flex" onPointerDown={(e) => e.stopPropagation()}>
             <IconButton
-              label={ss.collapseSheet}
-              icon={<ChevronDown size={20} strokeWidth={1.75} />}
-              disabled={i === 0}
-              onClick={() => onHeight(ORDER[i - 1]!)}
-              data-testid="sheet-collapse"
-            />
-            <IconButton
-              label={ss.expandSheet}
-              icon={<ChevronUp size={20} strokeWidth={1.75} />}
-              disabled={i === 2}
-              onClick={() => onHeight(ORDER[i + 1]!)}
-              data-testid="sheet-expand"
+              label={height === 'full' ? ss.collapseSheet : ss.expandSheet}
+              icon={height === 'full' ? <ChevronDown size={20} strokeWidth={1.75} /> : <ChevronUp size={20} strokeWidth={1.75} />}
+              onClick={() => onHeight(ORDER[(i + 1) % 3]!)}
+              data-testid="sheet-toggle"
             />
           </div>
         </div>

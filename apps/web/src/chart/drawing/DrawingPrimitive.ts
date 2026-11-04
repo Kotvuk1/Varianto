@@ -18,6 +18,9 @@ import { buildGeometry, isMarkVisible, type MarkState } from './layout';
 import { lwcProjection } from './lwcProjection';
 import { drawGeometry } from './render';
 
+/** Отступ слева для подписи окна: логотип TradingView (атрибуция LWC) занимает левый нижний угол панели. */
+const LOGO_CLEAR = 60;
+
 export interface OpenCandleInfo {
   openTime: number;
   high: number;
@@ -119,8 +122,8 @@ export class DrawingPrimitive implements ISeriesPrimitive<Time> {
               const label = st.windowLabel ?? 'Окно задания';
               context.font = `600 11px ${st.tokens.fontSans}`;
               const lw = context.measureText(label).width + 10;
-              const lx = Math.min(Math.max(left + 4, 4), Math.max(4, mediaSize.width - lw - 4));
-              // внизу панели: сверху живёт легенда OHLC
+              const lx = Math.min(Math.max(left + 4, LOGO_CLEAR), Math.max(LOGO_CLEAR, mediaSize.width - lw - 4));
+              // внизу панели (сверху легенда OHLC), правее логотипа TradingView (слева внизу, ~48 px)
               const ly = mediaSize.height - 24;
               context.fillStyle = st.tokens.bg;
               context.fillRect(lx, ly, lw, 16);

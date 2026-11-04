@@ -18,6 +18,8 @@ export interface FeedbackViewProps {
   footer?: React.ReactNode;
   /** Не показывать раздел «Итог» (экран выводит свой вердикт, например терминал). */
   hideVerdict?: boolean;
+  /** Свой текст блока раздела «Что понято верно» (терминал: без знаменателя эталона). */
+  understoodText?: (b: FeedbackBlock) => string;
   className?: string;
 }
 
@@ -53,12 +55,13 @@ export function FeedbackView({
   onFocusMarks,
   summary,
   hideVerdict,
+  understoodText,
   verdictExtra,
   footer,
   className,
 }: FeedbackViewProps) {
   const text = (b: FeedbackBlock) => renderBlock(b.templateKey, b.params, fmtPrice);
-  const list = (blocks: FeedbackBlock[], testId: string) => (
+  const list = (blocks: FeedbackBlock[], testId: string, textOf: (b: FeedbackBlock) => string = text) => (
     <ul data-testid={testId} className="space-y-2">
       {blocks.map((b, i) => (
         <li key={`${b.templateKey}-${i}`} className="flex items-start gap-2 text-sm">
@@ -71,10 +74,10 @@ export function FeedbackView({
               onClick={() => onFocusMarks(b.markIds!)}
               className="min-h-11 cursor-pointer text-left"
             >
-              {text(b)}
+              {textOf(b)}
             </button>
           ) : (
-            <span>{text(b)}</span>
+            <span>{textOf(b)}</span>
           )}
         </li>
       ))}
@@ -124,7 +127,7 @@ export function FeedbackView({
       )}
       <Section id="fb-understood" title={fb.understood}>
         {feedback.understood.length ? (
-          list(feedback.understood, 'fb-understood-list')
+          list(feedback.understood, 'fb-understood-list', understoodText)
         ) : (
           <p className="text-sm text-text-2">{fb.noMatches}</p>
         )}

@@ -78,9 +78,9 @@
     "semantic_hash": ""
   },
   "e2e/playwright.config.ts": {
-    "mtime": 1793752069.5095065,
-    "seen": 1793752116.7154293,
-    "ast_hash": "d8e43e57e2fbd446876f7fef485f36d2",
+    "mtime": 1793760714.1559193,
+    "seen": 1793761225.6085484,
+    "ast_hash": "04d63aaf1f527fb93a9f926686bf54a4",
     "semantic_hash": ""
   },
   "e2e/smoke.spec.ts": {
@@ -102,9 +102,9 @@
     "semantic_hash": ""
   },
   "package.json": {
-    "mtime": 1793677435.6227448,
-    "seen": 1793677917.5679555,
-    "ast_hash": "32aaaec31a8df92a2f210b1977f39193",
+    "mtime": 1793759974.3426378,
+    "seen": 1793761225.6089263,
+    "ast_hash": "95a7400d29b652ff423ccb5c5547eec4",
     "semantic_hash": ""
   },
   "packages/core/package.json": {
@@ -534,9 +534,9 @@
     "semantic_hash": ""
   },
   "apps/web/src/chart/drawing/DrawingPrimitive.ts": {
-    "mtime": 1793748678.3705726,
-    "seen": 1793748813.6123183,
-    "ast_hash": "7d3a7879681f3a099d2bd0a09ef8cec3",
+    "mtime": 1793761089.9645576,
+    "seen": 1793761225.6048245,
+    "ast_hash": "302dd460326ccf42fc2c2cb301dc9989",
     "semantic_hash": ""
   },
   "apps/web/src/chart/drawing/hit.test.ts": {
@@ -576,9 +576,9 @@
     "semantic_hash": ""
   },
   "apps/web/src/chart/drawing/render.ts": {
-    "mtime": 1793752026.0831618,
-    "seen": 1793752116.7122285,
-    "ast_hash": "82672b083b04fbf69df965797a50ce81",
+    "mtime": 1793759975.4786065,
+    "seen": 1793761225.604986,
+    "ast_hash": "4f9218f75526a22903da9f8e700e068f",
     "semantic_hash": ""
   },
   "apps/web/src/chart/drawing/serialize.test.ts": {
@@ -750,9 +750,9 @@
     "semantic_hash": ""
   },
   "apps/web/src/features/terminal/strings.ts": {
-    "mtime": 1793752099.548161,
-    "seen": 1793752116.7141433,
-    "ast_hash": "fb7730d3081a1ab79ebf5d160839c3f1",
+    "mtime": 1793761081.3721778,
+    "seen": 1793761225.607165,
+    "ast_hash": "f75d2d6d2fefbb97f815255e965d5fea",
     "semantic_hash": ""
   },
   "apps/web/src/i18n/format.test.ts": {
@@ -990,9 +990,9 @@
     "semantic_hash": ""
   },
   "apps/web/src/features/terminal/TerminalScreen.tsx": {
-    "mtime": 1793758351.0426402,
-    "seen": 1793759006.331852,
-    "ast_hash": "9cb4761abd812550031dd6b61d2a03e7",
+    "mtime": 1793760553.9343204,
+    "seen": 1793761225.6070187,
+    "ast_hash": "3395196897632e3a862b27313bcae45b",
     "semantic_hash": ""
   },
   "apps/web/src/features/terminal/ToolPalette.tsx": {
@@ -1590,15 +1590,15 @@
     "semantic_hash": ""
   },
   "apps/web/src/server/sources.ts": {
-    "mtime": 1793679903.4240732,
-    "seen": 1793680034.5534368,
-    "ast_hash": "fa2400f272035c32cb538f9c0ab53a39",
+    "mtime": 1793761101.8344548,
+    "seen": 1793761225.6076224,
+    "ast_hash": "65329daa38fe991fff39f7e732545acc",
     "semantic_hash": ""
   },
   "apps/web/src/server/tasks.ts": {
-    "mtime": 1793752152.0097845,
-    "seen": 1793757881.1121964,
-    "ast_hash": "d1ac73a5e483a56a0a9d34c1b6492176",
+    "mtime": 1793761149.5033245,
+    "seen": 1793761225.6076233,
+    "ast_hash": "a8e42ec66a1b8e807f629ef3ed6bb314",
     "semantic_hash": ""
   },
   "apps/web/src/server/token.test.ts": {
@@ -1614,9 +1614,9 @@
     "semantic_hash": ""
   },
   "apps/web/src/features/feedback/FeedbackView.tsx": {
-    "mtime": 1793752080.6626773,
-    "seen": 1793752116.7131836,
-    "ast_hash": "9a1f95416d33dba454cd99f4bfbc2545",
+    "mtime": 1793761081.3718774,
+    "seen": 1793761225.6058984,
+    "ast_hash": "b77eb13cf4d66fc9a07d7745411de1d9",
     "semantic_hash": ""
   },
   "apps/web/src/features/feedback/GradeGlyph.tsx": {
@@ -1632,9 +1632,9 @@
     "semantic_hash": ""
   },
   "apps/web/src/features/feedback/feedback.test.tsx": {
-    "mtime": 1793752151.8001587,
-    "seen": 1793757881.1107593,
-    "ast_hash": "75a118378e5ed7edf80b177c47cf14ab",
+    "mtime": 1793759977.8583255,
+    "seen": 1793761225.6059387,
+    "ast_hash": "109ed3fafd61e0ca0cce6014ecd0c70a",
     "semantic_hash": ""
   },
   "apps/web/src/features/feedback/format.ts": {
@@ -1650,9 +1650,9 @@
     "semantic_hash": ""
   },
   "apps/web/src/features/terminal/check/CheckPanel.tsx": {
-    "mtime": 1793752099.563807,
-    "seen": 1793752116.7140582,
-    "ast_hash": "edae6b34b26de38547bb08bc55844536",
+    "mtime": 1793761081.372419,
+    "seen": 1793761225.6070392,
+    "ast_hash": "4da09ae8c80c1fceaa2fddbdfc3e2c4e",
     "semantic_hash": ""
   },
   "apps/web/src/features/terminal/check/runCheck.test.ts": {
@@ -2058,9 +2058,9 @@
     "semantic_hash": ""
   },
   "e2e/ms.spec.ts": {
-    "mtime": 1793757520.890911,
-    "seen": 1793757881.1130378,
-    "ast_hash": "e67f8abc94b5cd159abc49a9c2f137ab",
+    "mtime": 1793761093.2836092,
+    "seen": 1793761225.6085336,
+    "ast_hash": "30c8d09751fa9d0b32e77f0fd0d6614f",
     "semantic_hash": ""
   },
   "e2e/pa.spec.ts": {
@@ -2352,15 +2352,33 @@
     "semantic_hash": ""
   },
   "apps/web/src/features/session/ResultSheet.tsx": {
-    "mtime": 1793752127.1536036,
-    "seen": 1793757881.1112351,
-    "ast_hash": "87d3b6a72e88042b8c3ba692b8c5ed76",
+    "mtime": 1793761089.964831,
+    "seen": 1793761225.606508,
+    "ast_hash": "21876446425ac61e27c23553f2f18ed2",
     "semantic_hash": ""
   },
   "e2e/progress.shots.spec.ts": {
     "mtime": 1793752255.457101,
     "seen": 1793757881.113059,
     "ast_hash": "fb293cc70e01e1692028662497d8121f",
+    "semantic_hash": ""
+  },
+  "apps/web/src/features/terminal/strings.test.ts": {
+    "mtime": 1793761123.5519009,
+    "seen": 1793761225.6071634,
+    "ast_hash": "a4f9f529d2595441973c8aacb849a031",
+    "semantic_hash": ""
+  },
+  "apps/web/src/server/next-resilience.test.ts": {
+    "mtime": 1793761143.7709715,
+    "seen": 1793761225.6075509,
+    "ast_hash": "c765be643d5803b0de648e40f4488da9",
+    "semantic_hash": ""
+  },
+  "e2e/zz-final.shots.spec.ts": {
+    "mtime": 1793761138.7643967,
+    "seen": 1793761225.6086588,
+    "ast_hash": "94dd46e183e7aeb9610607a15652007e",
     "semantic_hash": ""
   },
   "pnpm-lock.yaml": {

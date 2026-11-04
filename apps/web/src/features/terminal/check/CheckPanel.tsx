@@ -46,6 +46,7 @@ export function CheckPanel({ result, open, onClose, showRef, onToggleRef, fmt, o
         fmtPrice={fmt}
         onFocusMarks={onFocusMarks}
         hideVerdict
+        understoodText={(b) => cx.confirmed(renderBlock(b.templateKey, b.params, fmt))}
       />
       {result.missedBlocks.length > 0 && (
         <details className="border-t border-border py-2" data-testid="check-more">
