@@ -1,6 +1,7 @@
 // gradeMarks (ALGORITHMS §12): сопоставление разметки пользователя с эталоном. Чистая детерминированная функция.
 import { TIMEFRAME_MS } from '../types';
 import { kindName } from '../feedback/templates.ru';
+import { normalizeParams } from '../feedback/format';
 import type {
   AlgoMarkSet,
   ErrorCode,
@@ -176,6 +177,12 @@ export function gradeMarks(user: readonly Mark[], algo: AlgoMarkSet, ctx: GradeC
     }
     return { mark: m, group, lo, hi, skill: skillOf(m, group) };
   };
+  const inRange = (e: Entry) => {
+    if (ctx.kinds && !ctx.kinds.includes(e.mark.kind)) return false;
+    if (!ctx.range) return true;
+    const t = candles[e.lo]?.openTime;
+    return t !== undefined && t >= ctx.range.from && t <= ctx.range.to;
+  };
   const inWindow = (e: Entry) =>
     e.lo >= 0 &&
     e.hi >= 0 &&
@@ -192,7 +199,7 @@ export function gradeMarks(user: readonly Mark[], algo: AlgoMarkSet, ctx: GradeC
   const algoEntries: Entry[] = [];
   for (const m of algo.required) {
     const e = entryOf(m);
-    if (e && groupEvaluated(e.group, ctx.concepts, m) && inWindow(e)) algoEntries.push(e);
+    if (e && groupEvaluated(e.group, ctx.concepts, m) && inWindow(e) && inRange(e)) algoEntries.push(e);
   }
   const toleratedEntries: Entry[] = [];
   for (const m of algo.tolerated) {
@@ -657,7 +664,7 @@ export function gradeMarks(user: readonly Mark[], algo: AlgoMarkSet, ctx: GradeC
     extra: extraAll.sort(keyOrd).map((e) => e.mark),
     toleranceCandles: tol,
     ignored,
-    errors: errors.map((e) => ({ code: e.code, skill: e.skill, severity: e.severity, markIds: e.markIds, params: e.params })),
+    errors: errors.map((e) => ({ code: e.code, skill: e.skill, severity: e.severity, markIds: e.markIds, ...(e.params ? { params: normalizeParams(e.params, ctx.tickSize) } : {}) })),
     skillOutcomes,
     score,
     verdict,

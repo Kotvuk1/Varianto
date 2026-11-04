@@ -210,9 +210,16 @@ function conceptOf(it: MarkItem): SkillId | null {
 /** Эталон для gradeMarks: required / tolerated по понятиям и окну (§12.1, §12.6). */
 export function buildAlgoMarkSet(
   r: StructureResult,
-  opts: { concepts: SkillId[]; window: IndexWindow },
+  opts: {
+    concepts: SkillId[];
+    window: IndexWindow;
+    /** Время ключевой свечи (openTime, мс, включительно): [первая метка пользователя, последняя + 3 свечи]. */
+    range?: { from: number; to: number };
+    /** Только эти типы меток (то, что поставил пользователь). */
+    kinds?: readonly MarkKind[];
+  },
 ): AlgoMarkSet {
-  const { concepts, window } = opts;
+  const { concepts, window, range, kinds } = opts;
   const withInternal = concepts.includes('internal-external');
   const required: Mark[] = [];
   const tolerated: Mark[] = [];
@@ -220,6 +227,11 @@ export function buildAlgoMarkSet(
     const concept = conceptOf(it);
     if (!concept || !concepts.includes(concept)) continue;
     if (it.key < window.fromIndex || it.key > window.toIndex) continue;
+    if (kinds && !kinds.includes(it.mark.kind)) continue;
+    if (range) {
+      const t = r.times[it.key];
+      if (t === undefined || t < range.from || t > range.to) continue;
+    }
     if (it.scope === 'internal' && !withInternal) continue;
     if (it.cls === 'ob') {
       const o = it.src as OrderBlock;

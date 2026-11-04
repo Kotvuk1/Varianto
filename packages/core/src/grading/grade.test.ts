@@ -387,3 +387,50 @@ describe('gradeMarks: одна ошибка на точку (swing + подпи�
     expect([...byTime].filter(([, c]) => c.length > 1)).toEqual([]);
   });
 });
+
+describe('gradeMarks / buildAlgoMarkSet: range и kinds (терминал, F-05)', () => {
+  it('эталон ограничен диапазоном и типами пользователя', () => {
+    const full = buildAlgoMarkSet(r, { concepts: ALL, window });
+    const sw = full.required.filter((m) => m.kind === 'swing-high');
+    expect(sw.length).toBeGreaterThan(3);
+    const from = sw[1]!.anchors[0]!.time;
+    const to = sw[2]!.anchors[0]!.time + 3 * 4 * 3600_000;
+    const algo = buildAlgoMarkSet(r, { concepts: ALL, window, range: { from, to }, kinds: ['swing-high'] });
+    expect(algo.required.length).toBeGreaterThan(0);
+    expect(algo.required.length).toBeLessThan(full.required.length);
+    for (const m of algo.required) expect(m.kind).toBe('swing-high');
+    const res = gradeMarks(algo.required.map((m) => asUser(m)), algo, ctxOf(ALL));
+    expect(res.verdict).toBe('correct');
+  });
+
+  it('gradeMarks сам сужает эталон по ctx.range и ctx.kinds', () => {
+    const algo = algoOf(ALL);
+    const sh = algo.required.filter((m) => m.kind === 'swing-high');
+    const u = asUser(sh[1]!);
+    const range = { from: sh[1]!.anchors[0]!.time, to: sh[1]!.anchors[0]!.time + 3 * 4 * 3600_000 };
+    const wide = gradeMarks([u], algo, ctxOf(ALL));
+    const narrow = gradeMarks([u], algo, { ...ctxOf(ALL), range, kinds: ['swing-high'] });
+    expect(narrow.missed.length).toBeLessThan(wide.missed.length);
+    expect(narrow.missed.every((m) => m.kind === 'swing-high')).toBe(true);
+    expect(narrow.verdict).toBe('correct');
+  });
+
+  it('D-01: лишние метки не входят в M, но уменьшают оценку', () => {
+    const algo = algoOf(['swing']);
+    const far: Mark = { id: 'far', kind: 'swing-high', anchors: [{ time: candles[40]!.openTime, price: 1 }], scope: 'external', direction: null, author: 'user' };
+    const res = gradeMarks([far], algo, ctxOf(['swing']));
+    const sw = res.skillOutcomes.find((o) => o.skill === 'swing')!;
+    expect(sw.extra).toBe(1);
+    expect(sw.total - (sw.extra ?? 0)).toBe(algo.required.length);
+  });
+
+  it('градации вердикта: >= 0.8 верно, 0.4-0.8 частично, < 0.4 неверно', () => {
+    const algo = algoOf(['swing']);
+    const us = algo.required.map((m) => asUser(m));
+    const n = us.length;
+    const half = gradeMarks(us.slice(0, Math.ceil(n * 0.6)), algo, ctxOf(['swing']));
+    expect(half.verdict).toBe('partial');
+    const few = gradeMarks(us.slice(0, Math.floor(n * 0.2)), algo, ctxOf(['swing']));
+    expect(few.verdict).toBe('incorrect');
+  });
+});

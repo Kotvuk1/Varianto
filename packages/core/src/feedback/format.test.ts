@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { formatFeedbackParams, normalizeParams, roundByTick } from './format';
-import { fillTemplate, ERROR_TEMPLATES_RU, OK_TEMPLATES_RU } from './templates.ru';
+import { PARAM_KINDS, formatFeedbackParams, normalizeParams, roundByTick } from './format';
+import { flattenTemplates, fillTemplate, ERROR_TEMPLATES_RU, OK_TEMPLATES_RU } from './templates.ru';
 
 describe('normalizeParams', () => {
   it('округляет цены по tickSize, проценты и R до 2 знаков', () => {
@@ -34,5 +34,16 @@ describe('formatFeedbackParams', () => {
   it('без форматеров — дефолт: 2 знака, не более 2 знаков после точки', () => {
     const out = formatFeedbackParams({ devPct: 0.20344834672530776, rr: 2.0000000000000338, size: 969.6999999999971 });
     expect(out).toEqual({ devPct: '0.2', rr: '2', size: '969.7' });
+  });
+});
+
+describe('property: нет чисел с > 4 знаками после разделителя', () => {
+  it('все шаблоны при float-мусоре в params', () => {
+    const junk: Record<string, number> = {};
+    for (const k of Object.keys(PARAM_KINDS)) junk[k] = 969.6999999999971 / 3.1;
+    const params = formatFeedbackParams(junk, { tickSize: 0.1 });
+    for (const t of Object.values(flattenTemplates())) {
+      expect(fillTemplate(t, params)).not.toMatch(/\d+[.,]\d{5,}/);
+    }
   });
 });

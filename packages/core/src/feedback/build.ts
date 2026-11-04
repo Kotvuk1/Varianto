@@ -1,6 +1,7 @@
 // buildFeedback: 6-частный разбор (ALGORITHMS §17.1, API_CONTRACTS §5.2). Возвращает ключи шаблонов и параметры;
 // строки подставляет UI (templates.ru.ts — данные).
 import type { ErrorCode, GradeError, OkCode, SkillId, SkillOutcome } from '../types';
+import { normalizeParams } from './format';
 import { PATTERN_NAMES_RU } from './templates.ru';
 import type { Feedback, FeedbackBlock, FeedbackInput, OkItem } from './types';
 
@@ -44,13 +45,13 @@ function glyphOf(code: ErrorCode): FeedbackBlock['glyph'] {
   return MISSING.test(code) ? 'miss' : 'extra';
 }
 
-function block(e: GradeError, part: 'mistake' | 'why' | 'howTo'): FeedbackBlock {
+function block(e: GradeError, part: 'mistake' | 'why' | 'howTo', tickSize?: number): FeedbackBlock {
   const b: FeedbackBlock = {
     templateKey: `feedback.${e.code}.${part}`,
     code: e.code,
     glyph: part === 'mistake' ? glyphOf(e.code) : 'info',
   };
-  if (e.params) b.params = e.params;
+  if (e.params) b.params = normalizeParams(e.params, tickSize);
   if (part === 'mistake' && e.markIds) b.markIds = e.markIds;
   return b;
 }
@@ -82,15 +83,15 @@ export function buildFeedback(input: FeedbackInput): Feedback {
     verdict,
     understood: ok.map((o) => {
       const b: FeedbackBlock = { templateKey: `feedback.ok.${o.code}`, code: o.code, glyph: 'match' };
-      if (o.params) b.params = o.params;
+      if (o.params) b.params = normalizeParams(o.params, input.tickSize);
       if (o.markIds) b.markIds = o.markIds;
       return b;
     }),
-    mistakes: errors.map((e) => block(e, 'mistake')),
-    why: errors.map((e) => block(e, 'why')),
-    howTo: errors.map((e) => block(e, 'howTo')),
+    mistakes: errors.map((e) => block(e, 'mistake', input.tickSize)),
+    why: errors.map((e) => block(e, 'why', input.tickSize)),
+    howTo: errors.map((e) => block(e, 'howTo', input.tickSize)),
     principle: worst
-      ? { templateKey: `feedback.${worst.code}.principle`, code: worst.code, ...(worst.params ? { params: worst.params } : {}), glyph: 'info' }
+      ? { templateKey: `feedback.${worst.code}.principle`, code: worst.code, ...(worst.params ? { params: normalizeParams(worst.params, input.tickSize) } : {}), glyph: 'info' }
       : { templateKey: `feedback.principle.${input.module}`, code: null, glyph: 'info' },
   };
 }

@@ -339,4 +339,10 @@ export interface GradeContext {
   iouMin: number;
   levelPricePct: number;
   scoped: boolean;
+  /** Ограничение эталона по времени ключевой свечи (openTime, мс, включительно): свободная разметка в терминале. */
+  range?: { from: number; to: number };
+  /** Ограничение эталона типами меток (подмножество, например те, что поставил пользователь). */
+  kinds?: readonly MarkKind[];
+  /** Шаг цены символа: params ошибок округляются по нему (по умолчанию 2 знака). */
+  tickSize?: number;
 }

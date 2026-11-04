@@ -37,4 +37,6 @@ export interface FeedbackInput {
   skillOutcomes?: readonly SkillOutcome[];
   /** Допуск по времени для OK_SWING ({tol}); по умолчанию 2. */
   toleranceCandles?: number;
+  /** Шаг цены символа: цены в params округляются по нему (по умолчанию 2 знака). */
+  tickSize?: number;
 }
