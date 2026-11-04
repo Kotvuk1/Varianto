@@ -25,7 +25,11 @@ async function pickVisible(page: Page, marks: Mark[], box: { x: number; y: numbe
 const THEME = process.env.SHOTS_THEME === 'light' ? 'light' : 'dark';
 
 test(`терминал: разметка из вывода ядра и разбор после «Проверить»`, async ({ page }, info) => {
-  if (THEME === 'light') await page.addInitScript(() => localStorage.setItem('tl:appearance', JSON.stringify({ theme: 'light', candleStyle: 'color' })));
+  if (THEME === 'light') {
+    await page.goto('/settings');
+    await page.getByRole('radio', { name: 'Светлая' }).click();
+    await page.locator('html[data-theme="light"]').waitFor();
+  }
   const chart = await openTerminal(page);
   const box = await chartBox(chart);
   const marks = await coreMarks(page);

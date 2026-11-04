@@ -14,16 +14,16 @@ const mk = (kind: Mark['kind'], anchors: Mark['anchors'], direction: Mark['direc
 describe('describeMark', () => {
   it('BOS: название с направлением, время свечи пробоя, цена уровня', () => {
     const m = mk('bos', [{ time: t - 3_600_000, price: 81950 }, { time: t, price: 81950 }], 'bull');
-    expect(plain(describeMark(m, fmt))).toBe('BOS вверх · 29 окт 08:00 · 81 950,0');
-    expect(plain(describeMark({ ...m, kind: 'choch', direction: 'bear' }, fmt))).toBe('CHoCH вниз · 29 окт 08:00 · 81 950,0');
+    expect(plain(describeMark(m, fmt))).toBe('BOS вверх · 29 октября, 08:00 · 81 950,0');
+    expect(plain(describeMark({ ...m, kind: 'choch', direction: 'bear' }, fmt))).toBe('CHoCH вниз · 29 октября, 08:00 · 81 950,0');
   });
   it('FVG и OB: направление и диапазон цен', () => {
     const f = mk('fvg', [{ time: t, price: 82000 }, { time: t + 1, price: 81900 }], 'bull');
-    expect(plain(describeMark(f, fmt))).toBe('FVG бычий · 29 окт 08:00 · 82 000,0 – 81 900,0');
-    expect(plain(describeMark({ ...f, kind: 'order-block', direction: 'bear' }, fmt))).toBe('Order Block медвежий · 29 окт 08:00 · 82 000,0 – 81 900,0');
+    expect(plain(describeMark(f, fmt))).toBe('FVG бычий · 29 октября, 08:00 · 82 000,0 – 81 900,0');
+    expect(plain(describeMark({ ...f, kind: 'order-block', direction: 'bear' }, fmt))).toBe('Order Block медвежий · 29 октября, 08:00 · 82 000,0 – 81 900,0');
   });
   it('swing и уровень: одна цена', () => {
-    expect(plain(describeMark(mk('swing-high', [{ time: t, price: 100.25 }]), fmt))).toBe('Swing High · 29 окт 08:00 · 100,3');
-    expect(plain(describeMark(mk('level', [{ time: t, price: 5 }]), fmt))).toBe('Уровень · 29 окт 08:00 · 5,0');
+    expect(plain(describeMark(mk('swing-high', [{ time: t, price: 100.25 }]), fmt))).toBe('Swing High · 29 октября, 08:00 · 100,3');
+    expect(plain(describeMark(mk('level', [{ time: t, price: 5 }]), fmt))).toBe('Уровень · 29 октября, 08:00 · 5,0');
   });
 });

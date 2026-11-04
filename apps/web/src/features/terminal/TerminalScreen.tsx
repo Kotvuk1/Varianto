@@ -89,7 +89,7 @@ export function TerminalScreen() {
 
   const runCheckNow = () => {
     if (!data.series) return;
-    const o = runCheck(data.series.candles, data.series.tf, marks);
+    const o = runCheck(data.series.candles, data.series.tf, marks, tickSizeFor(data.series.symbol));
     if (!o.ok) {
       setMessageState({ text: o.reason === 'no-candles' ? tx.checkNoCandles : tx.checkEmpty, marks });
       return;
@@ -228,7 +228,7 @@ export function TerminalScreen() {
               className="ml-1 inline-flex h-11 min-w-11 shrink-0 cursor-pointer items-center justify-center gap-1 rounded-md border border-border-strong px-2 text-sm font-medium lg:hidden"
             >
               <ListChecks size={20} strokeWidth={1.75} aria-hidden />
-              <span aria-hidden className="tnum">
+              <span className="tnum">
                 {marks.length}
               </span>
             </button>

@@ -71,7 +71,7 @@ export type CheckOutcome = { ok: true; result: CheckResult } | { ok: false; reas
  * Окно - от свечи первой метки пользователя до последней закрытой свечи; понятия - по типам меток.
  * Эталон строится по ВСЕМ закрытым свечам текущего ТФ (прогрев машины состояний).
  */
-export function runCheck(candles: readonly Candle[], tf: Timeframe, userMarks: readonly Mark[]): CheckOutcome {
+export function runCheck(candles: readonly Candle[], tf: Timeframe, userMarks: readonly Mark[], tickSize?: number): CheckOutcome {
   const closed = closedOnly(candles);
   if (closed.length < 20) return { ok: false, reason: 'no-candles' };
   const scored = userMarks.filter((m) => CONCEPT_OF[m.kind]);
@@ -81,7 +81,6 @@ export function runCheck(candles: readonly Candle[], tf: Timeframe, userMarks: r
   let from = closed.findIndex((c) => c.openTime >= first);
   if (from < 0) from = closed.length - 1;
   // Диапазон оценки (решение F-05): [первая метка пользователя, последняя + 3 свечи].
-  // SYNC-CORE: когда Core добавит опции range/kinds в buildAlgoMarkSet/gradeMarks, перейти на них; пока фильтруем здесь.
   const lastT = Math.max(...scored.map((m) => Math.max(...m.anchors.map((a) => a.time))));
   let lastIdx = closed.findIndex((c) => c.openTime >= lastT);
   if (lastIdx < 0) lastIdx = closed.length - 1;
@@ -89,13 +88,15 @@ export function runCheck(candles: readonly Candle[], tf: Timeframe, userMarks: r
   const r = analyzeStructure(closed, msParamsFor('medium'), { tf });
   // Внутренняя (internal) структура: пробои (BOS/CHoCH) обязательны наравне с внешними - иначе BOS на месте
   // внутреннего CHoCH нельзя разобрать; остальные внутренние объекты допустимы, но не обязательны.
-  const full = buildAlgoMarkSet(r, { concepts: [...concepts, 'internal-external'], window });
   // Только типы меток, поставленные пользователем (BOS и CHoCH различаются только вместе).
   const kinds = new Set<Mark['kind']>(scored.map((m) => m.kind));
   if (kinds.has('bos') || kinds.has('choch')) {
     kinds.add('bos');
     kinds.add('choch');
   }
+  const range = { from: closed[window.fromIndex]!.openTime, to: closed[window.toIndex]!.openTime };
+  const kindList = [...kinds];
+  const full = buildAlgoMarkSet(r, { concepts: [...concepts, 'internal-external'], window, range, kinds: kindList });
   const optional = (m: Mark) => (m.scope === 'internal' && m.kind !== 'bos' && m.kind !== 'choch') || !kinds.has(m.kind);
   const algo = {
     ...full,
@@ -110,6 +111,9 @@ export function runCheck(candles: readonly Candle[], tf: Timeframe, userMarks: r
     iouMin: 0.5,
     levelPricePct: 0.1,
     scoped: false,
+    range,
+    kinds: kindList,
+    ...(tickSize ? { tickSize } : {}),
   });
   const isMissed = (e: { code: string }) => /_MISS(ED|ING)$/.test(e.code);
   const feedbackOf = (errors: typeof grade.errors) =>

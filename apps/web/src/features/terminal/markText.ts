@@ -1,12 +1,9 @@
 import type { Mark } from '@tl/core';
+import { formatDateTime } from '@/i18n/format';
 import { tx } from './strings';
 
-/** «29 окт 08:00» в часовом поясе устройства (как подписи оси графика). */
-export function formatWhen(t: number): string {
-  const d = new Date(t);
-  const mon = d.toLocaleDateString('ru-RU', { month: 'short' }).replace('.', '');
-  return `${d.getDate()} ${mon} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
-}
+/** «29 октября, 08:00» (родительный падеж, локальный пояс). */
+export const formatWhen = formatDateTime;
 
 export function markName(m: Mark): string {
   const d = tx.dir;

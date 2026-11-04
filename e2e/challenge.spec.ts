@@ -73,7 +73,7 @@ test('LONG: SL/TP перетаскиванием -> проигрывание -> 
   // Попытка сохранена в IndexedDB и попадает в статистику.
   await page.goto('/learn/challenge');
   await expect(page.getByTestId('challenge-stats')).toBeVisible();
-  await expect(page.getByTestId('challenge-stats')).toContainText('Win rate');
+  await expect(page.getByTestId('challenge-stats')).toContainText('Доля прибыльных');
 });
 
 test('SHORT: SL с неверной стороны блокирует подтверждение мягким сообщением', async ({ page }) => {
