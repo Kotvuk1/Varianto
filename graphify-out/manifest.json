@@ -2501,6 +2501,12 @@
     "ast_hash": "c11c0cae0047060bd9a2f3c76c34a991",
     "semantic_hash": ""
   },
+  "docs/specs/FIBONACCI.md": {
+    "mtime": 1793831856.9893107,
+    "seen": 1793831878.8574731,
+    "ast_hash": "d82cdc70d86363fd2ae7e0880a481d07",
+    "semantic_hash": ""
+  },
   "pnpm-lock.yaml": {
     "mtime": 1793747545.3523655,
     "seen": 1793747726.9762306,
