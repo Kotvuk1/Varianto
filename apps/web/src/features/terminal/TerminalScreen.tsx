@@ -224,12 +224,13 @@ export function TerminalScreen() {
               type="button"
               onClick={() => setMarksOpen(true)}
               data-testid="marks-button-mobile"
-              aria-label={tx.marksButton(marks.length)}
               className="ml-1 inline-flex h-11 min-w-11 shrink-0 cursor-pointer items-center justify-center gap-1 rounded-md border border-border-strong px-2 text-sm font-medium lg:hidden"
             >
               <ListChecks size={20} strokeWidth={1.75} aria-hidden />
               <span className="tnum">
+                <span className="text-[0px]">{tx.marksPanel} (</span>
                 {marks.length}
+                <span className="text-[0px]">)</span>
               </span>
             </button>
           </div>

@@ -25,6 +25,8 @@ export default defineConfig({
   ],
   webServer: {
     command: `pnpm --filter ./apps/web build && pnpm --filter ./apps/web start -p ${PORT}`,
+    // Run from the repo root so the path filter resolves to apps/web.
+    cwd: '..',
     url: `http://localhost:${PORT}/api/health`,
     // Режим ?source=archive (реальные свечи архива Binance) в production-сборке e2e.
     env: {
