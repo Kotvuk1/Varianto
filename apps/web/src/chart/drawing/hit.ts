@@ -58,7 +58,7 @@ function partScore(p: Part, x: number, y: number, tol: number): number | null {
       return d <= tol ? d : null;
     }
     case 'text': {
-      const w = textWidth(p.text) || CHAR_W;
+      const w = textWidth(p.text, p.state) || CHAR_W;
       const r = { x1: p.x - w / 2, x2: p.x + w / 2, y1: p.y - PILL_H / 2, y2: p.y + PILL_H / 2 };
       if (inside(x, y, r)) return 0;
       const d = distToRectEdge(x, y, r);

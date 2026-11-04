@@ -26,6 +26,7 @@ import { limitCandles, toCandleData, toVolumeData } from './seriesData';
 import {
   defaultLogicalRange,
   logicalRangeFromWindow,
+  padRangeForMarks,
   windowFromLogicalRange,
   type TimeWindow,
 } from './sync/visibleRange';
@@ -188,7 +189,7 @@ export function TradingChart(props: TradingChartProps) {
         ...chartColors(t).timeScale,
         timeVisible: true,
         secondsVisible: false,
-        rightOffset: 5,
+        rightOffset: 8,
         minBarSpacing: 0.4,
         tickMarkFormatter: tickFormatter,
       },
@@ -500,7 +501,12 @@ export function TradingChart(props: TradingChartProps) {
             prev === null || prev.key !== key
               ? (props.visibleRange ?? (sameSymbol ? (lastWindow.current ?? oldWindow) : null))
               : oldWindow;
-          const range = target ? logicalRangeFromWindow(newIndex, target) : defaultLogicalRange(newIndex);
+          const base = target ? logicalRangeFromWindow(newIndex, target) : defaultLogicalRange(newIndex);
+          // метки у края окна не прилипают к границе: запас 5 свечей (F-13, F-22)
+          const range =
+            prev === null || prev.key !== key
+              ? padRangeForMarks(newIndex, base, [...propsRef.current.marks, ...(propsRef.current.readOnlyMarks ?? [])])
+              : base;
           ts.setVisibleLogicalRange(range);
           lastWindow.current = windowFromLogicalRange(newIndex, ts.getVisibleLogicalRange() ?? range);
         }
@@ -534,6 +540,8 @@ export function TradingChart(props: TradingChartProps) {
       className={props.className}
       style={{ position: 'relative', width: '100%', height: '100%', minHeight: 0 }}
       data-testid="chart"
+      role="group"
+      aria-label={props.ariaLabel ?? `${props.series.symbol} ${props.series.tf}`}
       data-candle-count={candles.length}
       data-mark-count={props.marks.length}
       data-tool={props.tool ?? ''}
@@ -543,8 +551,6 @@ export function TradingChart(props: TradingChartProps) {
     >
       <div
         ref={containerRef}
-        role="img"
-        aria-label={props.ariaLabel ?? `${props.series.symbol} ${props.series.tf}`}
         style={{ position: 'absolute', inset: 0, touchAction: 'none', userSelect: 'none' }}
       />
       {shown && (

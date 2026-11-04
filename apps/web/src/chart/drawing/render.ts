@@ -1,6 +1,6 @@
 // Canvas-рендер геометрии меток. Различие user/algo: заливка плашки и цвет (DESIGN 2.3); тип - форма и подпись.
 import type { ChartTokens } from '../theme/chartTokens';
-import { CHAR_W, PILL_H, type Dash, type MarkGeometry, type Part } from './layout';
+import { CHAR_W, PILL_H, STATE_GLYPH_W, type Dash, type MarkGeometry, type Part } from './layout';
 
 const DASH: Record<Dash, number[]> = { solid: [], dashed: [6, 4], dotted: [2, 3] };
 
@@ -19,6 +19,40 @@ function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: numbe
   ctx.arcTo(x, y + h, x, y, r);
   ctx.arcTo(x, y, x + w, y, r);
   ctx.closePath();
+}
+
+/** Глифы состояний (DESIGN §2.3): различаются формой, не цветом. */
+function drawStateGlyph(ctx: CanvasRenderingContext2D, state: 'match' | 'missed' | 'extra', cx: number, cy: number, color: string) {
+  const r = 5;
+  ctx.save();
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 1.5;
+  ctx.setLineDash([]);
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  if (state === 'extra') {
+    ctx.rect(cx - r, cy - r, r * 2, r * 2);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(cx - 2.5, cy - 2.5);
+    ctx.lineTo(cx + 2.5, cy + 2.5);
+    ctx.moveTo(cx + 2.5, cy - 2.5);
+    ctx.lineTo(cx - 2.5, cy + 2.5);
+    ctx.stroke();
+  } else {
+    if (state === 'missed') ctx.setLineDash([2, 2]);
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.stroke();
+    if (state === 'match') {
+      ctx.setLineDash([]);
+      ctx.beginPath();
+      ctx.moveTo(cx - 2.5, cy);
+      ctx.lineTo(cx - 0.7, cy + 2);
+      ctx.lineTo(cx + 2.7, cy - 2);
+      ctx.stroke();
+    }
+  }
+  ctx.restore();
 }
 
 function drawPart(ctx: CanvasRenderingContext2D, p: Part, color: string, on: string, fill: string, algo: boolean, t: ChartTokens) {
@@ -89,7 +123,8 @@ function drawPart(ctx: CanvasRenderingContext2D, p: Part, color: string, on: str
     }
     case 'text': {
       ctx.font = `600 11px ${t.fontSans}`;
-      const w = Math.max(ctx.measureText(p.text).width, p.text.length * CHAR_W * 0.6) + 12;
+      const gw = p.state ? STATE_GLYPH_W : 0;
+      const w = Math.max(ctx.measureText(p.text).width, p.text.length * CHAR_W * 0.6) + 12 + gw;
       const x = p.x - w / 2;
       const y = p.y - PILL_H / 2;
       roundRect(ctx, x, y, w, PILL_H, 4);
@@ -102,7 +137,8 @@ function drawPart(ctx: CanvasRenderingContext2D, p: Part, color: string, on: str
       ctx.fillStyle = algo ? on : t.text1;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillText(p.text, p.x, p.y + 0.5);
+      ctx.fillText(p.text, p.x + gw / 2, p.y + 0.5);
+      if (p.state) drawStateGlyph(ctx, p.state, x + 6 + 5, p.y, algo ? on : t.text1);
       break;
     }
   }

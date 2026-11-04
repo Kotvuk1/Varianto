@@ -12,7 +12,7 @@ export type Part =
   | { t: 'rect'; x1: number; y1: number; x2: number; y2: number; dash: Dash; hatch: boolean }
   | { t: 'glyph'; g: GlyphKind; x: number; y: number }
   /** Подпись-плашка (залитая у user, контурная у algo). (x, y) - центр. */
-  | { t: 'text'; text: string; x: number; y: number };
+  | { t: 'text'; text: string; x: number; y: number; state?: MarkState };
 
 export interface Handle {
   x: number;
@@ -33,9 +33,12 @@ export const PILL_H = 18;
 /** Форматер по умолчанию (если tickSize неизвестен): 2 знака, пробел-разделитель, запятая. */
 export const formatPrice = makePriceFormatter(0.01);
 
-/** Состояние метки после проверки: подпись получает значок (галочка / вопрос / крест), форма сохраняется. */
+/**
+ * Состояние метки после проверки: слева в плашке рисуется глиф DESIGN §2.3 (match - галочка в круге,
+ * missed - пунктирный круг, extra - квадрат с крестом); форма метки сохраняется.
+ */
 export type MarkState = 'match' | 'missed' | 'extra';
-export const STATE_PREFIX: Record<MarkState, string> = { match: '✓ ', missed: '? ', extra: '✕ ' };
+export const STATE_GLYPH_W = 16;
 
 export interface GeometryOptions {
   state?: MarkState;
@@ -43,7 +46,7 @@ export interface GeometryOptions {
   fmt?: (price: number) => string;
 }
 
-export const textWidth = (text: string): number => text.length * CHAR_W + 12;
+export const textWidth = (text: string, state?: MarkState): number => text.length * CHAR_W + 12 + (state ? STATE_GLYPH_W : 0);
 
 /** Грубая проверка видимости до построения геометрии (дёшево, O(anchors)). */
 export function isMarkVisible(mark: Mark, proj: Projection, margin = 60): boolean {
@@ -65,7 +68,7 @@ export function isMarkVisible(mark: Mark, proj: Projection, margin = 60): boolea
 export function keepTextsInside(parts: Part[], width: number, pad = 2): Part[] {
   return parts.map((p) => {
     if (p.t !== 'text') return p;
-    const half = textWidth(p.text) / 2;
+    const half = textWidth(p.text, p.state) / 2;
     const x = Math.max(half + pad, Math.min(p.x, width - half - pad));
     return x === p.x ? p : { ...p, x };
   });
@@ -93,10 +96,17 @@ export function buildGeometry(mark: Mark, proj: Projection, opts: GeometryOption
   const algo = mark.author === 'algo';
   // internal-слой: общепринятая SMC-нотация iBOS / iCHoCH
   const scoped = (kind === 'bos' || kind === 'choch') && mark.scope === 'internal' ? `i${baseLabel}` : baseLabel;
-  const label = (opts.state ? STATE_PREFIX[opts.state] : '') + scoped;
+  const label = scoped;
 
   if (!p0) return { mark, parts, handles };
-  const done = () => ({ mark, parts: keepTextsInside(parts, proj.width), handles });
+  const done = () => ({
+    mark,
+    parts: keepTextsInside(
+      opts.state ? parts.map((p) => (p.t === 'text' && p.text === label ? { ...p, state: opts.state! } : p)) : parts,
+      proj.width,
+    ),
+    handles,
+  });
 
   switch (kind) {
     case 'swing-high':
@@ -135,7 +145,7 @@ export function buildGeometry(mark: Mark, proj: Projection, opts: GeometryOption
       const r = norm(p0.x, p0.y, p1.x, p1.y);
       parts.push({ t: 'rect', ...r, dash: kind === 'fvg' ? 'dashed' : 'solid', hatch: kind === 'fvg' });
       // подпись над верхней границей зоны, у левого края
-      parts.push({ t: 'text', text: label, x: Math.min(r.x1 + textWidth(label) / 2, proj.width - textWidth(label) / 2 - 2), y: algo ? r.y2 + PILL_H / 2 + 2 : r.y1 - PILL_H / 2 - 2 });
+      parts.push({ t: 'text', text: label, x: Math.min(r.x1 + textWidth(label, opts.state) / 2, proj.width - textWidth(label, opts.state) / 2 - 2), y: algo ? r.y2 + PILL_H / 2 + 2 : r.y1 - PILL_H / 2 - 2 });
       break;
     }
     case 'level':
