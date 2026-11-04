@@ -616,17 +616,20 @@ export function gradeMarks(user: readonly Mark[], algo: AlgoMarkSet, ctx: GradeC
   const denom = algoEntries.length + extraAll.length;
   const score = denom === 0 ? 1 : sumW / denom;
   const hasMajor = errors.some((e) => e.severity === 'major');
-  const verdict: Verdict = score >= 0.85 && !hasMajor ? 'correct' : score >= 0.5 ? 'partial' : 'incorrect';
+  const verdict: Verdict = score >= 0.8 && !hasMajor ? 'correct' : score >= 0.4 ? 'partial' : 'incorrect';
 
   // ---- навыки ----
-  const tot = new Map<SkillId, { correct: number; total: number }>();
-  const bump = (s: SkillId, field: 'correct' | 'total') => {
-    const cur = tot.get(s) ?? { correct: 0, total: 0 };
+  const tot = new Map<SkillId, { correct: number; total: number; extra: number }>();
+  const bump = (s: SkillId, field: 'correct' | 'total' | 'extra') => {
+    const cur = tot.get(s) ?? { correct: 0, total: 0, extra: 0 };
     cur[field]++;
     tot.set(s, cur);
   };
   for (const a of algoEntries) bump(a.skill, 'total');
-  for (const u of extraAll) bump(u.skill, 'total');
+  for (const u of extraAll) {
+    bump(u.skill, 'total');
+    bump(u.skill, 'extra');
+  }
   for (const p of okPairs) bump(p.a.skill, 'correct');
   if (ctx.scoped) {
     for (const p of pairs) {
@@ -638,7 +641,7 @@ export function gradeMarks(user: readonly Mark[], algo: AlgoMarkSet, ctx: GradeC
   const skillOutcomes: SkillOutcome[] = [...tot.entries()]
     .filter(([, v]) => v.total >= 1)
     .sort((a, b) => (a[0] < b[0] ? -1 : 1))
-    .map(([skill, v]) => ({ skill, correct: v.correct, total: v.total }));
+    .map(([skill, v]) => ({ skill, correct: v.correct, total: v.total, ...(v.extra > 0 ? { extra: v.extra } : {}) }));
 
   const sortedPairs = [...pairs].sort((x, y) => x.u.lo - y.u.lo || (x.u.mark.id < y.u.mark.id ? -1 : 1));
   const keyOrd = (a: Entry, b: Entry) => a.lo - b.lo || (a.mark.id < b.mark.id ? -1 : a.mark.id > b.mark.id ? 1 : 0);

@@ -8,7 +8,7 @@ import { ApiError, ConfigError } from './errors';
 
 export const TOKEN_VERSION = 'v1';
 export const TOKEN_TTL_MS = 24 * 3_600_000;
-const MIN_SECRET_LENGTH = 16;
+const MIN_SECRET_LENGTH = 32;
 const DEV_SECRET = 'trading-lab-DEV-ONLY-signing-secret-do-not-use-in-production';
 
 const HeaderSchema = z
@@ -45,8 +45,9 @@ let devWarned = false;
 export function getSigningSecret(env: NodeJS.ProcessEnv = process.env): string {
   const s = env.TASK_SIGNING_SECRET;
   if (s && s.length >= MIN_SECRET_LENGTH) return s;
-  if (env.NODE_ENV === 'production') {
-    console.error('[token] TASK_SIGNING_SECRET is missing or shorter than 16 chars in production');
+  // На Vercel (любой NODE_ENV/VERCEL_ENV) и в production dev-ключ недопустим.
+  if (env.NODE_ENV === 'production' || env.VERCEL || env.VERCEL_ENV) {
+    console.error(`[token] TASK_SIGNING_SECRET is missing or shorter than ${MIN_SECRET_LENGTH} chars in production/Vercel`);
     throw new ConfigError('TASK_SIGNING_SECRET is not configured');
   }
   if (!devWarned && env.NODE_ENV !== 'test') {

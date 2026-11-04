@@ -55,3 +55,33 @@ export function localDay(utcMs: number): string {
   const d = new Date(utcMs);
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
+
+const MONTHS_GEN = ['января', 'февраля', 'марта', 'апреля', 'мая', 'июня', 'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'];
+
+/** «5 марта» (родительный падеж), локальный пояс. */
+export function formatDayMonth(utcMs: number): string {
+  const d = new Date(utcMs);
+  return `${d.getDate()} ${MONTHS_GEN[d.getMonth()]}`;
+}
+
+/** «5 марта, 17:00»: месяц в родительном падеже, время локальное. */
+export function formatDateTime(utcMs: number): string {
+  return `${formatDayMonth(utcMs)}, ${formatTime(utcMs)}`;
+}
+
+/** Число не более чем с `maxDecimals` знаками, десятичная запятая: 0.2034 -> «0,2», 2.0000000000000338 -> «2». */
+export function formatDecimal(n: number, maxDecimals = 2): string {
+  const [int = '', frac] = Math.abs(Number(n.toFixed(maxDecimals))).toString().split('.');
+  const body = formatInt(Number(int)) + (frac ? `,${frac}` : '');
+  return n < 0 && Number(n.toFixed(maxDecimals)) !== 0 ? `−${body}` : body;
+}
+
+/** Значение уже в процентах (0.2 -> «0,2%»). */
+export function formatPercentValue(pct: number): string {
+  return `${formatDecimal(pct)}%`;
+}
+
+/** R по-русски: «2 R», «−1,5 R» (без плюса, запятая). */
+export function formatRValue(r: number): string {
+  return `${formatDecimal(r)}${NBSP}R`;
+}

@@ -31,11 +31,23 @@ describe('GET /api/cron/keepalive', () => {
   });
   it('верный секрет: пингует REST с anon-ключом', async () => {
     env(true);
-    const f = vi.fn().mockResolvedValue(new Response('[]', { status: 200 }));
+    const f = vi.fn().mockResolvedValue(new Response('1', { status: 200 }));
     vi.stubGlobal('fetch', f);
     expect((await GET(req('Bearer s3cret'))).status).toBe(200);
-    expect(f.mock.calls[0]![0]).toBe('https://p.supabase.co/rest/v1/profiles?select=id&limit=1');
+    expect(f.mock.calls[0]![0]).toBe('https://p.supabase.co/rest/v1/rpc/keepalive');
+    expect(f.mock.calls[0]![1].method).toBe('POST');
     expect(f.mock.calls[0]![1].headers.apikey).toBe('anon');
+  });
+  it('секрет другой длины / префикс: 401 без падения timingSafeEqual', async () => {
+    env(true);
+    vi.stubGlobal('fetch', vi.fn());
+    expect((await GET(req('Bearer s3cret-and-more'))).status).toBe(401);
+    expect((await GET(req('Bearer s3'))).status).toBe(401);
+  });
+  it('ответ Supabase не 2xx: 502', async () => {
+    env(true);
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response('no', { status: 401 })));
+    expect((await GET(req('Bearer s3cret'))).status).toBe(502);
   });
   it('ошибка Supabase: 502', async () => {
     env(true);

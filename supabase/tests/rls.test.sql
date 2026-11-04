@@ -72,5 +72,16 @@ set role anon;
 select pg_temp.expect_error('select 1 from public.attempts');
 select pg_temp.expect_error('insert into public.settings (data) values (''{}'')');
 
+select pg_temp.expect_count('select public.keepalive()', 1);
 reset role;
+
+-- 8. ограничения размера jsonb (0002); keepalive доступен anon
+set role authenticated;
+select set_config('request.jwt.claim.sub', '11111111-1111-1111-1111-111111111111', false);
+select pg_temp.expect_error($q$insert into public.settings (data) values (to_jsonb(repeat(md5(random()::text), 20000)))$q$);
+select pg_temp.expect_error($q$update public.terminal_marks set marks = to_jsonb(array(select md5(i::text || random()::text) from generate_series(1, 20000) i))$q$);
+select pg_temp.expect_error($q$insert into public.attempts (module, task_id, task_token_payload, answer, grade, algo_version, correct, local_day)
+  values ('challenge','big','{}', to_jsonb(array(select md5(i::text || random()::text) from generate_series(1, 20000) i)),'{}','1',true,'2026-11-03')$q$);
+reset role;
+
 select 'RLS TESTS PASSED' as result;

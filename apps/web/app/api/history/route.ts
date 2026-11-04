@@ -2,6 +2,8 @@ import { z } from 'zod';
 import { TIMEFRAME_MS, type CandleSeries } from '@tl/core';
 import { ArchiveError, findGaps } from '@tl/market-data';
 import { ArchiveSource } from '@tl/market-data/archive';
+import { getHistoryLimiter } from '../../../src/server/deps';
+import { clientKey } from '../../../src/server/rate-limit';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -10,6 +12,8 @@ export const dynamic = 'force-dynamic';
 const SYMBOLS = ['BTCUSDT', 'ETHUSDT', 'SOLUSDT'] as const;
 const TIMEFRAMES = ['1m', '15m', '1h', '4h', '1d'] as const;
 const MAX_CANDLES = 5000;
+// Начало USDⓈ-M BTCUSDT на Binance; для ETH/SOL более поздний листинг отсекает 404 архива.
+export const ARCHIVE_START_MS = Date.UTC(2019, 8, 1);
 const MIN_AGE_MS = 2 * 86_400_000;
 
 const CACHE_IMMUTABLE = 'public, max-age=31536000, s-maxage=31536000, immutable';
@@ -43,6 +47,7 @@ const querySchema = z
   .superRefine((v, ctx) => {
     const step = TIMEFRAME_MS[v.tf];
     const add = (path: string, message: string) => ctx.addIssue({ code: 'custom', path: [path], message });
+    if (v.from < ARCHIVE_START_MS) add('from', 'OUT_OF_RANGE');
     if (v.to <= v.from) add('to', 'OUT_OF_RANGE');
     if (v.from % step !== 0) add('from', 'RANGE_NOT_ALIGNED');
     if (v.to % step !== 0) add('to', 'RANGE_NOT_ALIGNED');
@@ -63,6 +68,13 @@ function errorResponse(
 }
 
 export async function GET(request: Request): Promise<Response> {
+  const rl = getHistoryLimiter().take(clientKey(request.headers));
+  if (!rl.ok) {
+    return Response.json(
+      { error: { code: 'rate_limited', message: 'Too many requests' } },
+      { status: 429, headers: { 'Cache-Control': 'no-store', 'Retry-After': String(rl.retryAfterSec) } },
+    );
+  }
   const params = Object.fromEntries(new URL(request.url).searchParams);
   const parsed = querySchema.safeParse(params);
   if (!parsed.success) {

@@ -104,7 +104,7 @@ describe('шаблоны (ALGORITHMS §17)', () => {
     }
   });
   it('fillTemplate подставляет параметры, неизвестные оставляет', () => {
-    expect(fillTemplate(flat['feedback.verdict.correct']!, { matched: 10, total: 11, score: 91 })).toBe('Верно: 10 из 11 совпало (91%).');
+    expect(fillTemplate(flat['feedback.verdict.correct']!, { matched: 10, total: 11, score: 91 })).toBe('Верно: совпало 10 из 11 эталонных меток. Оценка 91% учитывает точность и лишние метки.');
     expect(fillTemplate('Пропущен {a} и {b}', { a: 1 })).toBe('Пропущен 1 и {b}');
     expect(fillTemplate('{a}')).toBe('{a}');
   });
@@ -120,9 +120,19 @@ describe('шаблоны (ALGORITHMS §17)', () => {
       ],
     });
     const text = fillTemplate(flat[fb.verdict.templateKey]!, fb.verdict.params);
-    expect(text).toBe('Неверно: 2 из 6 совпало (4%). Разберём, что пошло не так.');
+    expect(text).toBe('Неверно: совпало 2 из 6 эталонных меток. Оценка 4% учитывает точность и лишние метки.');
     const plain = buildFeedback({ module: 'price-action', verdict: 'incorrect', score: 0, errors: [] });
     expect(fillTemplate(flat[plain.verdict.templateKey]!, plain.verdict.params)).not.toMatch(/\{|совпадения/);
+  });
+  it('D-01: лишние метки не входят в знаменатель «N из M»', () => {
+    const fb = buildFeedback({
+      module: 'market-structure',
+      verdict: 'incorrect',
+      score: 0,
+      errors: [],
+      skillOutcomes: [{ skill: 'swing', correct: 0, total: 6, extra: 1 }],
+    });
+    expect(fb.verdict.params).toMatchObject({ matched: 0, total: 5, score: 0 });
   });
   it('Challenge: вердикт по качеству, без «совпадения с эталоном»', () => {
     const fb = buildFeedback({ module: 'challenge', verdict: 'correct', score: 0.8, errors: [] });

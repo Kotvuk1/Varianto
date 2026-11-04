@@ -131,3 +131,19 @@ describe('GET /api/history: ошибки архива', () => {
     expect(JSON.stringify(e)).not.toContain('secret');
   });
 });
+
+describe('GET /api/history: безопасность', () => {
+  it('from раньше 2019-09-01: 400 OUT_OF_RANGE, архив не трогаем', async () => {
+    const res = await call({ ...ok, from: '0', to: String(86_400_000) });
+    expect(res.status).toBe(400);
+    expect(getMock).not.toHaveBeenCalled();
+  });
+  it('rate limit: 120 запросов проходят, 121-й получает 429 с Retry-After', async () => {
+    const hdr = { 'x-real-ip': '9.9.9.9' };
+    const go = () => GET(new Request(`http://localhost/api/history?${new URLSearchParams(ok)}`, { headers: hdr }));
+    for (let i = 0; i < 120; i++) expect((await go()).status).toBe(200);
+    const res = await go();
+    expect(res.status).toBe(429);
+    expect(Number(res.headers.get('Retry-After'))).toBeGreaterThan(0);
+  });
+});

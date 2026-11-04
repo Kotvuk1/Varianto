@@ -14,7 +14,7 @@ pnpm build
 pnpm test:e2e     # Playwright, порт 3100, проекты mobile и desktop
 ```
 
-Скопируйте `.env.example` в `.env.local` и заполните `TASK_SIGNING_SECRET` (`openssl rand -base64 32`). Секреты хранятся только в env Vercel / GitHub Actions.
+Скопируйте `.env.example` в `.env.local` и заполните `TASK_SIGNING_SECRET` (минимум 32 символа: `openssl rand -base64 48`; на Vercel без него сервер заданий не стартует). Секреты хранятся только в env Vercel / GitHub Actions.
 
 ## Структура
 

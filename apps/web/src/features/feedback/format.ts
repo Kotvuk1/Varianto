@@ -1,3 +1,4 @@
+import { formatDateTime, formatDecimal, formatPercentValue, formatRValue } from '@/i18n/format';
 import { fillTemplate, flattenTemplates, kindName } from '@tl/core';
 
 const TIME_KEYS = new Set(['time', 'refTime', 'eventTime', 'fromTime', 'toTime']);
@@ -8,20 +9,33 @@ const DIR: Record<string, string> = { bull: 'бычий', bear: 'медвежи�
 let templates: Record<string, string> | null = null;
 
 export function formatWhen(t: number): string {
-  const d = new Date(t);
-  const mon = d.toLocaleDateString('ru-RU', { month: 'short' }).replace('.', '');
-  return `${d.getDate()} ${mon} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+  return formatDateTime(t);
 }
 
-/** Значение параметра для текста: время - локальное, цены - единым форматером, типы меток - через словарь имён. */
+const PCT_KEYS = new Set(['devPct', 'tolPct', 'pct', 'tolerancePct', 'deviationPct']);
+const R_KEYS = new Set(['rr', 'r', 'rMultiple']);
+const TREND: Record<string, string> = { up: 'восходящий', down: 'нисходящий', range: 'боковик', bull: 'бычий', bear: 'медвежий', none: 'не задано' };
+const TF_KEYS = new Set(['htfTf', 'trendTf', 'tf', 'htf']);
+const TREND_KEYS = new Set(['trend', 'htfTrend', 'trendTf', 'given', 'expected', 'dir']);
+const SIDE: Record<string, string> = { LONG: 'лонг', SHORT: 'шорт', long: 'лонг', short: 'шорт' };
+
+/**
+ * Значение параметра для текста. Временный адаптер на месте `formatFeedbackParams` ядра
+ * (там же словари enum и округление): время локальное, цены - форматером графика, % и R с запятой.
+ */
 export function formatParam(key: string, v: string | number, fmtPrice: (p: number) => string): string | number {
   if (typeof v === 'number') {
     if (TIME_KEYS.has(key)) return formatWhen(v);
+    if (PCT_KEYS.has(key)) return formatPercentValue(v);
+    if (R_KEYS.has(key)) return formatRValue(v);
     if (PRICE_KEYS.has(key) || (KIND_KEYS.has(key) && v > 1)) return fmtPrice(v);
-    return v;
+    return Number.isInteger(v) ? v : formatDecimal(v);
   }
+  if (KIND_KEYS.has(key) && TREND_KEYS.has(key) && TREND[v]) return TREND[v]!;
   if (KIND_KEYS.has(key)) return DIR[v] ?? kindName(v);
-  if (key === 'dir') return DIR[v] ?? v;
+  if (TF_KEYS.has(key) && /^\d+[mhdw]$/i.test(v)) return v.toUpperCase();
+  if (TREND_KEYS.has(key) && TREND[v]) return TREND[v]!;
+  if (key === 'side' && SIDE[v]) return SIDE[v]!;
   return v;
 }
 

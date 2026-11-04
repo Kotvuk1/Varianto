@@ -180,8 +180,10 @@ export type OkCode =
 export interface SkillOutcome {
   skill: SkillId;
   correct: number;
-  /** >= 1 */
+  /** >= 1. Включает лишние метки пользователя (для точности навыка). */
   total: number;
+  /** Сколько из `total` — лишние метки пользователя без пары в эталоне (D-01: знаменатель вердикта = total - extra). */
+  extra?: number;
 }
 
 export interface GradeError {

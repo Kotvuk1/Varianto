@@ -91,6 +91,12 @@ describe('getSigningSecret', () => {
     const err = vi.spyOn(console, 'error').mockImplementation(() => undefined);
     expect(() => getSigningSecret({ NODE_ENV: 'production' } as NodeJS.ProcessEnv)).toThrow(ConfigError);
     expect(() => getSigningSecret({ NODE_ENV: 'production', TASK_SIGNING_SECRET: 'short' } as NodeJS.ProcessEnv)).toThrow(ConfigError);
+  });
+
+  it('на Vercel без секрета или с коротким (<32) падает независимо от NODE_ENV', () => {
+    expect(() => getSigningSecret({ VERCEL: '1', NODE_ENV: 'development' } as NodeJS.ProcessEnv)).toThrow(ConfigError);
+    expect(() => getSigningSecret({ VERCEL: '1', NODE_ENV: 'test', TASK_SIGNING_SECRET: 'x'.repeat(31) } as NodeJS.ProcessEnv)).toThrow(ConfigError);
+    expect(getSigningSecret({ VERCEL: '1', TASK_SIGNING_SECRET: 'x'.repeat(32) } as NodeJS.ProcessEnv)).toBe('x'.repeat(32));
     expect(err).toHaveBeenCalled();
   });
   it('development без секрета -> dev-ключ с предупреждением', () => {

@@ -33,6 +33,9 @@ export default defineConfig({
       TASK_SIGNING_SECRET: process.env.TASK_SIGNING_SECRET ?? 'e2e-only-task-signing-secret-not-for-production',
       // Route server-side archive fetches through the container proxy when present.
       NODE_USE_ENV_PROXY: '1',
+      // Все e2e идут с одного IP: поднимаем лимиты только для тестового сервера (D-07).
+      RATE_LIMIT_TASKS_PER_MIN: '100000',
+      RATE_LIMIT_HISTORY_PER_MIN: '100000',
     },
     reuseExistingServer: !process.env.CI,
     timeout: 240_000,

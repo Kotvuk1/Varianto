@@ -55,14 +55,14 @@ function block(e: GradeError, part: 'mistake' | 'why' | 'howTo'): FeedbackBlock 
   return b;
 }
 
-/** «N из M»: сумма исходов навыков (internal-external - производный счёт по тем же меткам, не суммируется). */
+/** «N из M»: M — число эталонных меток (лишние метки пользователя в знаменатель не входят, D-01); сумма исходов навыков (internal-external - производный счёт по тем же меткам, не суммируется). */
 function matchedOf(outcomes: readonly SkillOutcome[] | undefined): { matched: number; total: number } | null {
   let matched = 0;
   let total = 0;
   for (const o of outcomes ?? []) {
     if (o.skill === 'internal-external') continue;
     matched += o.correct;
-    total += o.total;
+    total += o.total - (o.extra ?? 0);
   }
   return total > 0 ? { matched, total } : null;
 }

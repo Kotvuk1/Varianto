@@ -1,6 +1,6 @@
 // Тексты Market Structure (COPY.md §7, ALGORITHMS §13). Термины SMC на английском с расшифровкой.
 import type { SkillId } from '@tl/core';
-import { plural } from '@/i18n/format';
+import { formatDateTime, plural } from '@/i18n/format';
 
 export const msTx = {
   title: 'Market Structure',
@@ -99,12 +99,8 @@ export const msReference = (key: string): string => {
 };
 
 type P = Record<string, string | number> | undefined;
-const DAY_MONTH = new Intl.DateTimeFormat('ru', { day: 'numeric', month: 'long' });
 /** «2 мая, 14:00»: месяц в родительном падеже, время в локальном поясе. */
-export function formatDateTimeRu(t: number): string {
-  const d = new Date(t);
-  return `${DAY_MONTH.format(d)}, ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
-}
+export const formatDateTimeRu = formatDateTime;
 const fmtTime = (t: unknown) => (typeof t === 'number' ? formatDateTimeRu(t) : '');
 const fmtNum = (v: unknown) => (typeof v === 'number' ? String(v).replace(/\B(?=(\d{3})+(?!\d))/g, ' ') : String(v ?? ''));
 
