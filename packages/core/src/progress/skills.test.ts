@@ -127,6 +127,9 @@ describe('навык -> генератор', () => {
 });
 
 describe('generatorForSkill: Fibonacci (FIBONACCI.md §10)', () => {
+  it('навыки ew-* -> модуль elliott (kind определяет сложность, focus не меняет генератор)', () => {
+    for (const s of ['ew-impulse', 'ew-correction', 'ew-rules', 'ew-invalidation'] as const) expect(generatorForSkill(s)).toEqual({ module: 'elliott' });
+  });
   it('fib-reaction и premium-discount -> reaction; fib-extension -> extension', () => {
     expect(generatorForSkill('fib-reaction')).toEqual({ module: 'fibonacci', taskType: 'reaction' });
     expect(generatorForSkill('premium-discount')).toEqual({ module: 'fibonacci', taskType: 'reaction' });

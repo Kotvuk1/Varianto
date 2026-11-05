@@ -1,0 +1,216 @@
+{
+ "algoVersion": "1.0.0",
+ "author": "technical-analyst (ELLIOTT.md §15); перенесено backend-разработчиком, правила §19 применены",
+ "date": "2026-11-05",
+ "source": [
+  {
+   "file": "klines/BTCUSDT/4h/BTCUSDT-4h-2026-07.csv",
+   "sha256": "3f315145e54edb7d5d0b30ddb68bc79b333171b5f6e66b303414436a8846e101"
+  },
+  {
+   "file": "klines/BTCUSDT/4h/BTCUSDT-4h-2026-08.csv",
+   "sha256": "e8a295e3633bb365db324a7d08b0e1512d2eb371d4d193a29d083a2837ed14d2"
+  },
+  {
+   "file": "klines/BTCUSDT/4h/BTCUSDT-4h-2026-09.csv",
+   "sha256": "83ab0cd5a285a747946fcc17684ecafe368a6d982f000f1890e76136e8b3b92a"
+  }
+ ],
+ "rationale": "EW-5: expanded flat (B за точкой 5); zigzag запрещён; по §19 invalidation = C: касание на 09-01 16:00, закрытие за C на 09-02 08:00 (ELLIOTT.md §15.2 EW-5).",
+ "cases": [
+  {
+   "function": "checkCount",
+   "name": "expanded-flat",
+   "params": {
+    "series": "EW-4",
+    "tf": "4h",
+    "upTo": "2026-08-29T12:00",
+    "impulse": [
+     [
+      "2026-08-01T16:00",
+      "low"
+     ],
+     [
+      "2026-08-09T20:00",
+      "high"
+     ],
+     [
+      "2026-08-14T12:00",
+      "low"
+     ],
+     [
+      "2026-08-21T08:00",
+      "high"
+     ],
+     [
+      "2026-08-23T04:00",
+      "low"
+     ],
+     [
+      "2026-08-25T00:00",
+      "high"
+     ]
+    ],
+    "correction": {
+     "type": "flat",
+     "anchors": [
+      [
+       "2026-08-26T12:00",
+       "low"
+      ],
+      [
+       "2026-08-28T00:00",
+       "high"
+      ],
+      [
+       "2026-08-28T16:00",
+       "low"
+      ]
+     ]
+    }
+   },
+   "expected": {
+    "ratios": {
+     "retrB": 1.0625,
+     "cBeyond": 0.2035,
+     "cLen": 1.266,
+     "corrRetr": 0.232
+    },
+    "validTypes": [
+     "flat"
+    ],
+    "failedGuides": [
+     "w2-depth",
+     "w5-ratio",
+     "flat-c"
+    ],
+    "blockingErrors": []
+   }
+  },
+  {
+   "function": "checkCount",
+   "name": "zigzag-forbidden",
+   "params": {
+    "series": "EW-4",
+    "tf": "4h",
+    "upTo": "2026-08-29T12:00",
+    "impulse": [
+     [
+      "2026-08-01T16:00",
+      "low"
+     ],
+     [
+      "2026-08-09T20:00",
+      "high"
+     ],
+     [
+      "2026-08-14T12:00",
+      "low"
+     ],
+     [
+      "2026-08-21T08:00",
+      "high"
+     ],
+     [
+      "2026-08-23T04:00",
+      "low"
+     ],
+     [
+      "2026-08-25T00:00",
+      "high"
+     ]
+    ],
+    "correction": {
+     "type": "zigzag",
+     "anchors": [
+      [
+       "2026-08-26T12:00",
+       "low"
+      ],
+      [
+       "2026-08-28T00:00",
+       "high"
+      ],
+      [
+       "2026-08-28T16:00",
+       "low"
+      ]
+     ]
+    }
+   },
+   "expected": {
+    "blockingErrors": [
+     "EW_ZIGZAG_B_TOO_DEEP"
+    ],
+    "validTypes": [
+     "flat"
+    ]
+   }
+  },
+  {
+   "function": "resolveScenario",
+   "name": "alt-after-invalidation-C-rule",
+   "params": {
+    "series": "EW-4",
+    "tf": "4h",
+    "T": "2026-08-29T12:00",
+    "impulse": [
+     [
+      "2026-08-01T16:00",
+      "low"
+     ],
+     [
+      "2026-08-09T20:00",
+      "high"
+     ],
+     [
+      "2026-08-14T12:00",
+      "low"
+     ],
+     [
+      "2026-08-21T08:00",
+      "high"
+     ],
+     [
+      "2026-08-23T04:00",
+      "low"
+     ],
+     [
+      "2026-08-25T00:00",
+      "high"
+     ]
+    ],
+    "correction": {
+     "type": "flat",
+     "anchors": [
+      [
+       "2026-08-26T12:00",
+       "low"
+      ],
+      [
+       "2026-08-28T00:00",
+       "high"
+      ],
+      [
+       "2026-08-28T16:00",
+       "low"
+      ]
+     ]
+    },
+    "primary": "trend-next",
+    "alternative": "correction-extends",
+    "limit": 60
+   },
+   "expected": {
+    "kind": "invalidated",
+    "time": "2026-09-01T16:00",
+    "altAfterInvalidation": "2026-09-02T08:00",
+    "levels": {
+     "invalidation": 76853.1,
+     "confirm": 81500.0,
+     "altConfirm": 76853.1
+    }
+   }
+  }
+ ]
+}

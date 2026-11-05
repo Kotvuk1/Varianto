@@ -83,11 +83,13 @@ select pg_temp.expect_error($q$update public.terminal_marks set marks = to_jsonb
 select pg_temp.expect_error($q$insert into public.attempts (module, task_id, task_token_payload, answer, grade, algo_version, correct, local_day)
   values ('challenge','big','{}', to_jsonb(array(select md5(i::text || random()::text) from generate_series(1, 20000) i)),'{}','1',true,'2026-11-03')$q$);
 
--- 0003: модуль fibonacci допустим, неизвестный модуль - нет
+-- 0003/0004: модули fibonacci и elliott допустимы, неизвестный модуль - нет
 insert into public.attempts (module, task_id, task_token_payload, answer, grade, algo_version, correct, local_day)
   values ('fibonacci', 'fib1', '{}', '{}', '{"verdict":"correct"}', '1.2.0', true, '2026-11-04');
+insert into public.attempts (module, task_id, task_token_payload, answer, grade, algo_version, correct, local_day)
+  values ('elliott', 'ew1', '{}', '{}', '{"verdict":"correct"}', '1.3.0', true, '2026-11-05');
 select pg_temp.expect_error($q$insert into public.attempts (module, task_id, task_token_payload, answer, grade, algo_version, correct, local_day)
-  values ('elliott','x','{}','{}','{}','1',true,'2026-11-04')$q$);
+  values ('chess','x','{}','{}','{}','1',true,'2026-11-05')$q$);
 reset role;
 
 select 'RLS TESTS PASSED' as result;

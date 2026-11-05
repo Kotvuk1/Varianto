@@ -104,11 +104,18 @@ export type SkillGenerator =
   | { module: 'price-action'; taskType: 'find-pattern'; targets: PatternType[] }
   | { module: 'price-action'; taskType: 'draw-level' | 'context' }
   | { module: 'challenge'; waitShare?: number }
-  | { module: 'fibonacci'; taskType: 'grid' | 'reaction' | 'extension' };
+  | { module: 'fibonacci'; taskType: 'grid' | 'reaction' | 'extension' }
+  /** Elliott: тип задания определяется сложностью (kind), `focus` генератор не меняет (ELLIOTT.md §13, §19). */
+  | { module: 'elliott' };
 
 /** Навык -> генератор заданий (§16.3). `seed` выбирает между grid и extension для fib-anchor (50/50). */
 export function generatorForSkill(skill: SkillId, seed = 0): SkillGenerator {
   switch (skill) {
+    case 'ew-impulse':
+    case 'ew-correction':
+    case 'ew-rules':
+    case 'ew-invalidation':
+      return { module: 'elliott' };
     case 'fib-anchor':
       return { module: 'fibonacci', taskType: mulberry32(seed)() < 0.5 ? 'grid' : 'extension' };
     case 'fib-reaction':

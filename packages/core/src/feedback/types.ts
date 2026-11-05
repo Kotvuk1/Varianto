@@ -39,4 +39,6 @@ export interface FeedbackInput {
   toleranceCandles?: number;
   /** Шаг цены символа: цены в params округляются по нему (по умолчанию 2 знака). */
   tickSize?: number;
+  /** Дополнительные параметры вердикта (Elliott: outcomeText, outcomeTime). */
+  verdictParams?: Record<string, string | number>;
 }

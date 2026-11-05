@@ -84,9 +84,10 @@ type MarkKind =
   | 'swing-high' | 'swing-low' | 'hh' | 'hl' | 'lh' | 'll'
   | 'bos' | 'choch' | 'sweep' | 'order-block' | 'fvg'
   | 'level' | 'hline' | 'trendline' | 'pattern' | 'position'
-  | 'fib-retracement' | 'fib-extension';              // (новое, FIBONACCI.md §9.1): 2 и 3 якоря
+  | 'fib-retracement' | 'fib-extension'              // (новое, FIBONACCI.md §9.1): 2 и 3 якоря
+  | 'ew-impulse' | 'ew-zigzag' | 'ew-flat';           // (новое, ELLIOTT.md §2.1): 3|5|6 якорей / 3 / 3
 interface Mark {
-  id: string; kind: MarkKind; anchors: Anchor[];         // 1..3 точки по типу
+  id: string; kind: MarkKind; anchors: Anchor[];         // 1..3 точки по типу; ew-impulse — 3, 5 или 6 (ELLIOTT.md §17 п.1)
   scope: 'internal' | 'external' | null;                 // для структуры
   direction: 'bull' | 'bear' | null;
   meta?: Record<string, unknown>;                        // напр. patternType, sl/tp
@@ -100,7 +101,7 @@ interface Mark {
 ### 2.2 Расширения контрактов (предложение — фиксируются при реализации в `@tl/core`)
 
 ```ts
-type ModuleId = 'market-structure' | 'price-action' | 'challenge' | 'fibonacci';   // 'fibonacci' (новое, ALGO_VERSION 1.2.0)
+type ModuleId = 'market-structure' | 'price-action' | 'challenge' | 'fibonacci' | 'elliott';   // 'fibonacci' (ALGO_VERSION 1.2.0), 'elliott' (новое, ALGO_VERSION 1.3.0, EW_ALGO_VERSION 1.0.0)
 type TaskTimeframe = '15m' | '1h' | '4h' | '1d';               // FR-DATA-05
 type TaskSymbol = 'BTCUSDT' | 'ETHUSDT' | 'SOLUSDT';           // FR-DATA-03
 type Difficulty = 'easy' | 'medium' | 'hard';
@@ -115,7 +116,8 @@ type SkillId =
   | 'pa-engulfing' | 'pa-pin-bar' | 'pa-inside-bar' | 'pa-doji' | 'pa-star'
   | 'pa-level' | 'pa-context'
   | 'challenge-entry' | 'challenge-risk' | 'challenge-wait'
-  | 'fib-anchor' | 'fib-reaction' | 'fib-extension' | 'premium-discount';   // (новое, FIBONACCI.md §10)
+  | 'fib-anchor' | 'fib-reaction' | 'fib-extension' | 'premium-discount'   // (новое, FIBONACCI.md §10)
+  | 'ew-impulse' | 'ew-correction' | 'ew-rules' | 'ew-invalidation';          // (новое, ELLIOTT.md §13)
 
 type Verdict = 'correct' | 'partial' | 'incorrect';
 ```
@@ -185,6 +187,7 @@ type NextRequest =
   | (NextBase & { module: 'price-action'; taskType: 'find-pattern' | 'draw-level' | 'context'; tf: TaskTimeframe })
   | (NextBase & { module: 'challenge' })      // ТФ выбирается пользователем в UI; сервер отдаёт все четыре
   | (NextBase & { module: 'fibonacci'; taskType: 'grid' | 'reaction' | 'extension'; tf: TaskTimeframe });   // (новое) FIBONACCI.md §9.2; series — только запрошенный tf, 500 закрытых свечей (1d — 365)
+  | (NextBase & { module: 'elliott'; tf?: TaskTimeframe });   // (новое) ELLIOTT.md §12.2; tf из списка сложности (easy 1h/4h, medium/hard 15m/1h/4h), иначе по seed (вне списка — 400 UNKNOWN_TIMEFRAME); kind задания определяется сложностью, focus на него не влияет (§19); series — только tf задания, 500 закрытых свечей
 ```
 `module` в теле дублирует путь и должен совпадать с ним (иначе 400).
 
@@ -198,7 +201,7 @@ interface TaskEnvelope<P extends TaskPayload = TaskPayload> {
   symbol: TaskSymbol;
   algoVersion: string;
   expiresAt: UtcMs;              // = exp токена
-  timeline: { mode: 'relative' | 'absolute' };   // challenge, fib-reaction, fib-extension — 'relative'; fib-grid — 'absolute'
+  timeline: { mode: 'relative' | 'absolute' };   // challenge, fib-reaction, fib-extension, elliott — 'relative'; fib-grid — 'absolute'
   decisionTime: UtcMs;           // T на шкале задания
   series: Partial<Record<TaskTimeframe, Candle[]>>;   // времена на шкале задания; closeTime < T, плюс частичная свеча старших ТФ (closed=false)
   payload: P;
@@ -286,7 +289,7 @@ v1.<header>.<sealed>.<mac>      // base64url-сегменты
 
 ### 4.1 Шкала задания
 - `timeline.mode = 'absolute'`: времена в `series`, якорях и ответах — реальные `UtcMs`.
-- `timeline.mode = 'relative'` (Challenge, Fibonacci `reaction` и `extension` — дата скрыта, будущее проигрывается): все времена — `real − shiftMs`, где `shiftMs` секретный, кратен 1 суткам (сетка 4h/1d сохраняется). UI для Challenge не показывает дату (на оси — время суток или номера свечей; AC-08).
+- `timeline.mode = 'relative'` (Challenge, Fibonacci `reaction` и `extension`, Elliott — дата скрыта, будущее проигрывается): все времена — `real − shiftMs`, где `shiftMs` секретный, кратен 1 суткам (сетка 4h/1d сохраняется). UI для Challenge не показывает дату (на оси — время суток или номера свечей; AC-08).
 - Якоря в `answer` отправляются на шкале задания; сервер переводит в реальное время.
 - После `grade` клиент получает `reveal.shiftMs` и `reveal.decisionTime` (реальное) и показывает дату в локальном часовом поясе. Все времена внутри `GradeResult` остаются на шкале задания (чтобы разметка ложилась на тот же график); реальное время = `time + reveal.shiftMs`.
 - Для `fibonacci/grid`, `market-structure` и `price-action` режим по умолчанию `absolute` (скрывать ли дату — вопрос 8.6).
@@ -325,6 +328,22 @@ interface FibGridAnswer      { kind: 'fib-grid';      mark: Mark }              
 interface FibReactionAnswer  { kind: 'fib-reaction';  option: FibReactionOption; confluence: FibConfluenceKey[]; pd: 'premium' | 'discount' | null }
 interface FibExtensionAnswer { kind: 'fib-extension'; mark: Mark; target: FibTarget }   // kind 'fib-extension', ровно 3 якоря [A, B, C]
 // validation (400, попытка не оценивается): FIB_ANCHORS_COUNT, FIB_ANCHOR_OUT_OF_RANGE, FIB_OPTION_UNAVAILABLE, FIB_CONFLUENCE_INVALID, FIB_PD_MISMATCH
+
+// elliott (новое, ELLIOTT.md §9.5, §12.3; типы — packages/core/src/elliott/types.ts)
+type EwTaskKind = 'ew-impulse' | 'ew-impulse-correction' | 'ew-scenario';          // easy | medium | hard
+type EwPrimaryScenario = 'w3-next' | 'w5-next' | 'abc-next' | 'trend-next';
+type EwScenarioId = EwPrimaryScenario | 'bc-next' | 'correction-extends' | 'impulse-extends';
+interface ElliottAnswer {
+  kind: EwTaskKind;                         // = kind задания
+  impulse: Mark;                            // kind 'ew-impulse', author 'user', anchors 3 | 5 | 6 (0..5), время на шкале задания
+  correction: Mark | null;                  // kind 'ew-zigzag' | 'ew-flat', anchors 3 (A, B, C); только при impulse из 6 точек и не на easy
+  primary: EwPrimaryScenario;
+  alternative: EwScenarioId | null;         // на easy необязательна
+  invalidation: number | null;              // цена горизонтали
+}
+// validation (400, попытка не оценивается): EW_ANCHORS_COUNT, EW_ANCHOR_OUT_OF_RANGE (якорь вне window), EW_CORRECTION_WITHOUT_IMPULSE,
+//   EW_SCENARIO_UNKNOWN, EW_SHAPE_NOT_ALLOWED (коррекция на easy), EW_INVALIDATION_INVALID (не конечное положительное число).
+//   Неполная разметка (3/5 точек на easy, нет коррекции на medium) не 400, а EW_COUNT_INCOMPLETE в разборе.
 
 // challenge
 type ReasonCode =                                                                    // начальный список (OQ-08)
@@ -401,7 +420,8 @@ type ModuleDetail =
   | { kind: 'pa-level'; userPrice: number; referencePrice: number; deviationPct: number; tolerancePct: number }
   | { kind: 'pa-context'; expected: ContextFactorAnswer & { significant: boolean }; given: ContextFactorAnswer & { significant: boolean } }
   | { kind: 'challenge'; challenge: ChallengeDetail }
-  | { kind: 'fib-grid' | 'fib-reaction' | 'fib-extension'; fib: FibDetail };   // (новое) FibDetail — FIBONACCI.md §9.3, packages/core/src/fib/types.ts
+  | { kind: 'fib-grid' | 'fib-reaction' | 'fib-extension'; fib: FibDetail }   // (новое) FibDetail — FIBONACCI.md §9.3, packages/core/src/fib/types.ts
+  | { kind: EwTaskKind; elliott: ElliottDetail };   // (новое) ELLIOTT.md §12.3, packages/core/src/elliott/types.ts; invalidation после ABC (trend-next) — точка C (§19), ruleRef 'P0' | 'P1' | 'P5' | 'C'
 
 interface MarkGrade {
   matched: { userMarkId: string; algoMarkId: string; timeOffsetCandles: number; priceOffsetPct: number }[];
@@ -454,7 +474,8 @@ interface FeedbackBlock {
 type OkCode = 'OK_SWING' | 'OK_BOS' | 'OK_CHOCH' | 'OK_OB' | 'OK_FVG' | 'OK_LEVEL' | 'OK_PATTERN'
             | 'OK_CONTEXT' | 'OK_SL_PLACEMENT' | 'OK_WAIT'
             | 'OK_LABEL' | 'OK_SCOPE' | 'OK_SWEEP' | 'OK_HTF' | 'OK_RR'
-            | 'OK_FIB_ANCHOR' | 'OK_FIB_EQUAL_EXTREME' | 'OK_FIB_REACTION' | 'OK_FIB_CONFLUENCE' | 'OK_PD' | 'OK_EXT_POINTS' | 'OK_EXT_TARGET';   // Fibonacci (новое), FIBONACCI.md §11.2   // OK_LABEL…OK_RR — (новое), ALGORITHMS §19 п.5
+            | 'OK_FIB_ANCHOR' | 'OK_FIB_EQUAL_EXTREME' | 'OK_FIB_REACTION' | 'OK_FIB_CONFLUENCE' | 'OK_PD' | 'OK_EXT_POINTS' | 'OK_EXT_TARGET'
+            | 'OK_EW_POINTS' | 'OK_EW_RULES' | 'OK_EW_GUIDES' | 'OK_EW_EXTENDED3' | 'OK_EW_CORRECTION' | 'OK_EW_INVALIDATION' | 'OK_EW_ALT';   // Elliott (новое), ELLIOTT.md §14.2   // Fibonacci (новое), FIBONACCI.md §11.2   // OK_LABEL…OK_RR — (новое), ALGORITHMS §19 п.5
 ```
 Элементы массивов `mistakes`, `why`, `howTo` соответствуют друг другу по `code` (один `GradeError` порождает по одному блоку в каждой из трёх частей).
 
@@ -490,7 +511,13 @@ type ErrorCode =
   // Fibonacci (новое), FIBONACCI.md §11.3
   | 'FIB_WRONG_DIRECTION' | 'FIB_NOT_IMPULSE' | 'FIB_WRONG_ANCHOR_START' | 'FIB_WRONG_ANCHOR_END' | 'FIB_IMPULSE_UNCONFIRMED'
   | 'FIB_LEVEL_MISS' | 'FIB_DEEP_MISSED' | 'FIB_CONFLUENCE_WRONG' | 'FIB_PD_WRONG'
-  | 'EXT_WRONG_DIRECTION' | 'EXT_WRONG_POINTS' | 'EXT_TARGET_MISS' | 'EXT_TARGET_CONSERVATIVE';
+  | 'EXT_WRONG_DIRECTION' | 'EXT_WRONG_POINTS' | 'EXT_TARGET_MISS' | 'EXT_TARGET_CONSERVATIVE'
+  // Elliott (новое), ELLIOTT.md §14.3
+  | 'EW_WRONG_ORDER' | 'EW_POINT_NOT_EXTREME' | 'EW_POINT_NOT_SWING' | 'EW_COUNT_NOT_CURRENT' | 'EW_COUNT_INCOMPLETE'
+  | 'EW_RULE_W2_BEYOND_W1' | 'EW_RULE_W3_NOT_BEYOND_W1' | 'EW_RULE_W3_SHORTEST' | 'EW_RULE_W4_OVERLAP'
+  | 'EW_ZIGZAG_B_TOO_DEEP' | 'EW_ZIGZAG_C_NOT_BEYOND_A' | 'EW_FLAT_B_TOO_SHALLOW' | 'EW_FLAT_C_TOO_SHORT'
+  | 'EW_GUIDE_MISS' | 'EW_SCENARIO_MISMATCH' | 'EW_INVALIDATION_WRONG' | 'EW_INVALIDATION_TOO_TIGHT'
+  | 'EW_ALT_MISSING' | 'EW_ALT_SAME' | 'EW_ALT_INCONSISTENT';
 ```
 
 | Код | Навык (`SkillId`) | Смысл |
@@ -549,6 +576,13 @@ type ErrorCode =
 | `EXT_WRONG_DIRECTION` | `fib-anchor` | Extension построен в обратную сторону |
 | `EXT_WRONG_POINTS` | `fib-anchor` (A, B) / `fib-extension` (C) | Точка A, B или C вне допуска |
 | `EXT_TARGET_MISS` / `EXT_TARGET_CONSERVATIVE` | `fib-extension` | Цель не достигнута / достигнута, но рынок дошёл дальше |
+| `EW_WRONG_ORDER`, `EW_COUNT_NOT_CURRENT`, `EW_COUNT_INCOMPLETE` | `ew-impulse` | Точки не по порядку / разметка не доведена до текущей точки / неполная форма |
+| `EW_POINT_NOT_EXTREME`, `EW_POINT_NOT_SWING`, `EW_GUIDE_MISS` | `ew-impulse` (0–5) / `ew-correction` (A–C; по `params.label` и `params.guide`) | Точка не экстремум волны / не внешний swing N=5 / рекомендация Фибоначчи не выполнена |
+| `EW_RULE_W2_BEYOND_W1`, `EW_RULE_W3_NOT_BEYOND_W1`, `EW_RULE_W3_SHORTEST`, `EW_RULE_W4_OVERLAP` | `ew-rules` | Нарушено нерушимое правило импульса (блокирует: verdict incorrect, score ≤ 0.4) |
+| `EW_ZIGZAG_B_TOO_DEEP`, `EW_ZIGZAG_C_NOT_BEYOND_A`, `EW_FLAT_B_TOO_SHALLOW`, `EW_FLAT_C_TOO_SHORT` | `ew-correction` | Нарушено правило типа коррекции (блокирует) |
+| `EW_SCENARIO_MISMATCH`, `EW_INVALIDATION_WRONG`, `EW_INVALIDATION_TOO_TIGHT`, `EW_ALT_MISSING`, `EW_ALT_SAME`, `EW_ALT_INCONSISTENT` | `ew-invalidation` | Сценарий / уровень invalidation / альтернатива |
+
+Шаблоны Elliott: `feedback.verdict.elliott.<verdict>` с параметрами `score`, `outcomeText`, `outcomeTime` (время свечи исхода, на шкале задания; форматирует UI); в терминале (`checkEwMarks`) вердикт `feedback.verdict.plain.*`. Имена параметров шаблонов — латиница без цифр (`pZero…pFive`, `lenOne/lenThree/lenFive`, `depthTwo`).
 
 ## 6. Внешние API Binance
 

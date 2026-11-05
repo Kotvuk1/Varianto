@@ -43,6 +43,15 @@ export const PRINCIPLE_TEMPLATES_RU: Record<ModuleId, string> = {
     'Качество решения — это соответствие правилам до входа; исход одной сделки его не доказывает и не опровергает.',
   fibonacci:
     'Fibonacci — линейка для импульса, а не сигнал: уровни работают вместе со структурой, зоной интереса и premium/discount.',
+  elliott:
+    'Подсчёт волн — гипотеза, а не факт: правила отсекают невозможные разметки, invalidation level говорит, когда гипотеза сломана, а альтернатива — что делать дальше.',
+};
+
+/** Elliott: вердикт с исходом проигрывания (ELLIOTT.md §14.1). `{outcomeText}` и `{outcomeTime}` готовит ядро. */
+export const ELLIOTT_VERDICT_TEMPLATES_RU: Record<Verdict, string> = {
+  correct: 'Верно: оценка {score}%. {outcomeText} {outcomeTime}.',
+  partial: 'Частично верно: оценка {score}%, есть ошибки ниже. {outcomeText} {outcomeTime}.',
+  incorrect: 'Неверно: оценка {score}%. {outcomeText} {outcomeTime}.',
 };
 
 export const OK_TEMPLATES_RU: Record<OkCode, string> = {
@@ -68,6 +77,13 @@ export const OK_TEMPLATES_RU: Record<OkCode, string> = {
   OK_PD: 'Premium/Discount определён верно: цена {price} в {expected}, equilibrium {eq}.',
   OK_EXT_POINTS: 'Точки A–B–C extension поставлены верно.',
   OK_EXT_TARGET: 'Цель {target} выбрана верно: максимум движения {maxPrice} ({xMax} от AB).',
+  OK_EW_POINTS: 'Точки волн стоят на экстремумах и внешних swing: {count} из {total}.',
+  OK_EW_RULES: 'Все правила Эллиотта выполнены: {rulesText}.',
+  OK_EW_GUIDES: 'Рекомендации Фибоначчи и чередования: выполнено {count} из {total}.',
+  OK_EW_EXTENDED3: 'Wave 3 удлинённая: {lenThree} против {lenOne} у wave 1 и {lenFive} у wave 5.',
+  OK_EW_CORRECTION: 'Коррекция названа верно: {type} (B {retrB} от A, C за концом A на {cBeyond}).',
+  OK_EW_INVALIDATION: 'Invalidation level {price} стоит по правилу: {ruleText}.',
+  OK_EW_ALT: 'Альтернатива «{alt}» допустима и проверяется другим триггером: {altTrigger}.',
 };
 
 /** Навык кода ошибки; null — определяется параметрами (pa-* по `params.pattern`, MARK_WRONG_DIRECTION по `params.kind`, QUESTION_WRONG по шаблону). */
@@ -143,6 +159,28 @@ export const ERROR_SKILLS: Record<ErrorCode, SkillId | null> = {
   EXT_WRONG_POINTS: null,
   EXT_TARGET_MISS: 'fib-extension',
   EXT_TARGET_CONSERVATIVE: 'fib-extension',
+  EW_WRONG_ORDER: 'ew-impulse',
+  /** wave 0–5 - ew-impulse, A–C - ew-correction (по `params.label`, см. skillForError). */
+  EW_POINT_NOT_EXTREME: null,
+  EW_POINT_NOT_SWING: null,
+  EW_COUNT_NOT_CURRENT: 'ew-impulse',
+  EW_COUNT_INCOMPLETE: 'ew-impulse',
+  EW_RULE_W2_BEYOND_W1: 'ew-rules',
+  EW_RULE_W3_NOT_BEYOND_W1: 'ew-rules',
+  EW_RULE_W3_SHORTEST: 'ew-rules',
+  EW_RULE_W4_OVERLAP: 'ew-rules',
+  EW_ZIGZAG_B_TOO_DEEP: 'ew-correction',
+  EW_ZIGZAG_C_NOT_BEYOND_A: 'ew-correction',
+  EW_FLAT_B_TOO_SHALLOW: 'ew-correction',
+  EW_FLAT_C_TOO_SHORT: 'ew-correction',
+  /** impulse / correction - по `params.guide`. */
+  EW_GUIDE_MISS: null,
+  EW_SCENARIO_MISMATCH: 'ew-invalidation',
+  EW_INVALIDATION_WRONG: 'ew-invalidation',
+  EW_INVALIDATION_TOO_TIGHT: 'ew-invalidation',
+  EW_ALT_MISSING: 'ew-invalidation',
+  EW_ALT_SAME: 'ew-invalidation',
+  EW_ALT_INCONSISTENT: 'ew-invalidation',
 };
 
 export const ERROR_TEMPLATES_RU: Record<ErrorCode, ErrorTemplate> = {
@@ -567,6 +605,127 @@ export const ERROR_TEMPLATES_RU: Record<ErrorCode, ErrorTemplate> = {
     howTo: 'Когда после C есть BOS по направлению импульса и нет встречной зоны, держите часть позиции до следующего уровня extension.',
     principle: 'Частичная фиксация с переносом цели забирает продолжение тренда.',
   },
+  // ---- Elliott Wave Lab (ELLIOTT.md §14.3). Параметры времени называются `*Time` (форматирует UI). ----
+  EW_WRONG_ORDER: {
+    mistake: 'Точки разметки идут не по порядку: {pointA} ({pointATime}, {priceA}) и {pointB} ({pointBTime}, {priceB}).',
+    why: 'Волны чередуются: по направлению impulse каждая следующая точка выше (bull) или ниже (bear) предыдущей противоположной, а время строго растёт.',
+    howTo: 'Расставьте 0, 1, 2… слева направо, чередуя swing low и swing high.',
+    principle: 'Разметка волн — последовательность экстремумов; без порядка правила не применимы.',
+  },
+  EW_POINT_NOT_EXTREME: {
+    mistake: 'Точка {label} на {userTime} ({price}) не является экстремумом своей волны.',
+    why: 'Между точками {prevLabel} и {nextLabel} цена дошла до {extremePrice} на {extremeTime}: волна заканчивается там.',
+    howTo: 'Перенесите точку {label} на {extremeTime}: магнит привяжет её к {sideName} {extremePrice}.',
+    principle: 'Волна измеряется от экстремума до экстремума, иначе длины и соотношения ложные.',
+  },
+  EW_POINT_NOT_SWING: {
+    mistake: 'Точка {label} на {time} не является внешним swing (N={n}).',
+    why: 'Слева или справа от свечи в пределах {n} свечей есть {sideName} не хуже: это колебание внутри волны.',
+    howTo: 'Ставьте точки волн на внешние swing: так волна заметна на графике задания.',
+    principle: 'Волна — значимое движение; шум внутри волны волной не считается.',
+  },
+  EW_COUNT_NOT_CURRENT: {
+    mistake: 'Разметка заканчивается на {userTime}, а текущая точка — {lastTime} ({lastPrice}).',
+    why: 'Сценарий строится от последнего подтверждённого swing: волны после вашей последней точки не размечены.',
+    howTo: 'Доведите подсчёт до {lastTime}: решите, какой волной является это движение.',
+    principle: 'Прогноз по устаревшему подсчёту не учитывает то, что рынок уже сделал.',
+  },
+  EW_COUNT_INCOMPLETE: {
+    mistake: 'В задании нужно разметить {shapeText}, а в ответе {givenText}.',
+    why: '{shapeRule}',
+    howTo: 'Добавьте недостающие точки инструментами {toolsText}.',
+    principle: 'Задание проверяет полную структуру; часть подсчёта не оценивается как целое.',
+  },
+  EW_RULE_W2_BEYOND_W1: {
+    mistake: 'Wave 2 ({pTwo}, {pTwoTime}) ушла за начало wave 1 ({pZero}, {pZeroTime}).',
+    why: 'Правило: wave 2 никогда не откатывает больше 100% wave 1. Здесь откат {depthTwo}.',
+    howTo: 'Если цена ушла за начало wave 1, импульс начинается ниже: перенесите точку 0 на {extremeTime} или считайте движение коррекцией.',
+    principle: 'Нарушение правила — не «редкий вариант», а неверный подсчёт.',
+  },
+  EW_RULE_W3_NOT_BEYOND_W1: {
+    mistake: 'Wave 3 ({pThree}) не вышла за конец wave 1 ({pOne}).',
+    why: 'В импульсе wave 3 всегда обновляет экстремум wave 1; без этого 1–2–3 — коррекция, а не impulse.',
+    howTo: 'Ищите wave 3 там, где цена прошла за {pOne}, или размечайте участок как A–B–C.',
+    principle: 'Impulse — движение с обновлением экстремумов по тренду.',
+  },
+  EW_RULE_W3_SHORTEST: {
+    mistake: 'Wave 3 ({lenThree}) короче wave 1 ({lenOne}) и wave 5 ({lenFive}).',
+    why: 'Правило: wave 3 никогда не бывает самой короткой из 1, 3 и 5.',
+    howTo: 'Скорее всего, ваша wave 3 — только её часть: проверьте, не являются ли точки 3–4 внутренним откатом wave 3.',
+    principle: 'Самая короткая 3-я означает, что волны посчитаны со сдвигом.',
+  },
+  EW_RULE_W4_OVERLAP: {
+    mistake: 'Wave 4 ({pFour}, {pFourTime}) зашла в зону wave 1 (конец wave 1 — {pOne}).',
+    why: 'Правило для impulse (без диагоналей): wave 4 не перекрывает ценовую зону wave 1.',
+    howTo: 'Если перекрытие есть, это не 4-я: возможно, ваша wave 1 — это wave 3 меньшего масштаба, или идёт коррекция A–B–C.',
+    principle: 'Перекрытие 1 и 4 ломает импульсный подсчёт.',
+  },
+  EW_ZIGZAG_B_TOO_DEEP: {
+    mistake: 'В zigzag wave B ({pB}) дошла до начала A ({pFive}): откат {retrB} A.',
+    why: 'В zigzag B откатывает меньше 100% A (обычно 38–79%).',
+    howTo: 'B на уровне или за началом A — признак flat: выберите инструмент «Flat».',
+    principle: 'Тип коррекции определяется глубиной B.',
+  },
+  EW_ZIGZAG_C_NOT_BEYOND_A: {
+    mistake: 'В zigzag wave C ({pC}) не ушла за конец A ({pA}).',
+    why: 'В zigzag C всегда выходит за конец A.',
+    howTo: 'Если C не дошла до A, коррекция не завершена или это flat с короткой C: проверьте правило flat.',
+    principle: 'Zigzag — резкая коррекция с обновлением экстремума A.',
+  },
+  EW_FLAT_B_TOO_SHALLOW: {
+    mistake: 'Во flat wave B откатила только {retrB} A.',
+    why: 'Во flat B откатывает почти всю A — не меньше 90%.',
+    howTo: 'При откате B меньше 90% выберите инструмент «Zigzag».',
+    principle: 'Flat — боковая коррекция: B возвращается к началу A.',
+  },
+  EW_FLAT_C_TOO_SHORT: {
+    mistake: 'Во flat wave C ({pC}) не дошла до конца A ({pA}): не хватает {short} A.',
+    why: 'Во flat C заканчивается около конца A или за ним (допуск 10% длины A).',
+    howTo: 'Дождитесь C у конца A или размечайте коррекцию как незавершённую (альтернатива «Коррекция не завершена»).',
+    principle: 'Незавершённая коррекция — не повод для входа по тренду.',
+  },
+  EW_GUIDE_MISS: {
+    mistake: 'Рекомендация «{guideName}» не выполнена: {actual} при ожидании {expected}.',
+    why: '{guideRule}',
+    howTo: 'Рекомендация не обязательна; если несколько рекомендаций не выполнено, проверьте альтернативный подсчёт.',
+    principle: 'Соотношения Фибоначчи повышают вероятность подсчёта, но не доказывают его.',
+  },
+  EW_SCENARIO_MISMATCH: {
+    mistake: 'Основной сценарий «{given}» не следует из разметки: она заканчивается точкой {lastLabel}.',
+    why: 'После точки {lastLabel} подсчёт ожидает «{implied}».',
+    howTo: 'Выберите «{implied}» или измените разметку.',
+    principle: 'Сценарий — продолжение подсчёта, а не отдельная догадка.',
+  },
+  EW_INVALIDATION_WRONG: {
+    mistake: 'Invalidation level {given} поставлен неверно: {reasonText}',
+    why: 'Для сценария «{primary}» подсчёт ломается, когда {ruleText}, то есть на {ruleLevel}.',
+    howTo: 'Поставьте горизонталь на {ruleLevel} (допуск ±{invTol}).',
+    principle: 'Invalidation — цена, при которой подсчёт нарушает правило; без неё прогноз нельзя проверить.',
+  },
+  EW_INVALIDATION_TOO_TIGHT: {
+    mistake: 'Уровень {given} ближе к цене, чем invalidation по правилу ({ruleLevel}).',
+    why: 'Цена за {given} ещё не нарушает правила: подсчёт остаётся допустимым до {ruleLevel}.',
+    howTo: 'Используйте {given} как стоп сделки, а invalidation подсчёта держите на {ruleLevel}.',
+    principle: 'Стоп сделки и invalidation подсчёта — разные уровни.',
+  },
+  EW_ALT_MISSING: {
+    mistake: 'Альтернативный сценарий не выбран.',
+    why: 'На этом участке допустимы и другие разметки: {altCountsText}.',
+    howTo: 'Выберите альтернативу из допустимых для «{primary}»: {allowedText}.',
+    principle: 'Без плана Б invalidation застаёт врасплох.',
+  },
+  EW_ALT_SAME: {
+    mistake: 'Альтернатива совпадает с основным сценарием «{primary}».',
+    why: 'Альтернатива должна давать другой триггер, чтобы рынок мог показать, какой сценарий верен.',
+    howTo: 'Выберите из: {allowedText}.',
+    principle: 'Два одинаковых сценария — это один сценарий.',
+  },
+  EW_ALT_INCONSISTENT: {
+    mistake: 'Альтернатива «{alt}» не сочетается с разметкой: {reasonText}',
+    why: 'Допустимы альтернативы с другим триггером, опирающиеся на допустимую разметку того же участка.',
+    howTo: 'Для «{primary}» подходят: {allowedText}.',
+    principle: 'Альтернатива — тоже подсчёт по правилам, а не любой другой исход.',
+  },
 };
 
 /** Плоский словарь `feedback.*` — совпадает с `templateKey` в FeedbackBlock. */
@@ -575,6 +734,7 @@ export function flattenTemplates(): Record<string, string> {
   for (const [k, v] of Object.entries(VERDICT_TEMPLATES_RU)) out[`feedback.verdict.${k}`] = v;
   for (const [k, v] of Object.entries(VERDICT_PLAIN_TEMPLATES_RU)) out[`feedback.verdict.plain.${k}`] = v;
   for (const [k, v] of Object.entries(CHALLENGE_VERDICT_TEMPLATES_RU)) out[`feedback.verdict.challenge.${k}`] = v;
+  for (const [k, v] of Object.entries(ELLIOTT_VERDICT_TEMPLATES_RU)) out[`feedback.verdict.elliott.${k}`] = v;
   for (const [k, v] of Object.entries(PRINCIPLE_TEMPLATES_RU)) out[`feedback.principle.${k}`] = v;
   for (const [k, v] of Object.entries(OK_TEMPLATES_RU)) out[`feedback.ok.${k}`] = v;
   for (const [code, t] of Object.entries(ERROR_TEMPLATES_RU)) {
@@ -604,6 +764,8 @@ export function skillForError(code: ErrorCode, params?: Record<string, string | 
   }
   if (code === 'QUESTION_WRONG') return (params?.skill as SkillId | undefined) ?? 'bos';
   if (code === 'EXT_WRONG_POINTS') return params?.point === 'C' ? 'fib-extension' : 'fib-anchor';
+  if (code === 'EW_POINT_NOT_EXTREME' || code === 'EW_POINT_NOT_SWING') return ['A', 'B', 'C'].includes(String(params?.label)) ? 'ew-correction' : 'ew-impulse';
+  if (code === 'EW_GUIDE_MISS') return /^(zigzag|flat)/.test(String(params?.guide)) ? 'ew-correction' : 'ew-impulse';
   const p = String(params?.pattern ?? '');
   const map: Record<string, SkillId> = {
     engulfing: 'pa-engulfing',
@@ -742,3 +904,92 @@ export const FIB_TARGET_LABEL_RU: Record<'1' | '1.272' | '1.618' | 'none', strin
 };
 /** `{sideName}`. */
 export const FIB_SIDE_NAME = { low: 'low', high: 'high' } as const;
+
+// ---- Elliott: словари текстовых параметров (ELLIOTT.md §14.4). Ядро кладёт в params готовые строки. ----
+
+export type EwGuideKey = 'w2-depth' | 'w3-ratio' | 'w4-depth' | 'w5-ratio' | 'alternation' | 'zigzag-b' | 'zigzag-c' | 'flat-b' | 'flat-c';
+export const EW_GUIDE_NAME_RU: Record<EwGuideKey, string> = {
+  'w2-depth': 'глубина wave 2',
+  'w3-ratio': 'длина wave 3',
+  'w4-depth': 'глубина wave 4',
+  'w5-ratio': 'длина wave 5',
+  alternation: 'чередование 2 и 4',
+  'zigzag-b': 'глубина B в zigzag',
+  'zigzag-c': 'длина C в zigzag',
+  'flat-b': 'глубина B во flat',
+  'flat-c': 'длина C во flat',
+};
+export const EW_GUIDE_RULE_RU: Record<EwGuideKey, string> = {
+  'w2-depth': 'Wave 2 обычно откатывает 50–61.8% wave 1 (допуск ±0.04).',
+  'w3-ratio': 'Wave 3 обычно не короче 1.618 wave 1 (допуск −10%); длиннее — удлинённая 3-я.',
+  'w4-depth': 'Wave 4 обычно откатывает 23.6–38.2% wave 3 (это не зона OTE 0.62–0.79).',
+  'w5-ratio': 'Wave 5 обычно равна wave 1 или 0.618 пути от 0 до 3 (допуск ±10%).',
+  alternation: 'Если wave 2 глубокая, wave 4 обычно мелкая или длится заметно дольше (и наоборот).',
+  'zigzag-b': 'B обычно 38.2–78.6% A.',
+  'zigzag-c': 'C обычно 0.618, 1 или 1.618 A.',
+  'flat-b': 'B обычно не дальше 138.2% A.',
+  'flat-c': 'C обычно равна A или 1.618 A.',
+};
+export const EW_SCENARIO_LABEL_RU: Record<'w3-next' | 'w5-next' | 'abc-next' | 'trend-next' | 'bc-next' | 'correction-extends' | 'impulse-extends', string> = {
+  'w3-next': 'Wave 2 завершена — ожидаю wave 3',
+  'w5-next': 'Wave 4 завершена — ожидаю wave 5',
+  'abc-next': 'Impulse 1–5 завершён — ожидаю коррекцию A–B–C',
+  'trend-next': 'Коррекция A–B–C завершена — ожидаю продолжение тренда',
+  'bc-next': 'Я ошибся на одну волну: моя 3 была 5, моя 4 — это A; дальше B и C',
+  'correction-extends': 'Коррекция ещё не завершена (wave 2/4/C удлинится или усложнится)',
+  'impulse-extends': 'Impulse не завершён: 5-я удлинится (или моя 5 — это 3)',
+};
+/** `{altTrigger}`. */
+export const EW_ALT_TRIGGER_RU: Record<'bc-next' | 'correction-extends' | 'impulse-extends' | 'other', string> = {
+  'bc-next': 'закрытие за последней точкой против тренда',
+  'correction-extends': 'закрытие за последней точкой против тренда',
+  'impulse-extends': 'закрытие за точкой 5',
+  other: 'закрытие за уровнем подтверждения',
+};
+/** `{ruleText}`. */
+export const EW_RULE_TEXT_RU: Record<'P0' | 'P1' | 'P5' | 'C', string> = {
+  P0: 'цена уходит за начало wave 1 (точка 0)',
+  P1: 'цена заходит в зону wave 1 (точка 1)',
+  P5: 'цена обновляет экстремум точки 5',
+  C: 'цена уходит за конец коррекции (точка C)',
+};
+/** `{reasonText}` для EW_INVALIDATION_WRONG. */
+export const EW_INV_REASON_RU: Record<'missing' | 'wrong-side' | 'too-wide', string> = {
+  missing: 'уровень не поставлен.',
+  'wrong-side': 'он с другой стороны от текущей цены.',
+  'too-wide': 'он дальше уровня правила: подсчёт будет считаться живым после нарушения правила.',
+};
+/** `{reasonText}` для EW_ALT_INCONSISTENT. */
+export const EW_ALT_REASON_RU: Record<'not-allowed' | 'unsupported', string> = {
+  'not-allowed': 'у неё тот же триггер, что у основного сценария, или она не следует из этой точки.',
+  unsupported: 'на участке нет допустимого импульса 0–5, у которого ваша последняя точка была бы A.',
+};
+/** `{rulesText}`: названия выполненных правил. */
+export const EW_RULE_NAME_RU: Record<'w2' | 'w3-beyond-w1' | 'w3-shortest' | 'w4-overlap' | 'zigzag-b' | 'zigzag-c' | 'flat-b' | 'flat-c', string> = {
+  w2: 'wave 2 не уходит за начало wave 1',
+  'w3-beyond-w1': 'wave 3 выходит за конец wave 1',
+  'w3-shortest': 'wave 3 не самая короткая',
+  'w4-overlap': 'wave 4 не заходит в зону wave 1',
+  'zigzag-b': 'B не доходит до начала A',
+  'zigzag-c': 'C уходит за конец A',
+  'flat-b': 'B откатывает не меньше 90% A',
+  'flat-c': 'C около конца A или за ним',
+};
+export const EW_CORR_TYPE_RU: Record<'zigzag' | 'flat', string> = { zigzag: 'zigzag', flat: 'flat' };
+/** `{shapeText}` / `{givenText}`. */
+export const EW_SHAPE_TEXT_RU = { impulse6: 'impulse 0–5', impulse6Correction: 'impulse 0–5 и коррекцию A–B–C', impulsePoints: '{n} точек impulse', impulseAndCorrection: 'impulse и коррекцию' } as const;
+export const EW_SHAPE_RULE_RU: Record<'ew-impulse' | 'ew-impulse-correction', string> = {
+  'ew-impulse': 'Лёгкое задание проверяет полный impulse из пяти волн.',
+  'ew-impulse-correction': 'Задание проверяет impulse и следующую за ним коррекцию.',
+};
+export const EW_TOOLS_TEXT_RU: Record<'ew-impulse' | 'ew-impulse-correction', string> = {
+  'ew-impulse': '«Impulse»',
+  'ew-impulse-correction': '«Impulse» и «Zigzag» или «Flat»',
+};
+/** `{outcomeText}` по `EwOutcome.kind`; время добавляет вердикт (`{outcomeTime}`). */
+export const EW_OUTCOME_TEXT_RU: Record<'primary' | 'alternative' | 'invalidated' | 'timeout', string> = {
+  primary: 'Дальше сработал основной сценарий: закрытие за {confirm}, свеча',
+  alternative: 'Дальше сработала альтернатива: закрытие за {altConfirm}, свеча',
+  invalidated: 'Подсчёт инвалидирован: цена коснулась {invalidation}, свеча',
+  timeout: 'За {limit} свечей ни один сценарий не подтвердился, последняя свеча',
+};

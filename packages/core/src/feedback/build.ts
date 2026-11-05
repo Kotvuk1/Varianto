@@ -74,7 +74,10 @@ export function buildFeedback(input: FeedbackInput): Feedback {
   const worst = errors.find((e) => e.severity === 'major') ?? errors[0];
   const score = Math.round(input.score * 100);
   const mt = input.module === 'challenge' ? null : matchedOf(input.skillOutcomes);
-  const verdict: FeedbackBlock = input.module === 'challenge'
+  const elliottOutcome = input.module === 'elliott' && input.verdictParams?.outcomeText !== undefined;
+  const verdict: FeedbackBlock = elliottOutcome
+    ? { templateKey: `feedback.verdict.elliott.${input.verdict}`, code: null, params: { score, ...input.verdictParams }, glyph: 'info' }
+    : input.module === 'challenge'
     ? { templateKey: `feedback.verdict.challenge.${input.verdict}`, code: null, params: { score }, glyph: 'info' }
     : mt
       ? { templateKey: `feedback.verdict.${input.verdict}`, code: null, params: { matched: mt.matched, total: mt.total, score }, glyph: 'info' }

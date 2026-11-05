@@ -58,12 +58,15 @@ export type MarkKind =
   | 'pattern'
   | 'position'
   | 'fib-retracement'
-  | 'fib-extension';
+  | 'fib-extension'
+  | 'ew-impulse'
+  | 'ew-zigzag'
+  | 'ew-flat';
 
 export interface Mark {
   id: string;
   kind: MarkKind;
-  /** 1..3 точки по типу. */
+  /** 1..3 точки по типу; ew-impulse - до 6. */
   anchors: Anchor[];
   scope: 'internal' | 'external' | null;
   direction: 'bull' | 'bear' | null;
@@ -73,7 +76,7 @@ export interface Mark {
 }
 
 // ---- Расширения контрактов (API_CONTRACTS §2.2) ----
-export type ModuleId = 'market-structure' | 'price-action' | 'challenge' | 'fibonacci';
+export type ModuleId = 'market-structure' | 'price-action' | 'challenge' | 'fibonacci' | 'elliott';
 export type TaskTimeframe = '15m' | '1h' | '4h' | '1d';
 export type TaskSymbol = 'BTCUSDT' | 'ETHUSDT' | 'SOLUSDT';
 export type Difficulty = 'easy' | 'medium' | 'hard';
@@ -100,7 +103,11 @@ export type SkillId =
   | 'fib-anchor'
   | 'fib-reaction'
   | 'fib-extension'
-  | 'premium-discount';
+  | 'premium-discount'
+  | 'ew-impulse'
+  | 'ew-correction'
+  | 'ew-rules'
+  | 'ew-invalidation';
 export type Verdict = 'correct' | 'partial' | 'incorrect';
 
 /** Полный список кодов ошибок (API_CONTRACTS §5.3 + новые из ALGORITHMS §17.4). */
@@ -178,7 +185,28 @@ export type ErrorCode =
   | 'EXT_WRONG_DIRECTION'
   | 'EXT_WRONG_POINTS'
   | 'EXT_TARGET_MISS'
-  | 'EXT_TARGET_CONSERVATIVE';
+  | 'EXT_TARGET_CONSERVATIVE'
+  // Elliott Wave Lab (ELLIOTT.md §14.3)
+  | 'EW_WRONG_ORDER'
+  | 'EW_POINT_NOT_EXTREME'
+  | 'EW_POINT_NOT_SWING'
+  | 'EW_COUNT_NOT_CURRENT'
+  | 'EW_COUNT_INCOMPLETE'
+  | 'EW_RULE_W2_BEYOND_W1'
+  | 'EW_RULE_W3_NOT_BEYOND_W1'
+  | 'EW_RULE_W3_SHORTEST'
+  | 'EW_RULE_W4_OVERLAP'
+  | 'EW_ZIGZAG_B_TOO_DEEP'
+  | 'EW_ZIGZAG_C_NOT_BEYOND_A'
+  | 'EW_FLAT_B_TOO_SHALLOW'
+  | 'EW_FLAT_C_TOO_SHORT'
+  | 'EW_GUIDE_MISS'
+  | 'EW_SCENARIO_MISMATCH'
+  | 'EW_INVALIDATION_WRONG'
+  | 'EW_INVALIDATION_TOO_TIGHT'
+  | 'EW_ALT_MISSING'
+  | 'EW_ALT_SAME'
+  | 'EW_ALT_INCONSISTENT';
 
 export type OkCode =
   | 'OK_SWING'
@@ -202,7 +230,14 @@ export type OkCode =
   | 'OK_FIB_CONFLUENCE'
   | 'OK_PD'
   | 'OK_EXT_POINTS'
-  | 'OK_EXT_TARGET';
+  | 'OK_EXT_TARGET'
+  | 'OK_EW_POINTS'
+  | 'OK_EW_RULES'
+  | 'OK_EW_GUIDES'
+  | 'OK_EW_EXTENDED3'
+  | 'OK_EW_CORRECTION'
+  | 'OK_EW_INVALIDATION'
+  | 'OK_EW_ALT';
 
 export interface SkillOutcome {
   skill: SkillId;

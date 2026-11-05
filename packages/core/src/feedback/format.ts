@@ -14,6 +14,10 @@ export const PARAM_KINDS: Readonly<Record<string, ParamKind>> = {
   // Fibonacci (FIBONACCI.md §11): цены уровней, экстремумов и эталонных точек
   cPrice: 'price', userPrice: 'price', refPrice: 'price', refStartPrice: 'price', refEndPrice: 'price',
   refAPrice: 'price', refBPrice: 'price', refCPrice: 'price', maxPrice: 'price', targetPrice: 'price', eq: 'price', thr: 'price',
+  // Elliott: цены точек, длин волн и уровней
+  pZero: 'price', pOne: 'price', pTwo: 'price', pThree: 'price', pFour: 'price', pFive: 'price', pA: 'price', pB: 'price', pC: 'price',
+  priceA: 'price', priceB: 'price', lenOne: 'price', lenThree: 'price', lenFive: 'price', extremePrice: 'price', lastPrice: 'price',
+  ruleLevel: 'price', invTol: 'price', confirm: 'price', altConfirm: 'price', invalidation: 'price',
   devPct: 'percent', tolPct: 'percent', iou: 'percent',
   rr: 'r', r: 'r',
   k: 'number', atr: 'number',
