@@ -72,6 +72,8 @@ async function tapPoints(page: Page, pts: { time: number; price: number }[]) {
 export async function drawCount(page: Page, count: WaveCount) {
   await selectTool(page, 'Импульс', 'Волны');
   await tapPoints(page, count.impulse);
+  // неполный импульс (3 или 5 точек) завершается кнопкой «Готово»
+  if (count.impulse.length < 6) await page.getByTestId('ew-finish').click();
   if (count.correction) {
     await selectTool(page, count.correction.type === 'zigzag' ? 'Зигзаг' : 'Плоская', 'Волны');
     await tapPoints(page, count.correction.points);

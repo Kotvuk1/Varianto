@@ -82,6 +82,7 @@ export function ElliottBody({ envelope, flow, base }: { envelope: TaskEnvelope<E
     return liveHints(liveChecks(results), primary !== null && implied !== null && primary !== implied);
   }, [liveOn, visible, p.tf, ci.marks, primary, implied]);
   const hasCount = userEwMarks(ci.marks).impulse !== null;
+  const marked = ci.marks.length > 0 || ci.notice.step > 0;
 
   const onPrimary = (s: EwPrimaryScenario) => {
     setPrimary(s);
@@ -98,7 +99,12 @@ export function ElliottBody({ envelope, flow, base }: { envelope: TaskEnvelope<E
     if (locked) return;
     const r = ewAnswer({ kind: EW_KIND[envelope.difficulty], marks: ci.marks, primary, alternative, invalidation, alternativeRequired: p.alternativeRequired });
     if ('error' in r) {
-      ci.setMessage(ewx.input[r.error]);
+      ci.setMessage(r.error === 'noImpulse' && ci.notice.step >= 3 ? ewx.input.unfinished : ewx.input[r.error]);
+      return;
+    }
+    const anchors = [...r.answer.impulse.anchors, ...(r.answer.correction?.anchors ?? [])];
+    if (anchors.some((a) => a.time < p.window.fromTime || a.time > p.window.toTime)) {
+      ci.setMessage(ewx.input.outside);
       return;
     }
     ci.setMessage(null);
@@ -137,12 +143,13 @@ export function ElliottBody({ envelope, flow, base }: { envelope: TaskEnvelope<E
     return i === null || i === undefined ? null : (replayCandles[i]?.openTime ?? null);
   }, [result, replayCandles]);
   const highlights = useMemo<CandleHighlight[]>(() => {
-    const out: CandleHighlight[] = [{ time: p.lastPivot.time, tone: 'focus', label: ewx.currentPoint }];
+    // подпись пропадает, когда пользователь начал разметку: она налезала на метку последней точки
+    const out: CandleHighlight[] = [{ time: p.lastPivot.time, tone: 'focus', ...(marked ? {} : { label: ewx.currentPoint }) }];
     if (final && exitTime !== null && result && result.detail.kind !== undefined && 'elliott' in result.detail) {
       out.push({ time: exitTime, tone: 'ref', label: ewx.result.marker[result.detail.elliott.outcome.kind] });
     }
     return out;
-  }, [p.lastPivot.time, final, exitTime, result]);
+  }, [p.lastPivot.time, final, exitTime, result, marked]);
 
   const readOnly = final && showRef && result ? result.reference : undefined;
   const chart = (
