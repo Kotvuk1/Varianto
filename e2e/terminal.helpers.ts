@@ -16,8 +16,8 @@ export async function openTerminal(page: Page, url = TERMINAL_URL) {
 
 /** Выбор инструмента: группа (рейка на десктопе, нижняя панель на мобильном) и инструмент в её списке. */
 export async function selectTool(page: Page, tool: string, group?: string) {
-  // на мобильной панели «Зоны» (OB, FVG) живут в веере «Пробои»: 9 кнопок по 44 px не помещаются в 390 px
-  if (group === 'Зоны' && isMobile(page)) group = 'Пробои';
+  // на мобильной панели «Пробои» и «Зоны» объединены в группу «SMC»: 9 кнопок по 44 px не помещаются в 390 px
+  if ((group === 'Зоны' || group === 'Пробои') && isMobile(page)) group = 'SMC';
   if (group) {
     await page.getByRole('button', { name: group, exact: true }).click();
     await page.getByRole('toolbar', { name: group }).getByRole('button', { name: tool, exact: true }).click();

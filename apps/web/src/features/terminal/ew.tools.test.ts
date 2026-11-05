@@ -16,8 +16,8 @@ describe('группа «Волны»', () => {
     for (const t of g.tools) expect(TOOL_ICON[t]).toBeTruthy();
     expect(groupOf('ew-flat')).toBe('ew');
   });
-  it('мобильная панель: 6 групп (Зоны - в веере «Пробои»), все группы достижимы', () => {
-    expect(MOBILE_GROUPS.map((g) => g.id)).toEqual(['select', 'structure', 'breaks', 'lines', 'fib', 'ew']);
+  it('мобильная панель: 6 групп (Пробои и Зоны - в «SMC»), все группы достижимы', () => {
+    expect(MOBILE_GROUPS.map((g) => g.id)).toEqual(['select', 'structure', 'smc', 'lines', 'fib', 'ew']);
     const all = new Set(MOBILE_GROUPS.flatMap((g) => g.tools));
     for (const t of ['order-block', 'fvg', 'position', 'ew-impulse']) expect(all.has(t as never)).toBe(true);
   });

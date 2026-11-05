@@ -86,7 +86,7 @@ export const TOOL_ICON: Record<ToolId, ReactNode> = {
 };
 
 export type TerminalTool = keyof typeof TOOL_ICON;
-export type GroupId = 'select' | 'structure' | 'breaks' | 'zones' | 'lines' | 'fib' | 'ew' | 'position';
+export type GroupId = 'select' | 'structure' | 'breaks' | 'zones' | 'lines' | 'fib' | 'ew' | 'position' | 'smc';
 
 export interface ToolGroup {
   id: GroupId;
@@ -107,13 +107,13 @@ export const GROUPS: readonly ToolGroup[] = [
 ];
 
 /**
- * Мобильная панель: «Позиция» входит в веер «Линии», «Зоны» - в веер «Пробои», чтобы 7 групп + Ластик + «Проверить»
+ * Мобильная панель: «Позиция» входит в веер «Линии», «Зоны» сливаются с «Пробои» в группу «SMC», чтобы 7 групп + Ластик + «Проверить»
  * помещались в 360 px (8 кнопок не уже 44 px).
  */
 export const MOBILE_GROUPS: readonly ToolGroup[] = [
   GROUPS[0]!,
   GROUPS[1]!,
-  { ...GROUPS[2]!, tools: ['bos', 'choch', 'sweep', 'order-block', 'fvg'] },
+  { ...GROUPS[2]!, id: 'smc', tools: ['bos', 'choch', 'sweep', 'order-block', 'fvg'] },
   { ...GROUPS[4]!, tools: ['level', 'hline', 'trendline', 'position'] },
   GROUPS[5]!,
   GROUPS[6]!,

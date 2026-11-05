@@ -42,9 +42,9 @@ export const tx = {
   openCandle: 'Идёт',
   cancel: 'Отмена',
   /** Короткие подписи рейки/панели (влезают в 60 px и мобильные кнопки). */
-  groups: { select: 'Выбор', structure: 'Свинги', breaks: 'Пробои', zones: 'Зоны', lines: 'Линии', fib: 'Фибо', ew: 'Волны', position: 'Позиция' },
+  groups: { select: 'Выбор', structure: 'Свинги', breaks: 'Пробои', zones: 'Зоны', lines: 'Линии', fib: 'Фибо', ew: 'Волны', smc: 'SMC', position: 'Позиция' },
   /** Полные названия: tooltip и aria-description. */
-  groupTitles: { select: 'Выбор и перемещение', structure: 'Структура рынка: свинги и HH/HL/LH/LL', breaks: 'Пробои структуры и снятие ликвидности', zones: 'Зоны: Order Block и FVG', lines: 'Линии и уровни', fib: 'Сетка Фибоначчи: коррекция и расширение', ew: 'Волны Эллиотта: импульс, зигзаг, плоская, invalidation', position: 'Позиция: вход, стоп, цель' },
+  groupTitles: { select: 'Выбор и перемещение', structure: 'Структура рынка: свинги и HH/HL/LH/LL', breaks: 'Пробои структуры и снятие ликвидности', zones: 'Зоны: Order Block и FVG', lines: 'Линии и уровни', smc: 'SMC: пробои структуры, ликвидность, Order Block, FVG', fib: 'Сетка Фибоначчи: коррекция и расширение', ew: 'Волны Эллиотта: импульс, зигзаг, плоская, invalidation', position: 'Позиция: вход, стоп, цель' },
   scope: { label: 'Слой структуры', external: 'Внешняя', internal: 'Внутренняя', hotkey: 'I' },
   tools_: {
     select: 'Выбор',
