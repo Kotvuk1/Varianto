@@ -35,7 +35,6 @@ export interface EwEnvelope {
 
 /** Открывает сессию и перехватывает ответ next (реальный сервер, реальные свечи) для расчёта допустимой разметки. */
 export async function openEw(page: Page, path: string): Promise<{ env: EwEnvelope }> {
-  page.on('response', async (r) => { if (r.url().includes('/elliott/grade') && !r.ok()) console.log('GRADE', r.status(), (await r.text()).slice(0, 600)); });
   const nextResp = page.waitForResponse((r: Response) => r.url().includes('/api/tasks/elliott/next') && r.request().method() === 'POST', { timeout: 120_000 });
   await page.goto(path);
   const env = (await (await nextResp).json()) as EwEnvelope;
@@ -50,7 +49,7 @@ export function countsFor(env: EwEnvelope): WaveCount[] {
   const candles = env.series[env.payload.tf]!;
   const idx = (t: number) => candles.findIndex((c) => c.openTime === t);
   const lastIndex = idx(env.payload.lastPivot.time);
-  const fromIndex = Math.max(0, idx(env.payload.window.fromTime) - 30);
+  const fromIndex = Math.max(0, idx(env.payload.window.fromTime));
   return enumerateCounts(candles, { nPoint: env.payload.nPoint, fromIndex, lastIndex, maxCounts: 5000 }).counts;
 }
 

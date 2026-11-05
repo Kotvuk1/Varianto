@@ -1,7 +1,6 @@
 import { expect, test } from '@playwright/test';
 import {
   DATE_LEAK, EW_STORAGE, bodyText, closePanel, drawCount, openEw, openPanel, pickCount, seeResult, shot, skipReplay, url,
-  type EwEnvelope,
 } from './elliott.helpers';
 import { chartBox } from './terminal.helpers';
 
