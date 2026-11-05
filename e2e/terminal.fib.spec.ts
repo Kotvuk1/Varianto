@@ -95,6 +95,7 @@ test('Фибо-коррекция двумя касаниями: сетка по
   await expect(chart).toHaveAttribute('data-mark-count', '1');
 
   // центр метки = середина между A и B (ручки стоят ровно на экстремумах)
+  await expect.poll(async () => (await markPoints(page)).length).toBe(1); // центры метки обновляются после отрисовки
   const [m] = await markPoints(page);
   expect(m!.x).toBeCloseTo((f.a.pt.x + f.b.pt.x) / 2, -1);
   expect(m!.y).toBeCloseTo((f.a.pt.y + f.b.pt.y) / 2, -1);
@@ -133,6 +134,7 @@ test('Фибо-расширение тремя касаниями: A, B, C, ша
   await expect(bar).toContainText('(C)');
   await tapAt(page, f.c!.pt);
   await expect(chart).toHaveAttribute('data-mark-count', '1');
+  await expect.poll(async () => (await markPoints(page)).length).toBe(1); // центры метки обновляются после отрисовки
   const [m] = await markPoints(page);
   expect(m!.x).toBeCloseTo((f.a.pt.x + f.b.pt.x + f.c!.pt.x) / 3, -1);
   await selectTool(page, 'Выбор');

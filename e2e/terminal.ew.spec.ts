@@ -82,6 +82,7 @@ test('Импульс: касания 0→5 (или 3/5 + «Готово»), ме
     await page.getByTestId('ew-finish').click();
   }
   await expect(chart).toHaveAttribute('data-mark-count', '1');
+  await expect.poll(async () => (await markPoints(page)).length).toBe(1); // центры метки обновляются после отрисовки
   const [m] = await markPoints(page);
   const mx = pts.reduce((a, p) => a + p.pt.x, 0) / n;
   const my = pts.reduce((a, p) => a + p.pt.y, 0) / n;
