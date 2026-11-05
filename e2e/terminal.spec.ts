@@ -130,10 +130,10 @@ test('раскладка: нет постоянной правой панели,
     await page.keyboard.press('Escape');
     await expect(chart).toHaveAttribute('data-tool', 'select');
   } else {
-    // 6 элементов + «Проверить» в одну строку без обрезки подписей
+    // 7 элементов (с группой «Фибо») + «Проверить» в одну строку без обрезки подписей
     const bar = page.getByRole('toolbar', { name: 'Инструменты разметки' });
     const buttons = bar.getByRole('button');
-    await expect(buttons).toHaveCount(7);
+    await expect(buttons).toHaveCount(8);
     for (const b of await buttons.all()) {
       const bb = (await b.boundingBox())!;
       expect(bb.width).toBeGreaterThanOrEqual(44);
