@@ -2,11 +2,13 @@
 import { Database, ListChecks, Menu, ScanSearch, Settings, TriangleAlert, WifiOff } from 'lucide-react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import type { Mark, Symbol, Timeframe } from '@tl/core';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { checkEwMarks, type Mark, type Symbol, type Timeframe } from '@tl/core';
+import { isEwKind } from '@/chart/ew/model';
+import { liveChecks, liveHints } from '@/features/elliott/adapters';
 import type { ControllerNotice } from '@/chart/interaction/controller';
 import { makePriceFormatter, tickSizeFor } from '@/chart/priceFormat';
-import { TradingChart } from '@/chart/TradingChart';
+import { TradingChart, type TradingChartHandle } from '@/chart/TradingChart';
 import { ru } from '@/i18n/ru';
 import { DesktopTabs } from '@/shell';
 import { NAV_ITEMS } from '@/shell/routes';
@@ -107,7 +109,18 @@ export function TerminalScreen() {
   // Результат проверки относится к конкретной разметке и ряду: любое изменение его обнуляет.
   const seriesKey = data.series ? `${data.series.symbol}|${data.series.tf}` : '';
   const check = checked && checked.marks === marks && checked.key === seriesKey ? checked.result : null;
-  const message = messageState && messageState.marks === marks ? messageState.text : null;
+  const checkMessage = messageState && messageState.marks === marks ? messageState.text : null;
+  const chartRef = useRef<TradingChartHandle>(null);
+
+  // Живые подсказки правил Elliott (ELLIOTT.md §19): первое нарушенное правило - в строке-инструкции, ничего не блокируется
+  const ewRules = useMemo(() => {
+    if (!data.series || !marks.some((m) => isEwKind(m.kind))) return [];
+    try {
+      return liveHints(liveChecks(checkEwMarks(data.series.candles, data.series.tf, marks).results)).filter((h) => h.tone === 'rule');
+    } catch {
+      return [];
+    }
+  }, [data.series, marks]);
 
   const runCheckNow = () => {
     if (!data.series) return;
@@ -151,6 +164,8 @@ export function TerminalScreen() {
     setSelectedId((s) => (s === id ? null : s));
   };
   const selected = marks.find((m) => m.id === selectedId) ?? null;
+  const ewContext = tool.startsWith('ew-') || (selected !== null && isEwKind(selected.kind));
+  const message = checkMessage ?? (ewContext && notice.step === 0 && !notice.code && ewRules.length ? tx.ewLive(ewRules[0]!.text, ewRules.length - 1) : null);
   const focusMark = (m: Mark) => {
     setTool('select');
     setSelectedId(m.id);
@@ -251,6 +266,7 @@ export function TerminalScreen() {
               allowScope
               scope={scope}
               onScope={setScope}
+              onFinish={() => chartRef.current?.finishDraft()}
             />
             <button
               type="button"
@@ -287,6 +303,7 @@ export function TerminalScreen() {
                 readOnlyMarks={check && showRef ? check.algoMarks : undefined}
                 markStates={check?.states}
                 scope={scope}
+                handleRef={chartRef}
               />
             )}
             <div className="pointer-events-none absolute top-2 right-14 z-10 lg:hidden">{statusBadge}</div>

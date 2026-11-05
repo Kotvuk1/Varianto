@@ -2,6 +2,7 @@
 
 import { ChevronRight } from 'lucide-react';
 import Link from 'next/link';
+import { ewx } from '@/i18n/ru/elliott';
 import { fx } from '@/i18n/ru/fib';
 import { ru } from '@/i18n/ru';
 import { ContinueBlock, HomeWeakSpots } from '../home/HomeBlocks';
@@ -11,6 +12,7 @@ const MODULES = [
   { href: '/learn/market-structure', title: ru.modules.marketStructure, modes: ru.modules.marketStructureModes },
   { href: '/learn/price-action', title: ru.modules.priceAction, modes: ru.modules.priceActionModes },
   { href: '/learn/fibonacci', title: fx.card.title, modes: fx.card.modes },
+  { href: '/learn/elliott', title: ewx.card.title, modes: ewx.card.modes },
   { href: '/learn/challenge', title: ru.modules.challenge, modes: ru.modules.challengeModes },
 ] as const;
 

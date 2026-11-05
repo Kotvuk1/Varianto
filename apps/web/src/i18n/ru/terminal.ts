@@ -42,9 +42,9 @@ export const tx = {
   openCandle: 'Идёт',
   cancel: 'Отмена',
   /** Короткие подписи рейки/панели (влезают в 60 px и мобильные кнопки). */
-  groups: { select: 'Выбор', structure: 'Свинги', breaks: 'Пробои', zones: 'Зоны', lines: 'Линии', fib: 'Фибо', position: 'Позиция' },
+  groups: { select: 'Выбор', structure: 'Свинги', breaks: 'Пробои', zones: 'Зоны', lines: 'Линии', fib: 'Фибо', ew: 'Волны', position: 'Позиция' },
   /** Полные названия: tooltip и aria-description. */
-  groupTitles: { select: 'Выбор и перемещение', structure: 'Структура рынка: свинги и HH/HL/LH/LL', breaks: 'Пробои структуры и снятие ликвидности', zones: 'Зоны: Order Block и FVG', lines: 'Линии и уровни', fib: 'Сетка Фибоначчи: коррекция и расширение', position: 'Позиция: вход, стоп, цель' },
+  groupTitles: { select: 'Выбор и перемещение', structure: 'Структура рынка: свинги и HH/HL/LH/LL', breaks: 'Пробои структуры и снятие ликвидности', zones: 'Зоны: Order Block и FVG', lines: 'Линии и уровни', fib: 'Сетка Фибоначчи: коррекция и расширение', ew: 'Волны Эллиотта: импульс, зигзаг, плоская, invalidation', position: 'Позиция: вход, стоп, цель' },
   scope: { label: 'Слой структуры', external: 'Внешняя', internal: 'Внутренняя', hotkey: 'I' },
   tools_: {
     select: 'Выбор',
@@ -66,6 +66,10 @@ export const tx = {
     position: 'Позиция',
     'fib-retracement': 'Фибо: коррекция',
     'fib-extension': 'Фибо: расширение',
+    'ew-impulse': 'Импульс',
+    'ew-zigzag': 'Зигзаг',
+    'ew-flat': 'Плоская',
+    'ew-invalidation': 'Инвалидация',
   },
   /** Названия меток Elliott (инструменты в палитре подключаются экранами Elliott). */
   ewMarks: { 'ew-impulse': 'Elliott: импульс', 'ew-zigzag': 'Elliott: zigzag', 'ew-flat': 'Elliott: flat' },
@@ -92,6 +96,10 @@ export const tx = {
     position: 'нажмите: 1) вход 2) стоп 3) цель',
     'fib-retracement': '1) нажмите на начало импульса (A) 2) нажмите на его конец (B): сетка встанет на экстремумы свечей',
     'fib-extension': '1) нажмите на начало импульса (A) 2) на его конец (B) 3) на конец коррекции (C)',
+    'ew-impulse': 'нажимайте точки 0 → 5 слева направо: метка встанет на экстремум, стороны чередуются (low, high, low…)',
+    'ew-zigzag': 'нажмите точки A, B, C слева направо: зигзаг 5-3-5',
+    'ew-flat': 'нажмите точки A, B, C слева направо: плоская 3-3-5',
+    'ew-invalidation': 'нажмите на цену, за которой подсчёт теряет силу: появится горизонталь',
   },
   helpStep2: {
     bos: 'swing выбран. Теперь нажмите на свечу, закрывшуюся за ним',
@@ -101,6 +109,15 @@ export const tx = {
     'fib-retracement': 'точка A поставлена. Теперь нажмите на конец импульса (B)',
     'fib-extension': 'точка A поставлена. Теперь нажмите на конец импульса (B)',
   },
+  /** Шаг мастера Elliott: сколько точек уже стоит. */
+  ewStep: (tool: 'ew-impulse' | 'ew-zigzag' | 'ew-flat', n: number): string => {
+    const names = tool === 'ew-impulse' ? ['0', '1', '2', '3', '4', '5'] : ['A', 'B', 'C'];
+    const tail = tool === 'ew-impulse' && (n === 3 || n === 5) ? ' Либо нажмите «Готово»: неполная разметка.' : '';
+    return `точки до ${names[n - 1]} поставлены. Нажмите на точку ${names[n]}.${tail}`;
+  },
+  finish: 'Готово',
+  finishHint: 'Завершить неполную разметку',
+  ewLive: (text: string, more: number) => (more > 0 ? `${text} (ещё замечаний: ${more})` : text),
   helpStep3: {
     'fib-extension': 'точки A и B поставлены. Теперь нажмите на конец коррекции (C): цели отложатся от неё',
   },
@@ -111,6 +128,7 @@ export const tx = {
     'before-swing': 'Выберите свечу правее swing',
     'no-sweep': 'Здесь нет sweep: фитиль не пробивает ближайший swing',
     'sweep-is-break': 'Свеча закрылась за уровнем: это пробой, а не sweep',
+    'ew-order': 'Точка должна стоять правее предыдущей',
     'fib-same-point': 'Вторая точка совпала с первой по цене: выберите другой экстремум',
   },
   dir: { up: 'вверх', down: 'вниз', bull: 'бычий', bear: 'медвежий', sweepHigh: 'по high', sweepLow: 'по low' },

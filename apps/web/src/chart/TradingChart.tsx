@@ -45,6 +45,8 @@ export interface TradingChartHandle {
   centerOn(time: number): void;
   /** Центрирует на метке (из marks или readOnlyMarks) и подсвечивает её на FLASH_MS. false - метки нет. */
   focusMark(id: string): boolean;
+  /** «Готово»: фиксирует неполный импульс Elliott (3 или 5 точек). false - завершать нечего. */
+  finishDraft(): boolean;
 }
 
 export const FLASH_MS = 1200;
@@ -517,10 +519,11 @@ export function TradingChart(props: TradingChartProps) {
     },
     [centerOn],
   );
-  useImperativeHandle(props.handleRef, () => ({ centerOn, focusMark }), [centerOn, focusMark]);
+  const finishDraft = useCallback(() => controllerRef.current?.finish() ?? false, []);
+  useImperativeHandle(props.handleRef, () => ({ centerOn, focusMark, finishDraft }), [centerOn, focusMark, finishDraft]);
   useLayoutEffect(() => {
-    handleApi.current = { centerOn, focusMark };
-  }, [centerOn, focusMark]);
+    handleApi.current = { centerOn, focusMark, finishDraft };
+  }, [centerOn, focusMark, finishDraft]);
   useEffect(
     () => () => {
       if (flashTimer.current) clearTimeout(flashTimer.current);

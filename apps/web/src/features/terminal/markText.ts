@@ -1,4 +1,5 @@
 import type { Mark } from '@tl/core';
+import { isEwKind } from '@/chart/ew/model';
 import { isFibKind } from '@/chart/fib/model';
 import { patternLabel } from '@/chart/drawing/layout';
 import { formatDateTime } from '@/i18n/format';
@@ -34,7 +35,9 @@ export function markName(m: Mark): string {
 export function describeMark(m: Mark, fmt: (p: number) => string): string {
   const a = m.anchors;
   const key = m.kind === 'bos' || m.kind === 'choch' || m.kind === 'sweep' ? a[a.length - 1] : a[0];
-  const price = isFibKind(m.kind)
+  const price = isEwKind(m.kind)
+    ? [a[0], a[a.length - 1]].filter(Boolean).map((x) => fmt(x!.price)).join(' → ')
+    : isFibKind(m.kind)
     ? a.map((x) => fmt(x.price)).join(' → ')
     : m.kind === 'fvg' || m.kind === 'order-block'
       ? `${fmt(a[0]!.price)} – ${fmt(a[1]!.price)}`

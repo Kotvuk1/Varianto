@@ -2,6 +2,7 @@
 // Возвращает null, если в новом месте метка недопустима (например, нет разрыва для FVG) - правка отклоняется.
 import type { Candle, Mark } from '@tl/core';
 import type { TimeIndex } from '../geometry/timeIndex';
+import { ewDirection, isEwKind, timesAscending } from '../ew/model';
 import { fibDirection, isFibKind } from '../fib/model';
 import { SWING_SIDE } from '../drawing/tools';
 import { localExtremeIndex, resolveBreak, resolveFvg, resolveOb, resolveSweep } from './rules';
@@ -15,6 +16,12 @@ export function normalizeMark(mark: Mark, candles: readonly Candle[], index: Tim
     const k = localExtremeIndex(candles, idxOf(a[0].time), side);
     const c = candles[k]!;
     return { ...mark, anchors: [{ time: c.openTime, price: side === 'high' ? c.high : c.low }] };
+  }
+  if (isEwKind(mark.kind)) {
+    // направление - по первым двум точкам; время точек строго возрастает, иначе правка отклоняется
+    if (!timesAscending(a)) return null;
+    const d = ewDirection(a);
+    return d ? { ...mark, direction: d } : null;
   }
   if (isFibKind(mark.kind)) {
     // направление сетки - по цене B против A; A == B по цене - вырожденная сетка, правка отклоняется

@@ -24,6 +24,8 @@ export interface InstructionBarProps {
   allowScope?: boolean;
   scope?: Scope;
   onScope?: (s: Scope) => void;
+  /** «Готово»: завершить неполный импульс (кнопка видна при 3 или 5 точках). */
+  onFinish?: () => void;
 }
 
 /** Текст строки-инструкции (без кнопок): выбор метки / предупреждение / инструмент и шаг. */
@@ -33,6 +35,9 @@ export function instructionText(p: Pick<InstructionBarProps, 'tool' | 'step' | '
   if (p.selected) return { text: `${tx.selectedPrefix}: ${describeMark(p.selected, p.fmt)}`, warn: false };
   if (p.tool === 'select') return { text: tx.stripHint, warn: false };
   if (p.tool === 'eraser') return { text: `${tx.toolPrefix(tx.tools_.eraser)} — ${tx.eraserHelp}`, warn: false };
+  if (p.step > 0 && (p.tool === 'ew-impulse' || p.tool === 'ew-zigzag' || p.tool === 'ew-flat')) {
+    return { text: `${tx.toolPrefix(tx.tools_[p.tool])} — ${tx.ewStep(p.tool, p.step)}`, warn: false };
+  }
   const step2 =
     p.step > 1
       ? ((tx.helpStep3 as Record<string, string>)[p.tool] ?? (tx.helpStep2 as Record<string, string>)[p.tool])
@@ -79,6 +84,18 @@ export function InstructionBar(props: InstructionBarProps) {
             onChange={props.onScope}
           />
         </div>
+      )}
+      {props.onFinish && !props.selected && props.tool === 'ew-impulse' && (props.step === 3 || props.step === 5) && (
+        <button
+          type="button"
+          onClick={props.onFinish}
+          aria-label={tx.finishHint}
+          title={tx.finishHint}
+          data-testid="ew-finish"
+          className="inline-flex h-11 shrink-0 cursor-pointer items-center justify-center gap-1 rounded-md bg-accent px-3 text-sm font-medium text-on-accent"
+        >
+          {tx.finish}
+        </button>
       )}
       {props.selected && (
         <>

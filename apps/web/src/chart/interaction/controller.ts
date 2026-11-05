@@ -9,7 +9,8 @@ import type { Projection } from '../drawing/projection';
 import {
   constrainAnchors,
   createMark,
-  isDrawKind,
+  drawKindOf,
+  isDrawTool,
   isScopedKind,
   SWING_SIDE,
   TOOL_DEFS,
@@ -17,6 +18,7 @@ import {
   type MarkExtra,
   type ToolId,
 } from '../drawing/tools';
+import { ewDirection, ewLabels, EW_IMPULSE_SIZES, firstSideOf, isEwKind, sideAt, snapExtreme } from '../ew/model';
 import { fibDirection, isFibKind } from '../fib/model';
 import { snapFibAnchor } from '../fib/snap';
 import { normalizeMark } from '../smc/normalize';
@@ -39,7 +41,7 @@ export interface PointerInput {
 }
 
 /** Подсказки обучения: контроллер не знает текстов, UI сопоставляет коды со строками. */
-export type NoticeCode = 'bos-wick-only' | 'no-fvg' | 'fvg-unclosed' | 'before-swing' | 'no-sweep' | 'sweep-is-break' | 'fib-same-point';
+export type NoticeCode = 'bos-wick-only' | 'no-fvg' | 'fvg-unclosed' | 'before-swing' | 'no-sweep' | 'sweep-is-break' | 'fib-same-point' | 'ew-order';
 
 export interface ControllerNotice {
   /** Сколько касаний уже сделано в текущей метке (0 - ничего не ожидается). */
@@ -94,6 +96,10 @@ type Built =
 
 const DRAG_THRESHOLD = 8;
 export const PREVIEW_ID = '__preview__';
+
+function ewExtra(kind: DrawKind, anchors: readonly Anchor[]): MarkExtra {
+  return { direction: ewDirection(anchors), meta: { labels: ewLabels(kind as 'ew-impulse', anchors.length) } };
+}
 
 export class DrawingController {
   /** Рабочая копия перетаскиваемой метки (рисуется вместо оригинала). */
@@ -198,6 +204,19 @@ export class DrawingController {
         if (!r.ok) return { t: 'reject', code: r.reason === 'is-break' ? 'sweep-is-break' : 'no-sweep' };
         return { t: 'mark', anchors: r.anchors, extra: { direction: r.direction } };
       }
+      case 'ew-impulse':
+      case 'ew-zigzag':
+      case 'ew-flat': {
+        const prev = pending?.anchors ?? [];
+        // стороны чередуются от первой точки; вторая точка выбирает сторону по движению цены
+        const first = prev.length >= 2 ? firstSideOf(prev[0]!, prev[1]!) : sideByPrice(c[t.i]!, t.price);
+        const side = prev.length === 0 ? first : prev.length === 1 ? (t.price >= prev[0]!.price ? 'high' : 'low') : sideAt(first, prev.length);
+        const a = this.d.snap() ? snapExtreme(c, t.i, side) : { time: c[t.i]!.openTime, price: t.price };
+        if (prev.length > 0 && a.time <= prev[prev.length - 1]!.time) return { t: 'reject', code: 'ew-order' };
+        const anchors = [...prev, a];
+        if (anchors.length < TOOL_DEFS[kind].taps) return { t: 'pending', anchors };
+        return { t: 'mark', anchors, extra: ewExtra(kind, anchors) };
+      }
       case 'fib-retracement':
       case 'fib-extension': {
         const a = this.d.snap() ? snapFibAnchor(c, t.i, t.price) : { time: c[t.i]!.openTime, price: t.price };
@@ -212,7 +231,8 @@ export class DrawingController {
       default: {
         const a = kind === 'position' ? { time: c[t.i]!.openTime, price: t.price } : this.lineAnchor(p, t);
         const anchors = [...(pending?.anchors ?? []), a];
-        return anchors.length >= TOOL_DEFS[kind].taps ? { t: 'mark', anchors, extra: {} } : { t: 'pending', anchors };
+        const extra: MarkExtra = kind === 'hline' && this.d.tool() === 'ew-invalidation' ? { meta: { role: 'ew-invalidation' } } : {};
+        return anchors.length >= TOOL_DEFS[kind].taps ? { t: 'mark', anchors, extra } : { t: 'pending', anchors };
       }
     }
   }
@@ -223,7 +243,9 @@ export class DrawingController {
       const anchors = (b.t === 'pending' ? b.anchors : this.pending!.anchors).slice();
       while (anchors.length < TOOL_DEFS[kind].anchors) anchors.push(anchors[anchors.length - 1]!);
       const real = b.t === 'pending' ? b.anchors.length : this.pending!.anchors.length;
-      const fibMeta = isFibKind(kind) ? { meta: { draft: real }, direction: fibDirection(anchors[0]!.price, anchors[1]!.price) } : {};
+      const fibMeta = isEwKind(kind)
+        ? { meta: { draft: real }, direction: ewDirection(anchors) }
+        : isFibKind(kind) ? { meta: { draft: real }, direction: fibDirection(anchors[0]!.price, anchors[1]!.price) } : {};
       this.preview = createMark(kind, anchors, PREVIEW_ID, isScopedKind(kind) ? { scope: this.d.scope?.() ?? null } : fibMeta);
     } else this.preview = null;
     this.d.invalidate?.();
@@ -253,10 +275,11 @@ export class DrawingController {
 
   pointerDown(p: PointerInput): boolean {
     const tool = this.d.tool();
-    if (isDrawKind(tool)) {
-      if (this.pending && this.pending.kind !== tool) this.reset();
-      this.gesture = { mode: 'draw', kind: tool, start: p, dragged: false };
-      this.showPreview(tool, this.build(tool, p, this.pending));
+    if (isDrawTool(tool)) {
+      const kind = drawKindOf(tool)!;
+      if (this.pending && this.pending.kind !== kind) this.reset();
+      this.gesture = { mode: 'draw', kind, start: p, dragged: false };
+      this.showPreview(kind, this.build(kind, p, this.pending));
       return true;
     }
     if (tool === 'eraser') {
@@ -324,7 +347,11 @@ export class DrawingController {
       if (!t) return;
       const anchors = g.original.anchors.map((a) => ({ ...a }));
       const line = !(g.original.kind in SWING_SIDE) && ['level', 'hline', 'trendline', 'position'].includes(g.original.kind);
-      anchors[g.index] = isFibKind(g.original.kind)
+      anchors[g.index] = isEwKind(g.original.kind)
+        ? this.d.snap()
+          ? snapExtreme(candles, t.i, sideAt(firstSideOf(g.original.anchors[0]!, g.original.anchors[1] ?? g.original.anchors[0]!), g.index))
+          : { time: candles[t.i]!.openTime, price: t.price }
+        : isFibKind(g.original.kind)
         ? this.d.snap()
           ? snapFibAnchor(candles, t.i, t.price)
           : { time: candles[t.i]!.openTime, price: t.price }
@@ -379,6 +406,24 @@ export class DrawingController {
     if (over && g.moved && over !== g.original) {
       this.d.commit(this.d.marks().map((m) => (m.id === over.id ? over : m)));
     }
+  }
+
+  /** Можно ли завершить неполную разметку Elliott кнопкой «Готово» (импульс из 3 или 5 точек). */
+  canFinish(): boolean {
+    const p = this.pending;
+    return !!p && p.kind === 'ew-impulse' && p.anchors.length < 6 && (EW_IMPULSE_SIZES as readonly number[]).includes(p.anchors.length);
+  }
+
+  /** «Готово»: фиксирует неполный импульс (3 или 5 точек) как метку. */
+  finish(): boolean {
+    const p = this.pending;
+    if (!p || !this.canFinish()) return false;
+    this.pending = null;
+    this.gesture = null;
+    this.clearPreview();
+    this.d.commit([...this.d.marks(), createMark(p.kind, p.anchors, this.d.newId(), ewExtra(p.kind, p.anchors))]);
+    this.emit(null);
+    return true;
   }
 
   /** Прерывает активный жест (например, второй палец), не трогая уже поставленные якоря. */

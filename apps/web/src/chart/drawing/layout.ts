@@ -5,6 +5,8 @@ import { makePriceFormatter } from '../priceFormat';
 import { TOOL_DEFS, type DrawKind } from './tools';
 import { fibExtentPrices, fibParts } from '../fib/parts';
 import { isFibKind } from '../fib/model';
+import { ewParts } from '../ew/parts';
+import { isEwKind } from '../ew/model';
 
 export type Dash = 'solid' | 'dashed' | 'dotted';
 export type GlyphKind = 'tri-up' | 'tri-down' | 'dot' | 'arrow-up' | 'arrow-down';
@@ -130,6 +132,11 @@ export function buildGeometry(mark: Mark, proj: Projection, opts: GeometryOption
     handles,
   });
 
+  if (isEwKind(kind)) {
+    const draft = typeof mark.meta?.['draft'] === 'number' ? (mark.meta['draft'] as number) : undefined;
+    parts.push(...ewParts({ kind, anchors: mark.anchors, pts, meta: mark.meta, pillH: PILL_H, ...(draft !== undefined ? { draft } : {}) }));
+    return done();
+  }
   const fibKind = isFibKind(kind) ? kind : null;
   if (fibKind) {
     const draft = typeof mark.meta?.['draft'] === 'number' ? (mark.meta['draft'] as number) : undefined;

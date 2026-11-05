@@ -1,17 +1,15 @@
 import type { Anchor, Mark, MarkKind, Scope } from '@tl/core';
 
-/**
- * Виды меток, которые пользователь может рисовать (pattern - только алгоритм).
- * ew-* (Elliott: до 6 якорей) подключаются экранами Elliott отдельно, пока вне набора инструментов.
- */
-export type DrawKind = Exclude<MarkKind, 'pattern' | 'ew-impulse' | 'ew-zigzag' | 'ew-flat'>;
-export type ToolId = 'select' | 'eraser' | DrawKind;
+/** Виды меток, которые пользователь может рисовать (pattern - только алгоритм). */
+export type DrawKind = Exclude<MarkKind, 'pattern'>;
+/** 'ew-invalidation' - горизонталь invalidation (hline с meta.role = 'ew-invalidation'). */
+export type ToolId = 'select' | 'eraser' | 'ew-invalidation' | DrawKind;
 
 export interface ToolDef {
   /** Сколько якорей хранит метка. */
-  anchors: 1 | 2 | 3;
+  anchors: 1 | 2 | 3 | 6;
   /** Сколько касаний нужно для создания (FVG/OB/Sweep - одно касание, якорей два). */
-  taps: 1 | 2 | 3;
+  taps: 1 | 2 | 3 | 6;
   /** Снап цены к фитилю включён по умолчанию (линии; для SMC-типов снап обязателен всегда). */
   snapPrice: boolean;
   /** Короткая подпись на графике (SMC-термин, не локализуется). */
@@ -36,12 +34,21 @@ export const TOOL_DEFS: Readonly<Record<DrawKind, ToolDef>> = {
   position: { anchors: 3, taps: 3, snapPrice: false, label: '' },
   'fib-retracement': { anchors: 2, taps: 2, snapPrice: true, label: 'Fib' },
   'fib-extension': { anchors: 3, taps: 3, snapPrice: true, label: 'Fib ext' },
+  /** Импульс 0..5; до 6 касаний, неполную разметку (3 или 5 точек) завершает «Готово». */
+  'ew-impulse': { anchors: 6, taps: 6, snapPrice: true, label: 'EW' },
+  'ew-zigzag': { anchors: 3, taps: 3, snapPrice: true, label: 'ZZ' },
+  'ew-flat': { anchors: 3, taps: 3, snapPrice: true, label: 'Flat' },
 };
+
+/** Инструмент -> вид создаваемой метки. */
+export const drawKindOf = (t: ToolId): DrawKind | null => (t === 'select' || t === 'eraser' ? null : t === 'ew-invalidation' ? 'hline' : t);
 
 /** Инструменты, которым нужен выбор слоя (Внешняя / Внутренняя). */
 export const isScopedKind = (t: ToolId | null): boolean => t === 'bos' || t === 'choch';
 
-export const isDrawKind = (t: ToolId | null): t is DrawKind => t !== null && t !== 'select' && t !== 'eraser';
+export const isDrawKind = (t: ToolId | null): t is DrawKind => t !== null && t !== 'select' && t !== 'eraser' && t !== 'ew-invalidation';
+/** Любой инструмент рисования (включая «Инвалидацию»). */
+export const isDrawTool = (t: ToolId | null): t is Exclude<ToolId, 'select' | 'eraser'> => t !== null && t !== 'select' && t !== 'eraser';
 
 /**
  * Инварианты формы метки по типу. Вызывается при создании и при каждом перетаскивании якоря.

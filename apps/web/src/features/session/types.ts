@@ -1,5 +1,5 @@
 import type {
-  Candle, Difficulty, Feedback, FibDetail, FibExtensionTask, FibGridTask, FibReactionTask, GradeError, Mark, MarkGrade, ModuleId, SkillOutcome, TaskSymbol, TaskTimeframe, Verdict,
+  Candle, Difficulty, ElliottDetail, ElliottTask, EwTaskKind, Feedback, FibDetail, FibExtensionTask, FibGridTask, FibReactionTask, GradeError, Mark, MarkGrade, ModuleId, SkillOutcome, TaskSymbol, TaskTimeframe, Verdict,
 } from '@tl/core';
 import type { Answer } from '@/server/schemas';
 
@@ -16,7 +16,9 @@ export const DIFFICULTIES: readonly Difficulty[] = ['easy', 'medium', 'hard'];
 /** Тело запроса POST /api/tasks/{module}/next (API_CONTRACTS §3.3). */
 export type NextBody =
   | { difficulty: Difficulty; mode: MsMode; tf: TaskTimeframe; symbol?: TaskSymbol; exclude?: string[]; focus?: string[] }
-  | { difficulty: Difficulty; taskType: PaType | FibType; tf: TaskTimeframe; symbol?: TaskSymbol; exclude?: string[]; focus?: string[] };
+  | { difficulty: Difficulty; taskType: PaType | FibType; tf: TaskTimeframe; symbol?: TaskSymbol; exclude?: string[]; focus?: string[] }
+  /** Elliott: тип задания определяется сложностью (ELLIOTT.md §19). */
+  | { difficulty: Difficulty; tf?: TaskTimeframe; symbol?: TaskSymbol; exclude?: string[] };
 
 export interface TaskPayloadBase {
   kind: string;
@@ -59,7 +61,7 @@ export interface PaContextPayload extends TaskPayloadBase {
   factorOptions: string[];
 }
 export type FibPayload = FibGridTask | FibReactionTask | FibExtensionTask;
-export type TaskPayload = MsMarkPayload | MsQuestionPayload | PaFindPayload | PaLevelPayload | PaContextPayload | FibPayload;
+export type TaskPayload = MsMarkPayload | MsQuestionPayload | PaFindPayload | PaLevelPayload | PaContextPayload | FibPayload | ElliottTask;
 
 export interface TaskEnvelope<P extends TaskPayload = TaskPayload> {
   taskId: string;
@@ -99,7 +101,8 @@ export interface GradeResultDto {
     | { kind: 'ms-question'; chosenOptionId: string; correctOptionId: string }
     | { kind: 'pa-level'; userPrice: number; referencePrice: number; deviationPct: number; tolerancePct: number }
     | { kind: 'pa-context'; expected: Record<string, unknown>; given: Record<string, unknown> }
-    | { kind: 'fib-grid' | 'fib-reaction' | 'fib-extension'; fib: FibDetail };
+    | { kind: 'fib-grid' | 'fib-reaction' | 'fib-extension'; fib: FibDetail }
+    | { kind: EwTaskKind; elliott: ElliottDetail };
   feedback: Feedback;
   /** Проигрывание будущего (Fibonacci reaction/extension, шкала задания). В попытку не сохраняется. */
   replay?: TaskReplay;
