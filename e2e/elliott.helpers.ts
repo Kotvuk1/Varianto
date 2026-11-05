@@ -71,10 +71,10 @@ async function tapPoints(page: Page, pts: { time: number; price: number }[]) {
 
 /** Импульс инструментом «Волны -> Impulse», коррекция - «Zigzag»/«Flat». */
 export async function drawCount(page: Page, count: WaveCount) {
-  await selectTool(page, 'Impulse', 'Волны');
+  await selectTool(page, 'Импульс', 'Волны');
   await tapPoints(page, count.impulse);
   if (count.correction) {
-    await selectTool(page, count.correction.type === 'zigzag' ? 'Zigzag' : 'Flat', 'Волны');
+    await selectTool(page, count.correction.type === 'zigzag' ? 'Зигзаг' : 'Плоская', 'Волны');
     await tapPoints(page, count.correction.points);
   }
 }
