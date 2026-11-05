@@ -155,3 +155,15 @@ describe('шаблоны (ALGORITHMS §17)', () => {
     expect(skillForError('QUESTION_WRONG')).toBe('bos');
   });
 });
+
+describe('вердикт fibonacci/elliott (FIBONACCI.md §11.1)', () => {
+  it('fibonacci использует feedback.verdict.plain.* даже при наличии исходов навыков', () => {
+    const fb = buildFeedback({ module: 'fibonacci', verdict: 'partial', score: 0.6, errors: [], skillOutcomes: [{ skill: 'fib-anchor', correct: 1, total: 2 }] });
+    expect(fb.verdict.templateKey).toBe('feedback.verdict.plain.partial');
+    expect(fb.verdict.params).toEqual({ score: 60 });
+  });
+  it('market-structure по-прежнему считает совпавшие метки', () => {
+    const fb = buildFeedback({ module: 'market-structure', verdict: 'partial', score: 0.6, errors: [], skillOutcomes: [{ skill: 'swing', correct: 1, total: 2 }] });
+    expect(fb.verdict.templateKey).toBe('feedback.verdict.partial');
+  });
+});

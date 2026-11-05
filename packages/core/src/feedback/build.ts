@@ -73,7 +73,8 @@ export function buildFeedback(input: FeedbackInput): Feedback {
   const errors = [...input.errors];
   const worst = errors.find((e) => e.severity === 'major') ?? errors[0];
   const score = Math.round(input.score * 100);
-  const mt = input.module === 'challenge' ? null : matchedOf(input.skillOutcomes);
+  // challenge, fibonacci и elliott оценивают не «совпадение меток», а качество решения: вердикт plain (FIBONACCI.md §11.1)
+  const mt = input.module === 'challenge' || input.module === 'fibonacci' || input.module === 'elliott' ? null : matchedOf(input.skillOutcomes);
   const elliottOutcome = input.module === 'elliott' && input.verdictParams?.outcomeText !== undefined;
   const verdict: FeedbackBlock = elliottOutcome
     ? { templateKey: `feedback.verdict.elliott.${input.verdict}`, code: null, params: { score, ...input.verdictParams }, glyph: 'info' }
