@@ -55,7 +55,16 @@ async function alternating(page: Page, box: { x: number; y: number; width: numbe
     }
   }
   // разделение по x, чтобы касания не слипались
-  return seq.filter((p, i) => i === 0 || p.pt.x - seq[i - 1]!.pt.x >= 14);
+  const spaced = seq.filter((p, i) => i === 0 || p.pt.x - seq[i - 1]!.pt.x >= 14);
+  // удаление слишком близких точек могло подряд оставить две одной стороны: снова склеиваем, сохраняя чередование
+  const out: P[] = [];
+  for (const p of spaced) {
+    const last = out[out.length - 1];
+    if (last && last.side === p.side) {
+      if (p.side === 'high' ? p.c.high > last.c.high : p.c.low < last.c.low) out[out.length - 1] = p;
+    } else out.push(p);
+  }
+  return out;
 }
 
 test('Импульс: касания 0→5 (или 3/5 + «Готово»), метка на экстремумах, подписи, перезагрузка', async ({ page }) => {
@@ -65,13 +74,15 @@ test('Импульс: касания 0→5 (или 3/5 + «Готово»), ме
   expect(seq.length).toBeGreaterThanOrEqual(3);
   const n = seq.length >= 6 ? 6 : seq.length >= 5 ? 5 : 3;
   const pts = seq.slice(-n);
+  // строка-инструкция меняет высоту (шаги, «Готово») и сдвигает график: координаты берём заново перед каждым касанием
+  const at = async (p: P) => (await project(page, p.c.openTime, p.c[p.side]))!;
 
   await selectTool(page, 'Импульс', 'Волны');
   const bar = page.getByTestId('instruction-bar');
   await expect(bar).toContainText('Инструмент: Импульс');
   await expect(bar).toContainText('0 → 5');
   for (let k = 0; k < n; k++) {
-    await tapAt(page, pts[k]!.pt);
+    await tapAt(page, await at(pts[k]!));
     if (k < n - 1) {
       await expect(chart).toHaveAttribute('data-mark-count', '0');
       await expect(bar).toContainText(`Нажмите на точку ${k + 1}`);
@@ -84,10 +95,12 @@ test('Импульс: касания 0→5 (или 3/5 + «Готово»), ме
   await expect(chart).toHaveAttribute('data-mark-count', '1');
   await expect.poll(async () => (await markPoints(page)).length).toBe(1); // центры метки обновляются после отрисовки
   const [m] = await markPoints(page);
-  const mx = pts.reduce((a, p) => a + p.pt.x, 0) / n;
-  const my = pts.reduce((a, p) => a + p.pt.y, 0) / n;
+  const now = await Promise.all(pts.map(at));
+  const mx = now.reduce((a, p) => a + p.x, 0) / n;
+  const my = now.reduce((a, p) => a + p.y, 0) / n;
   expect(m!.x).toBeCloseTo(mx, -1);
-  expect(m!.y).toBeCloseTo(my, -1);
+  // после «Готово» строка-инструкция меняет высоту и график сдвигается: центры метки обновляются после перерисовки
+  await expect.poll(async () => Math.abs(((await markPoints(page))[0]?.y ?? 1e9) - my)).toBeLessThan(5);
   await selectTool(page, 'Выбор');
   await shot(page, 'ew-impulse');
 
@@ -104,10 +117,10 @@ test('Зигзаг, Плоская и Инвалидация: A-B-C тремя �
   expect(seq.length).toBeGreaterThanOrEqual(3);
   const abc = seq.slice(-3);
   await selectTool(page, 'Зигзаг', 'Волны');
-  for (const p of abc) await tapAt(page, p.pt);
+  for (const p of abc) await tapAt(page, (await project(page, p.c.openTime, p.c[p.side]))!);
   await expect(chart).toHaveAttribute('data-mark-count', '1');
   await selectTool(page, 'Плоская', 'Волны');
-  for (const p of seq.slice(0, 3).length === 3 && seq.length >= 6 ? seq.slice(0, 3) : abc) await tapAt(page, p.pt);
+  for (const p of seq.slice(0, 3).length === 3 && seq.length >= 6 ? seq.slice(0, 3) : abc) await tapAt(page, (await project(page, p.c.openTime, p.c[p.side]))!);
   await expect(chart).toHaveAttribute('data-mark-count', '2');
   await selectTool(page, 'Инвалидация', 'Волны');
   await tapAt(page, { x: box.x + box.width / 2, y: abc[0]!.pt.y });

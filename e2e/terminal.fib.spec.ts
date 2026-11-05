@@ -88,17 +88,21 @@ test('Фибо-коррекция двумя касаниями: сетка по
   await expect(bar).toContainText('нажмите на начало импульса (A)');
 
   // касание рядом с экстремумом (смещение по цене и времени внутри радиуса снапа)
-  await tapAt(page, { x: f.a.pt.x + 2, y: f.a.pt.y - 4 });
+  const fresh = async (c: RealCandle, side: 'high' | 'low') => (await project(page, c.openTime, c[side]))!; // график сдвигается при смене строки-инструкции
+  const pa0 = await fresh(f.a, 'low');
+  await tapAt(page, { x: pa0.x + 2, y: pa0.y - 4 });
   await expect(chart).toHaveAttribute('data-mark-count', '0');
   await expect(bar).toContainText('конец импульса (B)');
-  await tapAt(page, { x: f.b.pt.x - 2, y: f.b.pt.y + 4 });
+  const pb0 = await fresh(f.b, 'high');
+  await tapAt(page, { x: pb0.x - 2, y: pb0.y + 4 });
   await expect(chart).toHaveAttribute('data-mark-count', '1');
 
   // центр метки = середина между A и B (ручки стоят ровно на экстремумах)
   await expect.poll(async () => (await markPoints(page)).length).toBe(1); // центры метки обновляются после отрисовки
   const [m] = await markPoints(page);
-  expect(m!.x).toBeCloseTo((f.a.pt.x + f.b.pt.x) / 2, -1);
-  expect(m!.y).toBeCloseTo((f.a.pt.y + f.b.pt.y) / 2, -1);
+  const [pa1, pb1] = [await fresh(f.a, 'low'), await fresh(f.b, 'high')];
+  expect(m!.x).toBeCloseTo((pa1.x + pb1.x) / 2, -1);
+  expect(m!.y).toBeCloseTo((pa1.y + pb1.y) / 2, -1);
   await selectTool(page, 'Выбор');
   await shot(page, 'fib-retracement');
 
@@ -111,13 +115,14 @@ test('Фибо-коррекция двумя касаниями: сетка по
   await expect(page.getByTestId('chart')).toHaveAttribute('data-mark-count', '1');
   await expect.poll(async () => (await markPoints(page)).length, { timeout: 10_000 }).toBe(1);
   const [m2] = await markPoints(page);
-  expect(m2!.x).toBeCloseTo((f.a.pt.x + f.b.pt.x) / 2, -1);
+  const [pa2, pb2] = [await fresh(f.a, 'low'), await fresh(f.b, 'high')];
+  expect(m2!.x).toBeCloseTo((pa2.x + pb2.x) / 2, -1);
   await shot(page, 'fib-retracement-reload');
 
   // ластик: касание по линии уровня удаляет сетку
   await selectTool(page, 'Ластик');
   const mid = await project(page, f.a.openTime + 0, (f.a.low + f.b.high) / 2);
-  await tapAt(page, { x: Math.min(box.x + box.width - 100, (f.b.pt.x + 40)), y: mid!.y });
+  await tapAt(page, { x: Math.min(box.x + box.width - 100, pb2.x + 40), y: mid!.y });
   await expect(page.getByTestId('chart')).toHaveAttribute('data-mark-count', '0');
 });
 
@@ -128,15 +133,18 @@ test('Фибо-расширение тремя касаниями: A, B, C, ша
   await openFibTool(page, 'Фибо: расширение');
   const bar = page.getByTestId('instruction-bar');
   await expect(bar).toContainText('3) на конец коррекции (C)');
-  await tapAt(page, f.a.pt);
-  await tapAt(page, f.b.pt);
+  // строка-инструкция меняет высоту между шагами и сдвигает график: координаты берём заново перед каждым касанием
+  const fresh = async (c: RealCandle, side: 'high' | 'low') => (await project(page, c.openTime, c[side]))!;
+  await tapAt(page, await fresh(f.a, 'low'));
+  await tapAt(page, await fresh(f.b, 'high'));
   await expect(chart).toHaveAttribute('data-mark-count', '0');
   await expect(bar).toContainText('(C)');
-  await tapAt(page, f.c!.pt);
+  await tapAt(page, await fresh(f.c!, 'low'));
   await expect(chart).toHaveAttribute('data-mark-count', '1');
   await expect.poll(async () => (await markPoints(page)).length).toBe(1); // центры метки обновляются после отрисовки
   const [m] = await markPoints(page);
-  expect(m!.x).toBeCloseTo((f.a.pt.x + f.b.pt.x + f.c!.pt.x) / 3, -1);
+  const [pa, pb, pc] = [await fresh(f.a, 'low'), await fresh(f.b, 'high'), await fresh(f.c!, 'low')];
+  expect(m!.x).toBeCloseTo((pa.x + pb.x + pc.x) / 3, -1);
   await selectTool(page, 'Выбор');
   await shot(page, 'fib-extension');
 
