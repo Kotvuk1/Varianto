@@ -39,6 +39,10 @@ export interface TaskChartProps {
   scope?: Scope | null;
   /** Колонки подсветки свечей модели (PA). */
   highlightCandles?: readonly CandleHighlight[];
+  /** Fibonacci: выбор уровня сетки касанием; подсветка выбранного уровня. */
+  onLevelPick?: (level: number, markId: string) => void;
+  highlightLevel?: number | null;
+  onVisibleRangeChange?: (w: TimeWindow) => void;
   /** centerOn / focusMark для разбора. */
   handleRef?: Ref<TradingChartHandle>;
 }
@@ -68,6 +72,9 @@ export function TaskChart(p: TaskChartProps) {
       focus={p.focus ?? null}
       {...(p.highlightCandles ? { highlightCandles: p.highlightCandles } : {})}
       {...(p.handleRef ? { handleRef: p.handleRef } : {})}
+      {...(p.onLevelPick ? { onLevelPick: p.onLevelPick } : {})}
+      {...(p.highlightLevel !== undefined ? { highlightLevel: p.highlightLevel } : {})}
+      {...(p.onVisibleRangeChange ? { onVisibleRangeChange: p.onVisibleRangeChange } : {})}
       openCandleLabel={tx.openCandle}
       ariaLabel={ss.chartLabel(p.symbol, TF_LABEL[p.tf])}
     />

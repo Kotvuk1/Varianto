@@ -21,6 +21,10 @@ export function markName(m: Mark): string {
       return m.direction ? `${tx.tools_.sweep} ${m.direction === 'bear' ? d.sweepHigh : d.sweepLow}` : tx.tools_.sweep;
     case 'pattern':
       return patternLabel(m.meta?.['patternType']);
+    case 'ew-impulse':
+    case 'ew-zigzag':
+    case 'ew-flat':
+      return tx.ewMarks[m.kind];
     default:
       return tx.tools_[m.kind];
   }

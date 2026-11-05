@@ -67,6 +67,8 @@ export const tx = {
     'fib-retracement': 'Фибо: коррекция',
     'fib-extension': 'Фибо: расширение',
   },
+  /** Названия меток Elliott (инструменты в палитре подключаются экранами Elliott). */
+  ewMarks: { 'ew-impulse': 'Elliott: импульс', 'ew-zigzag': 'Elliott: zigzag', 'ew-flat': 'Elliott: flat' },
   stripHint: 'Выберите инструмент и нажмите на график: метка встанет на свечу по правилам разметки.',
   stripExpand: 'Показать подсказку целиком',
   toolPrefix: (name: string) => `Инструмент: ${name}`,

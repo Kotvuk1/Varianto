@@ -2,6 +2,7 @@
 
 import { ChevronRight } from 'lucide-react';
 import Link from 'next/link';
+import { fx } from '@/i18n/ru/fib';
 import { ru } from '@/i18n/ru';
 import { ContinueBlock, HomeWeakSpots } from '../home/HomeBlocks';
 import { DailyGoal } from '../progress/DailyGoal';
@@ -9,6 +10,7 @@ import { DailyGoal } from '../progress/DailyGoal';
 const MODULES = [
   { href: '/learn/market-structure', title: ru.modules.marketStructure, modes: ru.modules.marketStructureModes },
   { href: '/learn/price-action', title: ru.modules.priceAction, modes: ru.modules.priceActionModes },
+  { href: '/learn/fibonacci', title: fx.card.title, modes: fx.card.modes },
   { href: '/learn/challenge', title: ru.modules.challenge, modes: ru.modules.challengeModes },
 ] as const;
 
@@ -40,7 +42,7 @@ export function LearnScreen() {
         <h2 id="modules-h" className="mb-2 text-lg font-semibold">
           {ru.modules.title}
         </h2>
-        <ul className="lg:grid lg:grid-cols-3 lg:gap-x-8">
+        <ul className="lg:grid lg:grid-cols-2 lg:gap-x-8">
           {MODULES.map((m) => (
             <li key={m.href}>
               <Link

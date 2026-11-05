@@ -44,6 +44,14 @@ describe('слабые места', () => {
   });
 });
 
+describe('навыки Fibonacci', () => {
+  it('fib-* и premium-discount образуют группу модуля fibonacci', () => {
+    const g = groupByModule([stat('fib-anchor', rep(6, true)), stat('fib-reaction', [true, false]), stat('premium-discount', rep(5, false)), stat('fib-extension', rep(6, true)), stat('bos', rep(6, true))]);
+    expect(g.map((x) => x.module)).toEqual(['market-structure', 'fibonacci']);
+    expect(g[1]!.skills.map((x) => x.skill).sort()).toEqual(['fib-anchor', 'fib-extension', 'fib-reaction', 'premium-discount']);
+  });
+});
+
 describe('тренд и тренировка', () => {
   it('тренд по половинам окна', () => {
     expect(trendOf(ok([...rep(4, false), ...rep(4, true)]))).toBe('up');
@@ -56,6 +64,12 @@ describe('тренд и тренировка', () => {
     expect(trainTarget(stat('pa-pin-bar', rep(6, false))).href).toBe('/learn/price-action/session?type=find-pattern&difficulty=easy&focus=pa-pin-bar');
     expect(trainTarget(stat('pa-level', rep(6, false))).href).toContain('type=draw-level');
     expect(trainTarget(stat('challenge-wait', rep(6, false))).href).toBe('/learn/challenge/session?difficulty=easy&focus=challenge-wait');
+    // Fibonacci: тип задания по навыку (FIBONACCI.md §10), без focus
+    expect(trainTarget(stat('fib-reaction', rep(6, false))).href).toBe('/learn/fibonacci/session?type=reaction&difficulty=easy');
+    expect(trainTarget(stat('premium-discount', rep(6, false))).href).toContain('type=reaction');
+    expect(trainTarget(stat('fib-extension', rep(6, false))).href).toContain('type=extension');
+    expect(['grid', 'extension']).toContain(new URL(trainTarget(stat('fib-anchor', rep(6, false))).href, 'http://x').searchParams.get('type'));
+    expect(trainTarget(stat('fib-anchor', rep(6, false))).module).toBe('fibonacci');
   });
   it('при точности >= 0.8 на полном окне сложность растёт', () => {
     expect(trainTarget(stat('bos', rep(20, true))).href).toContain('difficulty=medium');

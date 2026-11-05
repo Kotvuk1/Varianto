@@ -12,7 +12,7 @@ import type { Attempt, ModuleId, SkillStat } from '@/storage';
 export { MIN_SAMPLE };
 export type Trend = 'up' | 'flat' | 'down';
 
-const MODULE_ORDER: ModuleId[] = ['market-structure', 'price-action', 'challenge', 'fibonacci'];
+const MODULE_ORDER: ModuleId[] = ['market-structure', 'price-action', 'challenge', 'fibonacci', 'elliott'];
 const asCore = (s: SkillStat) => s as unknown as CoreSkillStat;
 
 export function moduleOfSkill(skill: string): ModuleId {
@@ -78,6 +78,18 @@ export function trainTarget(stat: Pick<SkillStat, 'skill' | 'recent' | 'accuracy
     q.set('difficulty', difficulty);
     q.set('focus', stat.skill);
     return { module: gen.module, href: `/learn/price-action/session?${q}` };
+  }
+  if (gen.module === 'fibonacci') {
+    // fib-anchor делится между grid и extension (50/50, §10): выбор по числу попыток детерминирован.
+    const g = stat.skill === 'fib-anchor' ? (generatorForSkill(stat.skill as SkillId, stat.attempts) as typeof gen) : gen;
+    q.set('type', g.taskType);
+    q.set('difficulty', difficulty);
+    return { module: 'fibonacci', href: `/learn/fibonacci/session?${q}` };
+  }
+  if (gen.module === 'elliott') {
+    // тип задания определяется сложностью, focus на него не влияет (ELLIOTT.md §19)
+    q.set('difficulty', difficulty);
+    return { module: 'elliott', href: `/learn/elliott/session?${q}` };
   }
   q.set('difficulty', difficulty);
   q.set('focus', stat.skill);

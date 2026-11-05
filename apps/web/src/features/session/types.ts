@@ -1,4 +1,6 @@
-import type { Candle, Difficulty, Feedback, GradeError, Mark, MarkGrade, ModuleId, SkillOutcome, TaskSymbol, TaskTimeframe, Verdict } from '@tl/core';
+import type {
+  Candle, Difficulty, Feedback, FibDetail, FibExtensionTask, FibGridTask, FibReactionTask, GradeError, Mark, MarkGrade, ModuleId, SkillOutcome, TaskSymbol, TaskTimeframe, Verdict,
+} from '@tl/core';
 import type { Answer } from '@/server/schemas';
 
 export type { Answer };
@@ -6,6 +8,7 @@ export type TaskModule = Exclude<ModuleId, 'challenge'>;
 
 export type MsMode = 'mark' | 'question';
 export type PaType = 'find-pattern' | 'draw-level' | 'context';
+export type FibType = 'grid' | 'reaction' | 'extension';
 export const TASK_TFS: readonly TaskTimeframe[] = ['15m', '1h', '4h', '1d'];
 export const TASK_SYMBOLS: readonly TaskSymbol[] = ['BTCUSDT', 'ETHUSDT', 'SOLUSDT'];
 export const DIFFICULTIES: readonly Difficulty[] = ['easy', 'medium', 'hard'];
@@ -13,7 +16,7 @@ export const DIFFICULTIES: readonly Difficulty[] = ['easy', 'medium', 'hard'];
 /** Тело запроса POST /api/tasks/{module}/next (API_CONTRACTS §3.3). */
 export type NextBody =
   | { difficulty: Difficulty; mode: MsMode; tf: TaskTimeframe; symbol?: TaskSymbol; exclude?: string[]; focus?: string[] }
-  | { difficulty: Difficulty; taskType: PaType; tf: TaskTimeframe; symbol?: TaskSymbol; exclude?: string[]; focus?: string[] };
+  | { difficulty: Difficulty; taskType: PaType | FibType; tf: TaskTimeframe; symbol?: TaskSymbol; exclude?: string[]; focus?: string[] };
 
 export interface TaskPayloadBase {
   kind: string;
@@ -55,7 +58,8 @@ export interface PaContextPayload extends TaskPayloadBase {
   pattern: Mark;
   factorOptions: string[];
 }
-export type TaskPayload = MsMarkPayload | MsQuestionPayload | PaFindPayload | PaLevelPayload | PaContextPayload;
+export type FibPayload = FibGridTask | FibReactionTask | FibExtensionTask;
+export type TaskPayload = MsMarkPayload | MsQuestionPayload | PaFindPayload | PaLevelPayload | PaContextPayload | FibPayload;
 
 export interface TaskEnvelope<P extends TaskPayload = TaskPayload> {
   taskId: string;
@@ -65,9 +69,18 @@ export interface TaskEnvelope<P extends TaskPayload = TaskPayload> {
   symbol: TaskSymbol;
   algoVersion: string;
   expiresAt: number;
+  /** relative: шкала времени сдвинута, дата скрыта до итога (Fibonacci reaction/extension). */
+  timeline?: { mode: 'relative' | 'absolute' };
   decisionTime: number;
   series: Partial<Record<TaskTimeframe, Candle[]>>;
   payload: P;
+}
+
+/** Проигрывание после решения: свечи шкалы задания и индекс события в них. */
+export interface TaskReplay {
+  tf: TaskTimeframe;
+  candles: Candle[];
+  exitIndex: number | null;
 }
 
 /** Ответ grade (API_CONTRACTS §5.1); поля, которые использует UI. */
@@ -77,7 +90,7 @@ export interface GradeResultDto {
   algoVersion: string;
   verdict: Verdict;
   score: number;
-  task: { module: TaskModule; difficulty: Difficulty; symbol: TaskSymbol; tf: TaskTimeframe | null; taskKind: string };
+  task: { module: TaskModule; difficulty: Difficulty; symbol: TaskSymbol; tf: TaskTimeframe | null; taskKind: string; reveal?: { decisionTime: number; shiftMs: number } };
   skillOutcomes: SkillOutcome[];
   errors: GradeError[];
   reference: Mark[];
@@ -85,8 +98,11 @@ export interface GradeResultDto {
     | { kind: 'ms-mark' | 'pa-find'; marks: MarkGrade }
     | { kind: 'ms-question'; chosenOptionId: string; correctOptionId: string }
     | { kind: 'pa-level'; userPrice: number; referencePrice: number; deviationPct: number; tolerancePct: number }
-    | { kind: 'pa-context'; expected: Record<string, unknown>; given: Record<string, unknown> };
+    | { kind: 'pa-context'; expected: Record<string, unknown>; given: Record<string, unknown> }
+    | { kind: 'fib-grid' | 'fib-reaction' | 'fib-extension'; fib: FibDetail };
   feedback: Feedback;
+  /** Проигрывание будущего (Fibonacci reaction/extension, шкала задания). В попытку не сохраняется. */
+  replay?: TaskReplay;
 }
 
 export type TaskErrorKind = 'no-situation' | 'rate-limited' | 'archive' | 'network' | 'expired' | 'generic';

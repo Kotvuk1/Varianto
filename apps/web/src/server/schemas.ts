@@ -7,16 +7,17 @@ export const MAX_BODY_BYTES = 64 * 1024;
 export const MAX_MARKS = 200;
 export const SYMBOLS = ['BTCUSDT', 'ETHUSDT', 'SOLUSDT'] as const;
 export const TASK_TFS = ['15m', '1h', '4h', '1d'] as const;
-export const MODULES: readonly ModuleId[] = ['market-structure', 'price-action', 'challenge', 'fibonacci'];
+export const MODULES: readonly ModuleId[] = ['market-structure', 'price-action', 'challenge', 'fibonacci', 'elliott'];
 
 const SKILLS = [
   'swing', 'structure-labels', 'bos', 'choch', 'internal-external', 'sweep', 'order-block', 'fvg',
   'pa-engulfing', 'pa-pin-bar', 'pa-inside-bar', 'pa-doji', 'pa-star', 'pa-level', 'pa-context',
   'challenge-entry', 'challenge-risk', 'challenge-wait', 'fib-anchor', 'fib-reaction', 'fib-extension', 'premium-discount',
+  'ew-impulse', 'ew-correction', 'ew-rules', 'ew-invalidation',
 ] as const;
 const MARK_KINDS = [
   'swing-high', 'swing-low', 'hh', 'hl', 'lh', 'll', 'bos', 'choch', 'sweep', 'order-block', 'fvg',
-  'level', 'hline', 'trendline', 'pattern', 'position', 'fib-retracement', 'fib-extension',
+  'level', 'hline', 'trendline', 'pattern', 'position', 'fib-retracement', 'fib-extension', 'ew-impulse', 'ew-zigzag', 'ew-flat',
 ] as const;
 
 const difficulty = z.enum(['easy', 'medium', 'hard']);
@@ -37,20 +38,23 @@ export const NextSchemas = {
   'price-action': z.object({ ...nextBase, taskType: z.enum(['find-pattern', 'draw-level', 'context']), tf }).strict(),
   challenge: z.object(nextBase).strict(),
   fibonacci: z.object({ ...nextBase, taskType: z.enum(['grid', 'reaction', 'extension']), tf }).strict(),
+  // tf из списка сложности проверяется при выборе (UNKNOWN_TIMEFRAME); без tf - по seed. focus на тип задания не влияет (ELLIOTT.md §19).
+  elliott: z.object({ ...nextBase, tf: tf.optional() }).strict(),
 } as const;
 
 export type NextRequest =
   | ({ module: 'market-structure' } & z.infer<(typeof NextSchemas)['market-structure']>)
   | ({ module: 'price-action' } & z.infer<(typeof NextSchemas)['price-action']>)
   | ({ module: 'challenge' } & z.infer<(typeof NextSchemas)['challenge']>)
-  | ({ module: 'fibonacci' } & z.infer<(typeof NextSchemas)['fibonacci']>);
+  | ({ module: 'fibonacci' } & z.infer<(typeof NextSchemas)['fibonacci']>)
+  | ({ module: 'elliott' } & z.infer<(typeof NextSchemas)['elliott']>);
 
 export const AnchorSchema = z.object({ time: z.number().int().finite(), price: z.number().finite() }).strict();
 export const UserMarkSchema = z
   .object({
     id: z.string().min(1).max(100),
     kind: z.enum(MARK_KINDS),
-    anchors: z.array(AnchorSchema).min(1).max(3),
+    anchors: z.array(AnchorSchema).min(1).max(6),
     scope: z.enum(['internal', 'external']).nullable(),
     direction: z.enum(['bull', 'bear']).nullable(),
     meta: z.record(z.string(), z.unknown()).optional(),
@@ -91,10 +95,38 @@ const fibMark = (kind: 'fib-retracement' | 'fib-extension', anchors: number) =>
   UserMarkSchema.superRefine((m, ctx) => {
     if (m.kind !== kind || m.anchors.length !== anchors) ctx.addIssue({ code: 'custom', path: ['anchors'], message: 'FIB_ANCHORS_COUNT' });
   });
+const ewMark = (kinds: readonly ('ew-impulse' | 'ew-zigzag' | 'ew-flat')[], counts: readonly number[]) =>
+  UserMarkSchema.superRefine((m, ctx) => {
+    if (!(kinds as readonly string[]).includes(m.kind) || !counts.includes(m.anchors.length)) ctx.addIssue({ code: 'custom', path: ['anchors'], message: 'EW_ANCHORS_COUNT' });
+  });
+const EW_PRIMARY = ['w3-next', 'w5-next', 'abc-next', 'trend-next'] as const;
+const EW_ALTERNATIVES = [...EW_PRIMARY, 'bc-next', 'correction-extends', 'impulse-extends'] as const;
+const ewScenario = <T extends readonly string[]>(list: T) =>
+  z.string().superRefine((v, ctx) => {
+    if (!(list as readonly string[]).includes(v)) ctx.addIssue({ code: 'custom', message: 'EW_SCENARIO_UNKNOWN' });
+  }) as unknown as z.ZodType<T[number]>;
 const FIB_OPTIONS = ['0.382', '0.5', '0.618', '0.705', '0.786', 'ote', 'deep'] as const;
 const FIB_TARGETS = ['1', '1.272', '1.618', 'none'] as const;
 
+export const ElliottAnswerSchema = z
+  .object({
+    kind: z.enum(['ew-impulse', 'ew-impulse-correction', 'ew-scenario']),
+    impulse: ewMark(['ew-impulse'], [3, 5, 6]),
+    correction: ewMark(['ew-zigzag', 'ew-flat'], [3]).nullable(),
+    primary: ewScenario(EW_PRIMARY),
+    alternative: ewScenario(EW_ALTERNATIVES).nullable(),
+    invalidation: z
+      .number()
+      .nullable()
+      .superRefine((v, ctx) => {
+        if (v !== null && !(Number.isFinite(v) && v > 0)) ctx.addIssue({ code: 'custom', message: 'EW_INVALIDATION_INVALID' });
+      }),
+  })
+  .strict();
+export type ElliottAnswerApi = z.infer<typeof ElliottAnswerSchema>;
+
 export const AnswerSchema = z.discriminatedUnion('kind', [
+  ElliottAnswerSchema,
   z.object({ kind: z.literal('fib-grid'), mark: fibMark('fib-retracement', 2) }).strict(),
   z
     .object({
@@ -134,6 +166,7 @@ export type GradeRequest = z.infer<typeof GradeSchema>;
 const BUSINESS_CODES = new Set([
   'SL_REQUIRED', 'TP_REQUIRED', 'SL_WRONG_SIDE', 'TP_WRONG_SIDE', 'ENTRY_MISMATCH', 'WAIT_HAS_POSITION_FIELDS',
   'FIB_ANCHORS_COUNT', 'FIB_CONFLUENCE_INVALID',
+  'EW_ANCHORS_COUNT', 'EW_SCENARIO_UNKNOWN', 'EW_INVALIDATION_INVALID',
 ]);
 
 /** zod-issue -> ValidationIssueCode контракта (API_CONTRACTS §1.1). */

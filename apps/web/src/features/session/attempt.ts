@@ -1,6 +1,7 @@
 // Сохранение попытки (API_CONTRACTS §7, DATABASE_SCHEMA): только публичные поля, без taskToken и расшифрованного состояния.
 import { localDay } from '@/i18n/format';
 import type { Attempt, Repository } from '@/storage';
+import { storableGrade } from '../fibonacci/reveal';
 import type { Answer, GradeResultDto, TaskEnvelope } from './types';
 
 export interface BuildAttemptInput {
@@ -26,7 +27,7 @@ export function buildAttempt({ envelope, answer, grade, startedAt, now, id }: Bu
       decisionTime: envelope.decisionTime,
     },
     answer,
-    grade: grade as unknown as Attempt['grade'],
+    grade: (envelope.module === 'fibonacci' ? storableGrade(grade) : grade) as unknown as Attempt['grade'],
     algoVersion: grade.algoVersion,
     skills,
     correct: grade.verdict === 'correct',

@@ -1,7 +1,10 @@
 import type { Anchor, Mark, MarkKind, Scope } from '@tl/core';
 
-/** Виды меток, которые пользователь может рисовать (pattern - только алгоритм). */
-export type DrawKind = Exclude<MarkKind, 'pattern'>;
+/**
+ * Виды меток, которые пользователь может рисовать (pattern - только алгоритм).
+ * ew-* (Elliott: до 6 якорей) подключаются экранами Elliott отдельно, пока вне набора инструментов.
+ */
+export type DrawKind = Exclude<MarkKind, 'pattern' | 'ew-impulse' | 'ew-zigzag' | 'ew-flat'>;
 export type ToolId = 'select' | 'eraser' | DrawKind;
 
 export interface ToolDef {

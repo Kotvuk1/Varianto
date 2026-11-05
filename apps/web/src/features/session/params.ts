@@ -29,6 +29,7 @@ function common(get: Get): CommonParams {
   };
 }
 
+export const parseCommonParams = common;
 export const parseMsParams = (get: Get): MsParams => ({ ...common(get), mode: pick(get('mode'), ['mark', 'question'] as const, 'mark') });
 export const parsePaParams = (get: Get): PaParams => ({
   ...common(get),

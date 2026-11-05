@@ -39,7 +39,6 @@ import {
   patternGradeContext,
   patternToMark,
   pickChallengeScenario,
-  isTimeParam,
   pickContextTask,
   pickFibTask,
   pickFindPattern,
@@ -71,7 +70,7 @@ import {
 import { z } from 'zod';
 import { ArchiveError } from '@tl/market-data';
 import { ApiError, validationError } from './errors';
-import { SYMBOLS, type Answer, type ChallengeAnswer, type FibAnswer, type GradeRequest, type NextRequest } from './schemas';
+import { SYMBOLS, type Answer, type ChallengeAnswer, type ElliottAnswerApi, type FibAnswer, type GradeRequest, type NextRequest } from './schemas';
 import {
   CHALLENGE_FUTURE_MS,
   ChallengeZone,
@@ -86,6 +85,10 @@ import {
   ARCHIVE_START,
 } from './sources';
 import { open, seal, taskIdFor } from './token';
+import { shiftCandle, shiftMark, shiftTimes } from './shift';
+import { buildElliott, gradeElliottTask, ElliottParamsSchema } from './elliott';
+
+export { shiftMark };
 
 export interface ServerDeps {
   loader: CandleLoader;
@@ -144,6 +147,7 @@ const ParamsSchema = z.discriminatedUnion('kind', [
     targetOptions: z.array(z.string()),
     directionHint: z.enum(['bull', 'bear']).nullable(),
   }),
+  ElliottParamsSchema,
 ]);
 type Params = z.infer<typeof ParamsSchema>;
 
@@ -163,7 +167,7 @@ export interface TaskEnvelope {
   payload: Record<string, unknown>;
 }
 
-interface Draft {
+export interface Draft {
   T: UtcMs;
   seed: number;
   shiftMs: number;
@@ -243,6 +247,7 @@ export async function nextTask(module: ModuleId, req: NextRequest, deps: ServerD
       if (req.module === 'market-structure') draft = await buildMs(req, symbol, seed, deps, (T) => excluded.has(idOf(T)));
       else if (req.module === 'price-action') draft = await buildPa(req, symbol, seed, deps);
       else if (req.module === 'fibonacci') draft = await buildFib(req, symbol, seed, deps, (T) => excluded.has(idOf(T)), attempt);
+      else if (req.module === 'elliott') draft = await buildElliott(req, symbol, seed, deps, rangeOf(deps), (T) => excluded.has(idOf(T)), attempt, started + budget);
       else draft = await buildChallenge(req, symbol, seed, deps);
     } catch (e) {
       // not_found файла - период непригоден (обычная отбраковка); недоступность источника - не «ситуация не подошла».
@@ -466,18 +471,6 @@ function reconstructContext(visible: Candle[], htfVisible: Candle[], T: UtcMs, t
 
 // ------------------------------------------------------------------ Challenge next
 
-function shiftCandle(c: Candle, shift: number): Candle {
-  return { ...c, openTime: c.openTime - shift, closeTime: c.closeTime - shift };
-}
-
-const TIME_META = ['confirmedTime', 'eventTime', 'middleTime', 'originTime'];
-/** Метка на шкале задания; id заменяется (исходные id содержат реальное время). */
-export function shiftMark(m: Mark, shift: number, id: string): Mark {
-  const meta = m.meta ? { ...m.meta } : undefined;
-  if (meta) for (const k of TIME_META) if (typeof meta[k] === 'number') meta[k] = (meta[k] as number) - shift;
-  return { ...m, id, anchors: m.anchors.map((a) => ({ ...a, time: a.time - shift })), ...(meta ? { meta } : {}) };
-}
-
 type ChReq = Extract<NextRequest, { module: 'challenge' }>;
 
 async function buildChallenge(req: ChReq, symbol: TaskSymbol, seed: number, deps: ServerDeps): Promise<Draft | null> {
@@ -658,7 +651,7 @@ export interface GradeResultApi {
   resolution?: { method: string; triggerTime: UtcMs; triggerTf: string };
 }
 
-interface Core {
+export interface Core {
   verdict: Verdict;
   score: number;
   skillOutcomes: SkillOutcome[];
@@ -667,6 +660,8 @@ interface Core {
   detail: Record<string, unknown>;
   ok?: { code: never; params?: Record<string, string | number>; markIds?: string[] }[];
   toleranceCandles?: number;
+  /** Параметры вердикта (Elliott: outcomeText, outcomeTime). */
+  verdictParams?: Record<string, string | number>;
   replay?: TaskReplay;
   resolution?: GradeResultApi['resolution'];
 }
@@ -718,6 +713,12 @@ export async function gradeTask(module: ModuleId, req: GradeRequest, deps: Serve
       tf = params.tf as TaskTimeframe;
       core = await gradeFibTask(ctx, params, answer as FibAnswer, sealed.shiftMs);
       break;
+    case 'ew-impulse':
+    case 'ew-impulse-correction':
+    case 'ew-scenario':
+      tf = params.tf as TaskTimeframe;
+      core = await gradeElliottTask(ctx, params, answer as ElliottAnswerApi, sealed.shiftMs, TICK[symbol]);
+      break;
   }
 
   const feedback = buildFeedback({
@@ -728,6 +729,7 @@ export async function gradeTask(module: ModuleId, req: GradeRequest, deps: Serve
     skillOutcomes: core.skillOutcomes,
     ...(core.ok ? { ok: core.ok } : {}),
     ...(core.toleranceCandles !== undefined ? { toleranceCandles: core.toleranceCandles } : {}),
+    ...(core.verdictParams ? { verdictParams: core.verdictParams } : {}),
     tickSize: TICK[symbol],
   });
   return {
@@ -754,7 +756,7 @@ export async function gradeTask(module: ModuleId, req: GradeRequest, deps: Serve
   };
 }
 
-interface GradeCtx {
+export interface GradeCtx {
   deps: ServerDeps;
   symbol: TaskSymbol;
   T: UtcMs;
@@ -868,18 +870,6 @@ async function gradePaContext(c: GradeCtx, p: Extract<Params, { kind: 'pa-contex
 
 
 // ---- Fibonacci grade
-
-/** Сдвигает числовые поля-времена (`time`, `*Time`) на -shift: отображение на шкалу задания. */
-function shiftTimes<T>(x: T, shift: number): T {
-  if (shift === 0) return x;
-  if (Array.isArray(x)) return x.map((v) => shiftTimes(v, shift)) as T;
-  if (x && typeof x === 'object') {
-    return Object.fromEntries(
-      Object.entries(x).map(([k, v]) => [k, typeof v === 'number' && isTimeParam(k) ? v - shift : shiftTimes(v, shift)]),
-    ) as T;
-  }
-  return x;
-}
 
 type FibParamsT = Extract<Params, { kind: 'fib-grid' | 'fib-reaction' | 'fib-extension' }>;
 

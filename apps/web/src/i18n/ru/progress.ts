@@ -24,6 +24,10 @@ export const SKILL_NAMES_RU: Record<SkillId, string> = {
   'fib-reaction': 'Fibonacci: реакция на уровень',
   'fib-extension': 'Fibonacci: цель по Extension',
   'premium-discount': 'Premium / Discount',
+  'ew-impulse': 'Elliott: импульс 1–5',
+  'ew-correction': 'Elliott: коррекция A–B–C',
+  'ew-rules': 'Elliott: нерушимые правила',
+  'ew-invalidation': 'Elliott: invalidation и сценарии',
 };
 
 /** Общие названия кодов ошибок для журнала (группа = код, а не отдельная свеча). */
@@ -98,6 +102,26 @@ export const ERROR_NAMES_RU: Record<ErrorCode, string> = {
   EXT_WRONG_POINTS: 'Неверные точки A–B–C',
   EXT_TARGET_MISS: 'Цель extension не достигнута',
   EXT_TARGET_CONSERVATIVE: 'Цель extension слишком близкая',
+  EW_WRONG_ORDER: 'Точки волн не по порядку',
+  EW_POINT_NOT_EXTREME: 'Точка волны не на экстремуме',
+  EW_POINT_NOT_SWING: 'Точка волны не на внешнем swing',
+  EW_COUNT_NOT_CURRENT: 'Разметка не доведена до текущей точки',
+  EW_COUNT_INCOMPLETE: 'Неполная разметка волн',
+  EW_RULE_W2_BEYOND_W1: 'Wave 2 ушла за начало wave 1',
+  EW_RULE_W3_NOT_BEYOND_W1: 'Wave 3 не вышла за конец wave 1',
+  EW_RULE_W3_SHORTEST: 'Wave 3 самая короткая',
+  EW_RULE_W4_OVERLAP: 'Wave 4 зашла в зону wave 1',
+  EW_ZIGZAG_B_TOO_DEEP: 'В zigzag B дошла до начала A',
+  EW_ZIGZAG_C_NOT_BEYOND_A: 'В zigzag C не ушла за конец A',
+  EW_FLAT_B_TOO_SHALLOW: 'Во flat B слишком мелкая',
+  EW_FLAT_C_TOO_SHORT: 'Во flat C слишком короткая',
+  EW_GUIDE_MISS: 'Рекомендация Фибоначчи не выполнена',
+  EW_SCENARIO_MISMATCH: 'Сценарий не следует из разметки',
+  EW_INVALIDATION_WRONG: 'Неверный уровень invalidation',
+  EW_INVALIDATION_TOO_TIGHT: 'Слишком близкий уровень invalidation',
+  EW_ALT_MISSING: 'Нет альтернативного сценария',
+  EW_ALT_SAME: 'Альтернатива совпадает с основным сценарием',
+  EW_ALT_INCONSISTENT: 'Альтернатива не сочетается с разметкой',
 };
 
 export const pr = {
@@ -106,6 +130,7 @@ export const pr = {
     'price-action': 'Price Action',
     challenge: 'Trading Challenge',
     fibonacci: 'Fibonacci',
+    elliott: 'Elliott Wave Lab',
   },
   fewData: (n: number, min: number) => `Мало данных: ${n} из ${min}`,
   accuracy: (pct: string) => `Точность ${pct}`,
