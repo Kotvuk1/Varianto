@@ -12,7 +12,7 @@ import type { Attempt, ModuleId, SkillStat } from '@/storage';
 export { MIN_SAMPLE };
 export type Trend = 'up' | 'flat' | 'down';
 
-const MODULE_ORDER: ModuleId[] = ['market-structure', 'price-action', 'challenge'];
+const MODULE_ORDER: ModuleId[] = ['market-structure', 'price-action', 'challenge', 'fibonacci'];
 const asCore = (s: SkillStat) => s as unknown as CoreSkillStat;
 
 export function moduleOfSkill(skill: string): ModuleId {

@@ -20,6 +20,10 @@ export const SKILL_NAMES_RU: Record<SkillId, string> = {
   'challenge-entry': 'Вход',
   'challenge-risk': 'Риск и стоп',
   'challenge-wait': 'Ожидание (WAIT)',
+  'fib-anchor': 'Fibonacci: якоря сетки',
+  'fib-reaction': 'Fibonacci: реакция на уровень',
+  'fib-extension': 'Fibonacci: цель по Extension',
+  'premium-discount': 'Premium / Discount',
 };
 
 /** Общие названия кодов ошибок для журнала (группа = код, а не отдельная свеча). */
@@ -81,6 +85,19 @@ export const ERROR_NAMES_RU: Record<ErrorCode, string> = {
   ENTRY_NO_POI: 'Вход вне зоны интереса',
   WAIT_MISSED_SETUP: 'WAIT при наличии сетапа',
   REASON_MISMATCH: 'Причина не подтверждается графиком',
+  FIB_WRONG_DIRECTION: 'Сетка протянута в обратную сторону',
+  FIB_NOT_IMPULSE: 'Сетка не на импульсе',
+  FIB_WRONG_ANCHOR_START: 'Неверное начало сетки',
+  FIB_WRONG_ANCHOR_END: 'Неверный конец сетки',
+  FIB_IMPULSE_UNCONFIRMED: 'Конец импульса не подтверждён',
+  FIB_LEVEL_MISS: 'Не тот уровень реакции',
+  FIB_DEEP_MISSED: 'Пропущена глубокая реакция',
+  FIB_CONFLUENCE_WRONG: 'Ложный конфлюэнс',
+  FIB_PD_WRONG: 'Premium/Discount определён неверно',
+  EXT_WRONG_DIRECTION: 'Extension в обратную сторону',
+  EXT_WRONG_POINTS: 'Неверные точки A–B–C',
+  EXT_TARGET_MISS: 'Цель extension не достигнута',
+  EXT_TARGET_CONSERVATIVE: 'Цель extension слишком близкая',
 };
 
 export const pr = {
@@ -88,6 +105,7 @@ export const pr = {
     'market-structure': 'Market Structure',
     'price-action': 'Price Action',
     challenge: 'Trading Challenge',
+    fibonacci: 'Fibonacci',
   },
   fewData: (n: number, min: number) => `Мало данных: ${n} из ${min}`,
   accuracy: (pct: string) => `Точность ${pct}`,

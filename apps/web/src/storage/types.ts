@@ -3,7 +3,7 @@ import type { Mark, Symbol, UtcMs } from '@tl/core';
 // Типы по docs/API_CONTRACTS.md §7. Типы заданий и разбора (RevealedTask, Answer, GradeResult)
 // появятся с модулями M2+; до тех пор поля хранятся как JSON-совместимые.
 
-export type ModuleId = 'market-structure' | 'price-action' | 'challenge';
+export type ModuleId = 'market-structure' | 'price-action' | 'challenge' | 'fibonacci';
 export type SkillId = string;
 
 export interface SkillOutcome {

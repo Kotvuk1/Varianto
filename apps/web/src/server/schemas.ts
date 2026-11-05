@@ -7,16 +7,16 @@ export const MAX_BODY_BYTES = 64 * 1024;
 export const MAX_MARKS = 200;
 export const SYMBOLS = ['BTCUSDT', 'ETHUSDT', 'SOLUSDT'] as const;
 export const TASK_TFS = ['15m', '1h', '4h', '1d'] as const;
-export const MODULES: readonly ModuleId[] = ['market-structure', 'price-action', 'challenge'];
+export const MODULES: readonly ModuleId[] = ['market-structure', 'price-action', 'challenge', 'fibonacci'];
 
 const SKILLS = [
   'swing', 'structure-labels', 'bos', 'choch', 'internal-external', 'sweep', 'order-block', 'fvg',
   'pa-engulfing', 'pa-pin-bar', 'pa-inside-bar', 'pa-doji', 'pa-star', 'pa-level', 'pa-context',
-  'challenge-entry', 'challenge-risk', 'challenge-wait',
+  'challenge-entry', 'challenge-risk', 'challenge-wait', 'fib-anchor', 'fib-reaction', 'fib-extension', 'premium-discount',
 ] as const;
 const MARK_KINDS = [
   'swing-high', 'swing-low', 'hh', 'hl', 'lh', 'll', 'bos', 'choch', 'sweep', 'order-block', 'fvg',
-  'level', 'hline', 'trendline', 'pattern', 'position',
+  'level', 'hline', 'trendline', 'pattern', 'position', 'fib-retracement', 'fib-extension',
 ] as const;
 
 const difficulty = z.enum(['easy', 'medium', 'hard']);
@@ -36,12 +36,14 @@ export const NextSchemas = {
   'market-structure': z.object({ ...nextBase, mode: z.enum(['mark', 'question']), tf }).strict(),
   'price-action': z.object({ ...nextBase, taskType: z.enum(['find-pattern', 'draw-level', 'context']), tf }).strict(),
   challenge: z.object(nextBase).strict(),
+  fibonacci: z.object({ ...nextBase, taskType: z.enum(['grid', 'reaction', 'extension']), tf }).strict(),
 } as const;
 
 export type NextRequest =
   | ({ module: 'market-structure' } & z.infer<(typeof NextSchemas)['market-structure']>)
   | ({ module: 'price-action' } & z.infer<(typeof NextSchemas)['price-action']>)
-  | ({ module: 'challenge' } & z.infer<(typeof NextSchemas)['challenge']>);
+  | ({ module: 'challenge' } & z.infer<(typeof NextSchemas)['challenge']>)
+  | ({ module: 'fibonacci' } & z.infer<(typeof NextSchemas)['fibonacci']>);
 
 export const AnchorSchema = z.object({ time: z.number().int().finite(), price: z.number().finite() }).strict();
 export const UserMarkSchema = z
@@ -85,7 +87,28 @@ export const ChallengeAnswerSchema = z
     if (long ? a.tp <= a.entry : a.tp >= a.entry) add('tp', 'TP_WRONG_SIDE');
   });
 
+const fibMark = (kind: 'fib-retracement' | 'fib-extension', anchors: number) =>
+  UserMarkSchema.superRefine((m, ctx) => {
+    if (m.kind !== kind || m.anchors.length !== anchors) ctx.addIssue({ code: 'custom', path: ['anchors'], message: 'FIB_ANCHORS_COUNT' });
+  });
+const FIB_OPTIONS = ['0.382', '0.5', '0.618', '0.705', '0.786', 'ote', 'deep'] as const;
+const FIB_TARGETS = ['1', '1.272', '1.618', 'none'] as const;
+
 export const AnswerSchema = z.discriminatedUnion('kind', [
+  z.object({ kind: z.literal('fib-grid'), mark: fibMark('fib-retracement', 2) }).strict(),
+  z
+    .object({
+      kind: z.literal('fib-reaction'),
+      option: z.enum(FIB_OPTIONS),
+      confluence: z.array(z.enum(['order-block', 'fvg', 'level'])).max(3),
+      pd: z.enum(['premium', 'discount']).nullable(),
+    })
+    .strict()
+    .superRefine((a, ctx) => {
+      if (new Set(a.confluence).size !== a.confluence.length || (a.option === 'deep' && a.confluence.length > 0))
+        ctx.addIssue({ code: 'custom', path: ['confluence'], message: 'FIB_CONFLUENCE_INVALID' });
+    }),
+  z.object({ kind: z.literal('fib-extension'), mark: fibMark('fib-extension', 3), target: z.enum(FIB_TARGETS) }).strict(),
   z.object({ kind: z.literal('ms-mark'), marks: marksField }).strict(),
   z.object({ kind: z.literal('ms-question'), questionId: z.string().min(1).max(64), optionId: z.string().min(1).max(64) }).strict(),
   z.object({ kind: z.literal('pa-find'), marks: marksField }).strict(),
@@ -103,12 +126,14 @@ export const AnswerSchema = z.discriminatedUnion('kind', [
 ]);
 export type Answer = z.infer<typeof AnswerSchema>;
 export type ChallengeAnswer = z.infer<typeof ChallengeAnswerSchema>;
+export type FibAnswer = Extract<Answer, { kind: 'fib-grid' | 'fib-reaction' | 'fib-extension' }>;
 
 export const GradeSchema = z.object({ taskToken: z.string().min(10).max(4096), answer: AnswerSchema }).strict();
 export type GradeRequest = z.infer<typeof GradeSchema>;
 
 const BUSINESS_CODES = new Set([
   'SL_REQUIRED', 'TP_REQUIRED', 'SL_WRONG_SIDE', 'TP_WRONG_SIDE', 'ENTRY_MISMATCH', 'WAIT_HAS_POSITION_FIELDS',
+  'FIB_ANCHORS_COUNT', 'FIB_CONFLUENCE_INVALID',
 ]);
 
 /** zod-issue -> ValidationIssueCode контракта (API_CONTRACTS §1.1). */

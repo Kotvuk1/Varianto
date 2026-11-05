@@ -103,11 +103,19 @@ export type SkillGenerator =
   | { module: 'market-structure'; kind: 'ms' }
   | { module: 'price-action'; taskType: 'find-pattern'; targets: PatternType[] }
   | { module: 'price-action'; taskType: 'draw-level' | 'context' }
-  | { module: 'challenge'; waitShare?: number };
+  | { module: 'challenge'; waitShare?: number }
+  | { module: 'fibonacci'; taskType: 'grid' | 'reaction' | 'extension' };
 
-/** Навык -> генератор заданий (§16.3). */
-export function generatorForSkill(skill: SkillId): SkillGenerator {
+/** Навык -> генератор заданий (§16.3). `seed` выбирает между grid и extension для fib-anchor (50/50). */
+export function generatorForSkill(skill: SkillId, seed = 0): SkillGenerator {
   switch (skill) {
+    case 'fib-anchor':
+      return { module: 'fibonacci', taskType: mulberry32(seed)() < 0.5 ? 'grid' : 'extension' };
+    case 'fib-reaction':
+    case 'premium-discount':
+      return { module: 'fibonacci', taskType: 'reaction' };
+    case 'fib-extension':
+      return { module: 'fibonacci', taskType: 'extension' };
     case 'pa-engulfing':
       return { module: 'price-action', taskType: 'find-pattern', targets: ['engulfing'] };
     case 'pa-pin-bar':

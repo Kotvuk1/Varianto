@@ -125,3 +125,19 @@ describe('навык -> генератор', () => {
     expect(generatorForSkill('challenge-entry')).toEqual({ module: 'challenge' });
   });
 });
+
+describe('generatorForSkill: Fibonacci (FIBONACCI.md §10)', () => {
+  it('fib-reaction и premium-discount -> reaction; fib-extension -> extension', () => {
+    expect(generatorForSkill('fib-reaction')).toEqual({ module: 'fibonacci', taskType: 'reaction' });
+    expect(generatorForSkill('premium-discount')).toEqual({ module: 'fibonacci', taskType: 'reaction' });
+    expect(generatorForSkill('fib-extension')).toEqual({ module: 'fibonacci', taskType: 'extension' });
+  });
+  it('fib-anchor -> grid или extension (50/50 по seed, детерминированно)', () => {
+    const kinds = Array.from({ length: 200 }, (_, i) => (generatorForSkill('fib-anchor', i + 1) as { taskType: string }).taskType);
+    const grid = kinds.filter((k) => k === 'grid').length;
+    expect(new Set(kinds)).toEqual(new Set(['grid', 'extension']));
+    expect(grid).toBeGreaterThan(70);
+    expect(grid).toBeLessThan(130);
+    expect(generatorForSkill('fib-anchor', 5)).toEqual(generatorForSkill('fib-anchor', 5));
+  });
+});

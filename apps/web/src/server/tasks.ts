@@ -2,20 +2,32 @@
 // Инвариант: payload next и эталон grade строятся из одних и тех же рядов - loadClosedBefore(T) (ADR-0005).
 import {
   ALGO_VERSION,
+  FIB_ALGO_VERSION,
   HTF_OF,
   MS_DEPTH,
   REASON_CODES,
   TIMEFRAME_MS,
   TIME_LIMIT_CANDLES,
   analyzeStructure,
+  anchorIndex,
   buildAlgoMarkSet,
+  buildExtensionRef,
+  buildGridRef,
+  buildReactionRef,
   buildFeedback,
   buildPatternAlgoMarkSet,
   computeChallengeFacts,
   computeContext,
   detectPatterns,
   gradeChallenge,
+  fibExtensionTask,
+  fibGridTask,
+  fibLimit,
+  fibReactionTask,
   gradeContext,
+  gradeFibExtension,
+  gradeFibGrid,
+  gradeFibReaction,
   gradeLevel,
   gradeMarks,
   gradeMsQuestion,
@@ -27,7 +39,9 @@ import {
   patternGradeContext,
   patternToMark,
   pickChallengeScenario,
+  isTimeParam,
   pickContextTask,
+  pickFibTask,
   pickFindPattern,
   pickLevelTask,
   randInt,
@@ -57,7 +71,7 @@ import {
 import { z } from 'zod';
 import { ArchiveError } from '@tl/market-data';
 import { ApiError, validationError } from './errors';
-import { SYMBOLS, type Answer, type ChallengeAnswer, type GradeRequest, type NextRequest } from './schemas';
+import { SYMBOLS, type Answer, type ChallengeAnswer, type FibAnswer, type GradeRequest, type NextRequest } from './schemas';
 import {
   CHALLENGE_FUTURE_MS,
   ChallengeZone,
@@ -104,6 +118,17 @@ const BASE_MS = 15 * 60_000;
 
 // ------------------------------------------------------------------ параметры токена
 
+const FibParams = <K extends string>(kind: K) =>
+  z.object({
+    kind: z.literal(kind),
+    fibAlgoVersion: z.string(),
+    tf: z.string(),
+    nExt: z.number().int(),
+    evalDifficulty: z.enum(['easy', 'medium', 'hard']),
+    a: z.object({ time: z.number() }),
+    b: z.object({ time: z.number() }),
+  });
+
 const ParamsSchema = z.discriminatedUnion('kind', [
   z.object({ kind: z.literal('ms-mark'), tf: z.string(), focus: z.array(z.string()).optional(), windowSize: z.number().int().min(1).max(500) }),
   z.object({ kind: z.literal('ms-question'), tf: z.string(), questionId: z.string(), focus: z.array(z.string()).optional() }),
@@ -111,6 +136,14 @@ const ParamsSchema = z.discriminatedUnion('kind', [
   z.object({ kind: z.literal('pa-level'), tf: z.string(), levelType: z.enum(['support', 'resistance']), evalDifficulty: z.enum(['easy', 'medium', 'hard']) }),
   z.object({ kind: z.literal('pa-context'), tf: z.string(), patternType: z.string(), direction: z.enum(['bull', 'bear']) }),
   z.object({ kind: z.literal('challenge'), defaultTf: z.string(), entry: z.number() }),
+  FibParams('fib-grid').extend({ window: z.object({ fromTime: z.number(), toTime: z.number() }) }),
+  FibParams('fib-reaction').extend({ options: z.array(z.string()), pdAsked: z.boolean() }),
+  FibParams('fib-extension').extend({
+    cTime: z.number(),
+    window: z.object({ fromTime: z.number(), toTime: z.number() }),
+    targetOptions: z.array(z.string()),
+    directionHint: z.enum(['bull', 'bear']).nullable(),
+  }),
 ]);
 type Params = z.infer<typeof ParamsSchema>;
 
@@ -138,6 +171,8 @@ interface Draft {
   params: Params;
   series: Partial<Record<TaskTimeframe, Candle[]>>;
   payload: Record<string, unknown>;
+  /** Шкала времени задания скрыта (будущее проигрывается): timeline.mode = relative. */
+  relative?: boolean;
 }
 
 const toSeed = (n: number) => n >>> 0;
@@ -207,6 +242,7 @@ export async function nextTask(module: ModuleId, req: NextRequest, deps: ServerD
     try {
       if (req.module === 'market-structure') draft = await buildMs(req, symbol, seed, deps, (T) => excluded.has(idOf(T)));
       else if (req.module === 'price-action') draft = await buildPa(req, symbol, seed, deps);
+      else if (req.module === 'fibonacci') draft = await buildFib(req, symbol, seed, deps, (T) => excluded.has(idOf(T)), attempt);
       else draft = await buildChallenge(req, symbol, seed, deps);
     } catch (e) {
       // not_found файла - период непригоден (обычная отбраковка); недоступность источника - не «ситуация не подошла».
@@ -238,7 +274,7 @@ export async function nextTask(module: ModuleId, req: NextRequest, deps: ServerD
       symbol,
       algoVersion: ALGO_VERSION,
       expiresAt: header.exp,
-      timeline: { mode: module === 'challenge' ? 'relative' : 'absolute' },
+      timeline: { mode: module === 'challenge' || draft.relative ? 'relative' : 'absolute' },
       decisionTime: draft.T - draft.shiftMs,
       series: draft.series,
       payload: draft.payload,
@@ -434,7 +470,7 @@ function shiftCandle(c: Candle, shift: number): Candle {
   return { ...c, openTime: c.openTime - shift, closeTime: c.closeTime - shift };
 }
 
-const TIME_META = ['confirmedTime', 'eventTime', 'middleTime'];
+const TIME_META = ['confirmedTime', 'eventTime', 'middleTime', 'originTime'];
 /** Метка на шкале задания; id заменяется (исходные id содержат реальное время). */
 export function shiftMark(m: Mark, shift: number, id: string): Mark {
   const meta = m.meta ? { ...m.meta } : undefined;
@@ -499,7 +535,104 @@ async function buildChallenge(req: ChReq, symbol: TaskSymbol, seed: number, deps
   };
 }
 
+
+// ------------------------------------------------------------------ Fibonacci next
+
+type FibReq = Extract<NextRequest, { module: 'fibonacci' }>;
+/** Запас истории сверх видимого окна и будущего: чем длиннее ряд, тем больше кандидатов для балансировки ответа. */
+const FIB_EXTRA: Record<TaskTimeframe, number> = { '15m': 2500, '1h': 2500, '4h': 1500, '1d': 500 };
+/** После стольких неудачных сегментов разрешается ослабление критерия сложности (FIBONACCI.md §4). */
+const FIB_RELAX_AFTER = 3;
+
+async function buildFib(
+  req: FibReq,
+  symbol: TaskSymbol,
+  seed: number,
+  deps: ServerDeps,
+  isExcludedId: (T: UtcMs) => boolean,
+  attempt: number,
+): Promise<Draft | null> {
+  const { tf, difficulty, taskType } = req;
+  const depth = depthOf(tf);
+  const limit = fibLimit(tf);
+  const step = TIMEFRAME_MS[tf];
+  const seg = pickSegment(deps, seed, tf, depth + FIB_EXTRA[tf] + limit, depth + 300 + limit);
+  if (!seg) return null;
+  const candles = await deps.loader.candles(symbol, tf, seg.from, seg.to);
+  const pick = pickFibTask({
+    candles,
+    tf,
+    difficulty,
+    seed,
+    taskType,
+    allowRelax: attempt >= FIB_RELAX_AFTER,
+    isExcluded: isExcludedId,
+    ...(deps.maxAttempts ? { maxAttempts: deps.maxAttempts } : {}),
+  });
+  if (!pick) return null;
+
+  // тот же ряд, что увидит grade
+  const visible = await loadClosedBefore(deps.loader, symbol, tf, pick.T);
+  const local = candles.slice(pick.visibleFrom, pick.endIndex + 1);
+  if (!sameSeries(visible, local) || visible.length !== depth) return null;
+  const common = { kind: undefined as never, fibAlgoVersion: FIB_ALGO_VERSION, tf, nExt: pick.nExt, evalDifficulty: pick.evalDifficulty, a: { time: pick.aTime }, b: { time: pick.bTime } };
+
+  if (pick.taskType === 'grid') {
+    if (!buildGridRef(visible, { nExt: pick.nExt, aTime: pick.aTime, bTime: pick.bTime })) return null;
+    const task = fibGridTask(pick, tf);
+    return {
+      T: pick.T, seed, shiftMs: 0, tf,
+      params: { ...common, kind: 'fib-grid', window: pick.window! },
+      series: { [tf]: visible },
+      payload: { ...task },
+    };
+  }
+
+  const cutoff = cutoffOf(deps.now());
+  const future = (await deps.loader.candles(symbol, tf, pick.T, Math.min(pick.T + limit * step, cutoff))).filter((c) => c.closed && c.openTime >= pick.T);
+  if (future.length !== limit || future.some((c, i) => c.openTime !== pick.T + i * step)) return null;
+  const offDays = 1000 + randInt(rngOf(seed, 0xf1b0), 3000);
+  const shiftMs = (Math.floor(pick.T / DAY_MS) - offDays) * DAY_MS;
+  const shiftedSeries = { [tf]: visible.map((c) => shiftCandle(c, shiftMs)) };
+  const win = (w: { fromTime: UtcMs; toTime: UtcMs }) => ({ fromTime: w.fromTime - shiftMs, toTime: w.toTime - shiftMs });
+  const refParams = { nExt: pick.nExt, tf, evalDifficulty: pick.evalDifficulty, aTime: pick.aTime, bTime: pick.bTime };
+
+  if (pick.taskType === 'reaction') {
+    const ref = buildReactionRef(visible, future, refParams);
+    if (!ref) return null;
+    const task = fibReactionTask(ref, tf, difficulty === 'easy', visible);
+    const payload = {
+      ...task,
+      grid: shiftMark(task.grid, shiftMs, 'fib:grid'),
+      ...(task.hints ? { hints: task.hints.map((m, i) => shiftMark(m, shiftMs, `hint:${i}`)) } : {}),
+    };
+    return {
+      T: pick.T, seed, shiftMs, tf, relative: true,
+      params: { ...common, kind: 'fib-reaction', options: ref.options, pdAsked: ref.pd.asked },
+      series: shiftedSeries,
+      payload,
+    };
+  }
+
+  const ref = buildExtensionRef(visible, future, refParams);
+  if (!ref || ref.c.time !== pick.cTime) return null;
+  const task = fibExtensionTask(ref, tf, win(pick.window!), pick.directionHint);
+  return {
+    T: pick.T, seed, shiftMs, tf, relative: true,
+    params: { ...common, kind: 'fib-extension', cTime: pick.cTime!, window: pick.window!, targetOptions: ref.targetOptions, directionHint: pick.directionHint },
+    series: shiftedSeries,
+    payload: { ...task },
+  };
+}
+
 // ------------------------------------------------------------------ grade
+
+/** Проигрывание после решения (challenge и fibonacci): свечи шкалы задания, индекс события в них. */
+export interface TaskReplay {
+  tf: TaskTimeframe;
+  candles: Candle[];
+  exitIndex: number | null;
+}
 
 export interface GradeResultApi {
   taskId: string;
@@ -520,7 +653,7 @@ export interface GradeResultApi {
   reference: Mark[];
   detail: Record<string, unknown>;
   feedback: Feedback;
-  replay?: { tf: TaskTimeframe; candles: Candle[]; exitIndex: number | null };
+  replay?: TaskReplay;
   /** Расширение контракта: как определён исход и где сработал (шкала задания). Только challenge. */
   resolution?: { method: string; triggerTime: UtcMs; triggerTf: string };
 }
@@ -534,7 +667,7 @@ interface Core {
   detail: Record<string, unknown>;
   ok?: { code: never; params?: Record<string, string | number>; markIds?: string[] }[];
   toleranceCandles?: number;
-  replay?: GradeResultApi['replay'];
+  replay?: TaskReplay;
   resolution?: GradeResultApi['resolution'];
 }
 
@@ -578,6 +711,12 @@ export async function gradeTask(module: ModuleId, req: GradeRequest, deps: Serve
     case 'challenge':
       tf = params.defaultTf as TaskTimeframe;
       core = await gradeChallengeTask(ctx, params, answer as ChallengeAnswer, sealed.shiftMs);
+      break;
+    case 'fib-grid':
+    case 'fib-reaction':
+    case 'fib-extension':
+      tf = params.tf as TaskTimeframe;
+      core = await gradeFibTask(ctx, params, answer as FibAnswer, sealed.shiftMs);
       break;
   }
 
@@ -725,6 +864,83 @@ async function gradePaContext(c: GradeCtx, p: Extract<Params, { kind: 'pa-contex
     detail: g.detail,
     ok: g.ok as Core['ok'],
   };
+}
+
+
+// ---- Fibonacci grade
+
+/** Сдвигает числовые поля-времена (`time`, `*Time`) на -shift: отображение на шкалу задания. */
+function shiftTimes<T>(x: T, shift: number): T {
+  if (shift === 0) return x;
+  if (Array.isArray(x)) return x.map((v) => shiftTimes(v, shift)) as T;
+  if (x && typeof x === 'object') {
+    return Object.fromEntries(
+      Object.entries(x).map(([k, v]) => [k, typeof v === 'number' && isTimeParam(k) ? v - shift : shiftTimes(v, shift)]),
+    ) as T;
+  }
+  return x;
+}
+
+type FibParamsT = Extract<Params, { kind: 'fib-grid' | 'fib-reaction' | 'fib-extension' }>;
+
+async function gradeFibTask(c: GradeCtx, p: FibParamsT, a: FibAnswer, shift: number): Promise<Core> {
+  if (p.fibAlgoVersion !== FIB_ALGO_VERSION) throw new ApiError(401, 'token_expired', 'Task token was issued for another Fibonacci algorithm version');
+  const tf = p.tf as TaskTimeframe;
+  const visible = await visibleFor(c, tf);
+  const input = { candles: visible, tf };
+  const key = { nExt: p.nExt, aTime: p.a.time, bTime: p.b.time };
+  const mismatch500 = () => new Error('FIB_REFERENCE_MISMATCH'); // сервер не смог воспроизвести эталон: 500 + лог, не оценка
+
+  // якоря пользователя -> реальное время; вне видимого ряда -> 400
+  const unshift = (m: Mark): Mark => {
+    const anchors = m.anchors.map((x) => ({ ...x, time: x.time + shift }));
+    for (const x of anchors) if (anchorIndex(input, x.time) < 0) throw validationError('FIB_ANCHOR_OUT_OF_RANGE', 'answer.mark.anchors');
+    return { ...m, anchors };
+  };
+  const wrap = (g: ReturnType<typeof gradeFibGrid>, extra: Pick<Core, 'replay'> = {}): Core => ({
+    verdict: g.verdict,
+    score: g.score,
+    skillOutcomes: g.skillOutcomes,
+    errors: g.errors.map((e) => (e.params ? { ...e, params: shiftTimes(e.params, shift) } : e)),
+    reference: g.reference.map((m, i) => shiftMark(m, shift, shift === 0 ? m.id : `ref:${i}`)),
+    detail: { kind: p.kind, fib: shiftTimes(g.detail, shift) },
+    ok: g.ok.map((o) => (o.params ? { ...o, params: shiftTimes(o.params, shift) } : o)) as unknown as Core['ok'],
+    toleranceCandles: g.toleranceCandles,
+    ...extra,
+  });
+  const replayOf = (g: ReturnType<typeof gradeFibGrid>): Pick<Core, 'replay'> =>
+    g.replay ? { replay: { tf, candles: g.replay.candles.map((x) => shiftCandle(x, shift)), exitIndex: g.replay.exitIndex } } : {};
+
+  if (p.kind === 'fib-grid') {
+    const ref = buildGridRef(visible, key);
+    if (!ref) throw mismatch500();
+    const ans = a as Extract<FibAnswer, { kind: 'fib-grid' }>;
+    return wrap(gradeFibGrid(ref, input, { kind: 'fib-grid', mark: unshift(ans.mark as Mark) }));
+  }
+
+  const limit = fibLimit(tf);
+  const step = TIMEFRAME_MS[tf];
+  const cutoff = cutoffOf(c.deps.now());
+  const future = (await c.deps.loader.candles(c.symbol, tf, c.T, Math.min(c.T + limit * step, cutoff))).filter((x) => x.closed && x.openTime >= c.T);
+  if (future.length !== limit) throw new ApiError(404, 'not_found', 'No archive data after the decision time');
+  const refParams = { ...key, tf, evalDifficulty: p.evalDifficulty };
+
+  if (p.kind === 'fib-reaction') {
+    const ref = buildReactionRef(visible, future, refParams);
+    if (!ref || ref.options.join() !== p.options.join() || ref.pd.asked !== p.pdAsked) throw mismatch500();
+    const ans = a as Extract<FibAnswer, { kind: 'fib-reaction' }>;
+    if (!ref.options.includes(ans.option)) throw validationError('FIB_OPTION_UNAVAILABLE', 'answer.option');
+    if (ref.pd.asked !== (ans.pd !== null)) throw validationError('FIB_PD_MISMATCH', 'answer.pd');
+    const g = gradeFibReaction(ref, input, { kind: 'fib-reaction', option: ans.option, confluence: ans.confluence, pd: ans.pd });
+    return wrap(g, replayOf(g));
+  }
+
+  const ref = buildExtensionRef(visible, future, refParams);
+  if (!ref || ref.c.time !== p.cTime || ref.targetOptions.join() !== p.targetOptions.join()) throw mismatch500();
+  const ans = a as Extract<FibAnswer, { kind: 'fib-extension' }>;
+  if (!ref.targetOptions.includes(ans.target)) throw validationError('FIB_OPTION_UNAVAILABLE', 'answer.target');
+  const g = gradeFibExtension(ref, input, { kind: 'fib-extension', mark: unshift(ans.mark as Mark), target: ans.target });
+  return wrap(g, replayOf(g));
 }
 
 // ---- Challenge grade
