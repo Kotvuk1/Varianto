@@ -66,14 +66,18 @@ function drawStateGlyph(ctx: CanvasRenderingContext2D, state: 'match' | 'missed'
 
 function drawPart(ctx: CanvasRenderingContext2D, p: Part, color: string, on: string, fill: string, algo: boolean, t: ChartTokens) {
   switch (p.t) {
-    case 'seg':
+    case 'seg': {
+      const lw = ctx.lineWidth;
+      if (p.w !== undefined) ctx.lineWidth = p.w;
       ctx.setLineDash(DASH[p.dash]);
       ctx.beginPath();
       ctx.moveTo(p.x1, p.y1);
       ctx.lineTo(p.x2, p.y2);
       ctx.stroke();
       ctx.setLineDash([]);
+      ctx.lineWidth = lw;
       break;
+    }
     case 'rect': {
       const w = p.x2 - p.x1;
       const h = p.y2 - p.y1;
@@ -94,9 +98,11 @@ function drawPart(ctx: CanvasRenderingContext2D, p: Part, color: string, on: str
         ctx.stroke();
         ctx.restore();
       }
-      ctx.setLineDash(DASH[p.dash]);
-      ctx.strokeRect(p.x1, p.y1, w, h);
-      ctx.setLineDash([]);
+      if (!p.noStroke) {
+        ctx.setLineDash(DASH[p.dash]);
+        ctx.strokeRect(p.x1, p.y1, w, h);
+        ctx.setLineDash([]);
+      }
       break;
     }
     case 'glyph': {

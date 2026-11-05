@@ -26,4 +26,8 @@ describe('describeMark', () => {
     expect(plain(describeMark(mk('swing-high', [{ time: t, price: 100.25 }]), fmt))).toBe('Swing High · 29 октября, 08:00 · 100,3');
     expect(plain(describeMark(mk('level', [{ time: t, price: 5 }]), fmt))).toBe('Уровень · 29 октября, 08:00 · 5,0');
   });
+  it('Фибо: название с направлением и цены якорей A → B', () => {
+    const g = { id: 'x', kind: 'fib-retracement', anchors: [{ time: t, price: 80095.9 }, { time: t + 3_600_000, price: 87385.1 }], scope: null, direction: 'bull', author: 'user' } as unknown as Mark;
+    expect(plain(describeMark(g, fmt))).toBe('Фибо: коррекция вверх · 29 октября, 08:00 · 80 095,9 → 87 385,1');
+  });
 });

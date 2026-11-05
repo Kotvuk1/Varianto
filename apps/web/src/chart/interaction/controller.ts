@@ -4,7 +4,7 @@
 import type { Anchor, Candle, Mark, Scope } from '@tl/core';
 import type { TimeIndex } from '../geometry/timeIndex';
 import { buildGeometry } from '../drawing/layout';
-import { hitTest, toleranceFor, type Hit, type PointerKind } from '../drawing/hit';
+import { hitLevel, hitTest, toleranceFor, type Hit, type PointerKind } from '../drawing/hit';
 import type { Projection } from '../drawing/projection';
 import {
   constrainAnchors,
@@ -17,6 +17,8 @@ import {
   type MarkExtra,
   type ToolId,
 } from '../drawing/tools';
+import { fibDirection, isFibKind } from '../fib/model';
+import { snapFibAnchor } from '../fib/snap';
 import { normalizeMark } from '../smc/normalize';
 import {
   localExtremeIndex,
@@ -37,7 +39,7 @@ export interface PointerInput {
 }
 
 /** Подсказки обучения: контроллер не знает текстов, UI сопоставляет коды со строками. */
-export type NoticeCode = 'bos-wick-only' | 'no-fvg' | 'fvg-unclosed' | 'before-swing' | 'no-sweep' | 'sweep-is-break';
+export type NoticeCode = 'bos-wick-only' | 'no-fvg' | 'fvg-unclosed' | 'before-swing' | 'no-sweep' | 'sweep-is-break' | 'fib-same-point';
 
 export interface ControllerNotice {
   /** Сколько касаний уже сделано в текущей метке (0 - ничего не ожидается). */
@@ -64,12 +66,19 @@ export interface ControllerDeps {
   fmt?: (price: number) => string;
   /** Текущий слой для BOS/CHoCH (null - не задан). */
   scope?: () => Scope | null;
+  /** Метки алгоритма (только чтение): нужны для выбора уровня сетки Fibonacci. */
+  readOnlyMarks?: () => readonly Mark[];
+  /** Выбор уровня сетки касанием (если не задан - выбор отключён). */
+  onLevelPick?: (pick: { markId: string; level: number }) => void;
+  /** Выбор уровня включён (подписчик есть): без него касание сеток не перехватывается. По умолчанию - если задан onLevelPick. */
+  levelPickEnabled?: () => boolean;
 }
 
 type Gesture =
   | { mode: 'draw'; kind: DrawKind; start: PointerInput; dragged: boolean }
   | { mode: 'anchor'; original: Mark; index: number; moved: boolean }
-  | { mode: 'move'; original: Mark; start: PointerInput; moved: boolean };
+  | { mode: 'move'; original: Mark; start: PointerInput; moved: boolean }
+  | { mode: 'pick'; start: PointerInput; markId: string; level: number; moved: boolean };
 
 interface Pending {
   kind: DrawKind;
@@ -189,6 +198,17 @@ export class DrawingController {
         if (!r.ok) return { t: 'reject', code: r.reason === 'is-break' ? 'sweep-is-break' : 'no-sweep' };
         return { t: 'mark', anchors: r.anchors, extra: { direction: r.direction } };
       }
+      case 'fib-retracement':
+      case 'fib-extension': {
+        const a = this.d.snap() ? snapFibAnchor(c, t.i, t.price) : { time: c[t.i]!.openTime, price: t.price };
+        const prev = pending?.anchors ?? [];
+        // вторая точка на той же цене, что и первая: сетка вырождена
+        if (prev.length === 1 && prev[0]!.price === a.price) return { t: 'reject', code: 'fib-same-point' };
+        const anchors = [...prev, a];
+        if (anchors.length < TOOL_DEFS[kind].taps) return { t: 'pending', anchors };
+        const direction = fibDirection(anchors[0]!.price, anchors[1]!.price);
+        return { t: 'mark', anchors, extra: { direction } };
+      }
       default: {
         const a = kind === 'position' ? { time: c[t.i]!.openTime, price: t.price } : this.lineAnchor(p, t);
         const anchors = [...(pending?.anchors ?? []), a];
@@ -202,7 +222,9 @@ export class DrawingController {
     else if (b.t === 'pending' || (b.t === 'reject' && this.pending)) {
       const anchors = (b.t === 'pending' ? b.anchors : this.pending!.anchors).slice();
       while (anchors.length < TOOL_DEFS[kind].anchors) anchors.push(anchors[anchors.length - 1]!);
-      this.preview = createMark(kind, anchors, PREVIEW_ID, isScopedKind(kind) ? { scope: this.d.scope?.() ?? null } : {});
+      const real = b.t === 'pending' ? b.anchors.length : this.pending!.anchors.length;
+      const fibMeta = isFibKind(kind) ? { meta: { draft: real }, direction: fibDirection(anchors[0]!.price, anchors[1]!.price) } : {};
+      this.preview = createMark(kind, anchors, PREVIEW_ID, isScopedKind(kind) ? { scope: this.d.scope?.() ?? null } : fibMeta);
     } else this.preview = null;
     this.d.invalidate?.();
   }
@@ -248,7 +270,7 @@ export class DrawingController {
       const hit = this.hit(p);
       if (!hit) {
         this.d.select(null);
-        return false;
+        return this.startPick(p);
       }
       const mark = this.d.marks().find((m) => m.id === hit.markId)!;
       this.d.select(hit.markId);
@@ -258,13 +280,32 @@ export class DrawingController {
           : { mode: 'move', original: mark, start: p, moved: false };
       return true;
     }
-    return false;
+    return this.startPick(p);
+  }
+
+  /** Касание линии/подписи уровня сетки алгоритма: выбор уровня (если подписка задана), срабатывает на отпускание без сдвига. */
+  private startPick(p: PointerInput): boolean {
+    if (!this.d.onLevelPick || !this.d.readOnlyMarks || (this.d.levelPickEnabled && !this.d.levelPickEnabled())) return false;
+    const proj = this.d.proj();
+    const fmt = this.d.fmt;
+    const geos = this.d
+      .readOnlyMarks()
+      .filter((m) => isFibKind(m.kind))
+      .map((m) => buildGeometry(m, proj, fmt ? { fmt } : {}));
+    const h = hitLevel(geos, p.x, p.y, toleranceFor(p.pointer));
+    if (!h) return false;
+    this.gesture = { mode: 'pick', start: p, markId: h.markId, level: h.level, moved: false };
+    return true;
   }
 
   /** Движение при нажатом указателе. */
   pointerMove(p: PointerInput): void {
     const g = this.gesture;
     if (!g) return;
+    if (g.mode === 'pick') {
+      if (Math.hypot(p.x - g.start.x, p.y - g.start.y) > DRAG_THRESHOLD) g.moved = true;
+      return;
+    }
     if (g.mode === 'draw') {
       if (!g.dragged && Math.hypot(p.x - g.start.x, p.y - g.start.y) > DRAG_THRESHOLD) g.dragged = true;
       if (g.dragged && !this.pending && TOOL_DEFS[g.kind].taps >= 2) {
@@ -283,7 +324,13 @@ export class DrawingController {
       if (!t) return;
       const anchors = g.original.anchors.map((a) => ({ ...a }));
       const line = !(g.original.kind in SWING_SIDE) && ['level', 'hline', 'trendline', 'position'].includes(g.original.kind);
-      anchors[g.index] = line && g.original.kind !== 'position' ? this.lineAnchor(p, t) : { time: candles[t.i]!.openTime, price: t.price };
+      anchors[g.index] = isFibKind(g.original.kind)
+        ? this.d.snap()
+          ? snapFibAnchor(candles, t.i, t.price)
+          : { time: candles[t.i]!.openTime, price: t.price }
+        : line && g.original.kind !== 'position'
+          ? this.lineAnchor(p, t)
+          : { time: candles[t.i]!.openTime, price: t.price };
       next = { ...g.original, anchors: constrainAnchors(g.original.kind, anchors) };
       g.moved = true;
     } else {
@@ -312,6 +359,10 @@ export class DrawingController {
     const g = this.gesture;
     this.gesture = null;
     if (!g) return;
+    if (g.mode === 'pick') {
+      if (!g.moved && Math.hypot(p.x - g.start.x, p.y - g.start.y) <= DRAG_THRESHOLD) this.d.onLevelPick?.({ markId: g.markId, level: g.level });
+      return;
+    }
     if (g.mode === 'draw') {
       if (g.dragged && !this.pending && TOOL_DEFS[g.kind].taps >= 2) {
         const first = this.build(g.kind, g.start, null);

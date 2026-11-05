@@ -19,6 +19,21 @@ import {
 import type { ToolId } from '@/chart/drawing/tools';
 
 const ic = { size: 24, strokeWidth: 1.75, 'aria-hidden': true } as const;
+const svgProps = { width: 24, height: 24, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 1.75, strokeLinecap: 'round', strokeLinejoin: 'round', 'aria-hidden': true } as const;
+/** Сетка коррекции: уровни разной длины и диагональ импульса (форма, не цвет). */
+const FibRetracementIcon = () => (
+  <svg {...svgProps}>
+    <path d="M3 5h18M3 10h18M3 15h18M3 20h18" />
+    <path d="M6 20 18 5" strokeDasharray="2 2.5" />
+  </svg>
+);
+/** Расширение: ножки A-B-C и уровни-цели справа. */
+const FibExtensionIcon = () => (
+  <svg {...svgProps}>
+    <path d="M3 19 8 9l4 6" />
+    <path d="M12 15h9M12 8h9M12 4h9" />
+  </svg>
+);
 const txt = (t: string): ReactNode => <span className="text-sm leading-6 font-semibold">{t}</span>;
 
 export const TOOL_ICON: Record<ToolId, ReactNode> = {
@@ -39,10 +54,12 @@ export const TOOL_ICON: Record<ToolId, ReactNode> = {
   hline: <SeparatorHorizontal {...ic} />,
   trendline: <MoveDiagonal {...ic} />,
   position: <Crosshair {...ic} />,
+  'fib-retracement': <FibRetracementIcon />,
+  'fib-extension': <FibExtensionIcon />,
 };
 
 export type TerminalTool = keyof typeof TOOL_ICON;
-export type GroupId = 'select' | 'structure' | 'breaks' | 'zones' | 'lines' | 'position';
+export type GroupId = 'select' | 'structure' | 'breaks' | 'zones' | 'lines' | 'fib' | 'position';
 
 export interface ToolGroup {
   id: GroupId;
@@ -50,13 +67,14 @@ export interface ToolGroup {
   icon: ReactNode;
 }
 
-/** Шесть групп рейки (ластик - отдельно внизу). Группы из одного инструмента не имеют flyout. */
+/** Семь групп рейки (ластик - отдельно внизу). Группы из одного инструмента не имеют flyout. */
 export const GROUPS: readonly ToolGroup[] = [
   { id: 'select', tools: ['select'], icon: TOOL_ICON.select },
   { id: 'structure', tools: ['swing-high', 'swing-low', 'hh', 'hl', 'lh', 'll'], icon: <TrendingUp {...ic} /> },
   { id: 'breaks', tools: ['bos', 'choch', 'sweep'], icon: <Zap {...ic} /> },
   { id: 'zones', tools: ['order-block', 'fvg'], icon: <RectangleHorizontal {...ic} /> },
   { id: 'lines', tools: ['level', 'hline', 'trendline'], icon: <Minus {...ic} /> },
+  { id: 'fib', tools: ['fib-retracement', 'fib-extension'], icon: <FibRetracementIcon /> },
   { id: 'position', tools: ['position'], icon: TOOL_ICON.position },
 ];
 
@@ -67,6 +85,7 @@ export const MOBILE_GROUPS: readonly ToolGroup[] = [
   GROUPS[2]!,
   GROUPS[3]!,
   { ...GROUPS[4]!, tools: ['level', 'hline', 'trendline', 'position'] },
+  GROUPS[5]!,
 ];
 
 export const groupOf = (t: ToolId | null, groups: readonly ToolGroup[] = GROUPS): GroupId | null =>
@@ -82,6 +101,7 @@ export const HOTKEYS: Readonly<Record<string, TerminalTool>> = {
   o: 'order-block',
   l: 'level',
   t: 'trendline',
+  g: 'fib-retracement',
 };
 
 export const HOTKEY_OF: Readonly<Partial<Record<TerminalTool, string>>> = Object.fromEntries(

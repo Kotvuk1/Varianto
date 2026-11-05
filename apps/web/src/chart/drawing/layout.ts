@@ -3,16 +3,20 @@ import type { Mark } from '@tl/core';
 import type { Projection } from './projection';
 import { makePriceFormatter } from '../priceFormat';
 import { TOOL_DEFS, type DrawKind } from './tools';
+import { fibExtentPrices, fibParts } from '../fib/parts';
+import { isFibKind } from '../fib/model';
 
 export type Dash = 'solid' | 'dashed' | 'dotted';
 export type GlyphKind = 'tri-up' | 'tri-down' | 'dot' | 'arrow-up' | 'arrow-down';
 
 export type Part =
-  | { t: 'seg'; x1: number; y1: number; x2: number; y2: number; dash: Dash }
-  | { t: 'rect'; x1: number; y1: number; x2: number; y2: number; dash: Dash; hatch: boolean }
+  /** w - толщина линии (по умолчанию из стиля метки); level - доля уровня сетки Fibonacci (хит-тест выбора уровня). */
+  | { t: 'seg'; x1: number; y1: number; x2: number; y2: number; dash: Dash; w?: number; level?: number }
+  /** noStroke - зона без контура (OTE). */
+  | { t: 'rect'; x1: number; y1: number; x2: number; y2: number; dash: Dash; hatch: boolean; noStroke?: boolean }
   | { t: 'glyph'; g: GlyphKind; x: number; y: number }
   /** Подпись-плашка (залитая у user, контурная у algo). (x, y) - центр. */
-  | { t: 'text'; text: string; x: number; y: number; state?: MarkState };
+  | { t: 'text'; text: string; x: number; y: number; state?: MarkState; level?: number };
 
 export interface Handle {
   x: number;
@@ -59,6 +63,8 @@ export interface GeometryOptions {
   state?: MarkState;
   /** Единый форматер цен символа (priceFormat.ts). */
   fmt?: (price: number) => string;
+  /** Выбранный уровень сетки Fibonacci (подсветка). */
+  level?: number | null;
 }
 
 export const textWidth = (text: string, state?: MarkState): number => text.length * CHAR_W + 12 + (state ? STATE_GLYPH_W : 0);
@@ -67,7 +73,8 @@ export const textWidth = (text: string, state?: MarkState): number => text.lengt
 export function isMarkVisible(mark: Mark, proj: Projection, margin = 60): boolean {
   if (mark.anchors.length === 0) return false;
   const xs = mark.anchors.map((a) => proj.timeToX(a.time));
-  const ys = mark.anchors.map((a) => proj.priceToY(a.price));
+  const fibKind = isFibKind(mark.kind) ? mark.kind : null;
+  const ys = (fibKind ? fibExtentPrices(fibKind, mark.anchors) : mark.anchors.map((a) => a.price)).map((p) => proj.priceToY(p));
   const minY = Math.min(...ys);
   const maxY = Math.max(...ys);
   const minX = Math.min(...xs);
@@ -75,7 +82,7 @@ export function isMarkVisible(mark: Mark, proj: Projection, margin = 60): boolea
   const yOk = maxY >= -margin && minY <= proj.height + margin;
   if (!yOk) return false;
   if (mark.kind === 'level') return true;
-  if (mark.kind === 'hline' || mark.kind === 'position') return minX <= proj.width + margin;
+  if (mark.kind === 'hline' || mark.kind === 'position' || fibKind) return minX <= proj.width + margin;
   return maxX >= -margin && minX <= proj.width + margin;
 }
 
@@ -122,6 +129,26 @@ export function buildGeometry(mark: Mark, proj: Projection, opts: GeometryOption
     ),
     handles,
   });
+
+  const fibKind = isFibKind(kind) ? kind : null;
+  if (fibKind) {
+    const draft = typeof mark.meta?.['draft'] === 'number' ? (mark.meta['draft'] as number) : undefined;
+    parts.push(
+      ...fibParts({
+        kind: fibKind,
+        anchors: mark.anchors,
+        pts,
+        priceToY: proj.priceToY,
+        width: proj.width,
+        fmt,
+        tw: (t) => textWidth(t),
+        pillH: PILL_H,
+        highlight: opts.level ?? null,
+        ...(draft !== undefined ? { draft } : {}),
+      }),
+    );
+    return done();
+  }
 
   switch (kind) {
     case 'swing-high':

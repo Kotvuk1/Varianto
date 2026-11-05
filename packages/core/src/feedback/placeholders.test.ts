@@ -8,6 +8,10 @@ import { ERROR_TEMPLATES_RU, fillTemplate, flattenTemplates, OK_TEMPLATES_RU } f
 import { gradeLevel, findLevels, computeContext, gradeContext, detectPatterns, patternToMark, htfClosedAt, buildPatternAlgoMarkSet, patternGradeContext } from '../pa';
 import { buildMsQuestion, gradeMsQuestion, MS_QUESTION_TEMPLATES, selectMsMarkTask } from '../tasks';
 import type { PatternType } from '../types';
+import { fibCandles, indexAtIso, type FibSeriesId } from '../testing/fib';
+import { checkFibMarks, gradeFibExtension, gradeFibGrid, gradeFibReaction, buildExtensionRef, buildGridRef, buildReactionRef } from '../fib';
+import type { FibConfluenceKey, FibReactionOption, FibTarget } from '../fib';
+import type { OkItem } from './types';
 import { buildFeedback } from './build';
 import type { ErrorCode, GradeError, Mark, SkillId, StructureParams } from '../types';
 
@@ -223,5 +227,132 @@ describe('шаблоны: все коды MS и PA, по режимам, реа�
     expect(bad).toEqual([]);
     const missing = MS_PA_CODES.filter((c) => !seenAll.has(c));
     expect(missing).toEqual([]);
+  });
+});
+
+// ---------------------------------------------------------------------------------------------------------------------
+// Fibonacci (FIBONACCI.md §11, §13 п.7): все коды FIB_* / EXT_* и OK_FIB_* / OK_PD / OK_EXT_* после подстановки реальных параметров
+// golden-участков FG не содержат «{…}».
+const FIB_ERROR_CODES: ErrorCode[] = [
+  'FIB_WRONG_DIRECTION', 'FIB_NOT_IMPULSE', 'FIB_WRONG_ANCHOR_START', 'FIB_WRONG_ANCHOR_END', 'FIB_IMPULSE_UNCONFIRMED', 'FIB_LEVEL_MISS',
+  'FIB_DEEP_MISSED', 'FIB_CONFLUENCE_WRONG', 'FIB_PD_WRONG', 'EXT_WRONG_DIRECTION', 'EXT_WRONG_POINTS', 'EXT_TARGET_MISS', 'EXT_TARGET_CONSERVATIVE',
+];
+const FIB_OK_CODES = ['OK_FIB_ANCHOR', 'OK_FIB_EQUAL_EXTREME', 'OK_FIB_REACTION', 'OK_FIB_CONFLUENCE', 'OK_PD', 'OK_EXT_POINTS', 'OK_EXT_TARGET'];
+
+describe('шаблоны Fibonacci: нет неподставленных плейсхолдеров (реальные params golden FG)', () => {
+  const seenErr = new Set<string>();
+  const seenOk = new Set<string>();
+  const problems: string[] = [];
+  const flatAll = flattenTemplates();
+
+  function check(label: string, r: { verdict: 'correct' | 'partial' | 'incorrect'; score: number; errors: GradeError[]; ok: OkItem[]; skillOutcomes: import('../types').SkillOutcome[] }) {
+    const fb = buildFeedback({ module: 'fibonacci', verdict: r.verdict, score: r.score, errors: r.errors, ok: r.ok, skillOutcomes: r.skillOutcomes, tickSize: 0.01 });
+    const blocks = [fb.verdict, ...fb.understood, ...fb.mistakes, ...fb.why, ...fb.howTo, fb.principle];
+    for (const b of blocks) {
+      const tpl = flatAll[b.templateKey];
+      if (tpl === undefined) {
+        problems.push(`${label}: нет шаблона ${b.templateKey}`);
+        continue;
+      }
+      const text = fillTemplate(tpl, b.params);
+      if (/[{}]/.test(text)) problems.push(`${label}:${b.templateKey}: ${text}`);
+      if (/undefined|NaN|\[object/.test(text)) problems.push(`${label}:${b.templateKey}: мусор в тексте: ${text}`);
+    }
+    for (const e of r.errors) seenErr.add(e.code);
+    for (const o of r.ok) seenOk.add(o.code);
+  }
+
+  const at = (c: import('../types').Candle[], iso: string) => indexAtIso(c, iso + ':00Z');
+  const OPTIONS: FibReactionOption[] = ['0.382', '0.5', '0.618', '0.705', '0.786', 'ote', 'deep'];
+  const CONF: FibConfluenceKey[][] = [[], ['order-block'], ['fvg'], ['level'], ['order-block', 'fvg', 'level']];
+  const TARGETS: FibTarget[] = ['1', '1.272', '1.618', 'none'];
+
+  it('«Построй сетку»: перебор начал и концов вокруг эталона (FG-1, FG-8) и перевёрнутых сеток', () => {
+    for (const [id, tf, a, b, dir] of [
+      ['FG-1', '4h', '2026-09-20T00:00', '2026-09-21T20:00', 'bull'], ['FG-8', '15m', '2026-08-10T20:30', '2026-08-11T07:15', 'bear'],
+    ] as [FibSeriesId, '4h' | '15m', string, string, 'bull' | 'bear'][]) {
+      const c = fibCandles(id);
+      const bi = at(c, b);
+      const ai = at(c, a);
+      const T = bi + 15;
+      const vis = c.slice(0, T + 1);
+      const ref = buildGridRef(vis, { nExt: 5, aTime: c[ai]!.openTime, bTime: c[bi]!.openTime })!;
+      const startSide = dir === 'bull' ? 'low' : 'high';
+      const endSide = dir === 'bull' ? 'high' : 'low';
+      for (let i0 = ai - 12; i0 <= ai + 12; i0 += 1) {
+        for (const i1 of [bi - 12, bi - 6, bi - 3, bi, bi + 2, bi + 5, T, ai + 1]) {
+          const mk = (x: number, y: number, s0: 'low' | 'high', s1: 'low' | 'high') => ({
+            id: 'u', kind: 'fib-retracement' as const, scope: null, direction: null, author: 'user' as const,
+            anchors: [{ time: c[x]!.openTime, price: c[x]![s0] }, { time: c[y]!.openTime, price: c[y]![s1] }],
+          });
+          for (const m of [mk(i0, i1, startSide, endSide), mk(i1, i0, endSide, startSide), mk(i0, i1, endSide, startSide)]) {
+            check(`grid/${id}`, gradeFibGrid(ref, { candles: vis, tf }, { kind: 'fib-grid', mark: m }));
+          }
+        }
+      }
+    }
+  });
+
+  it('«Где реакция?»: все варианты x конфлюэнс x PD на golden-участках (easy/medium/hard)', () => {
+    const cases: [FibSeriesId, '4h' | '1h' | '15m', string, string, 'easy' | 'medium' | 'hard'][] = [
+      ['FG-1', '4h', '2026-09-20T00:00', '2026-09-21T20:00', 'medium'], ['FG-4', '4h', '2026-09-10T12:00', '2026-09-11T12:00', 'medium'],
+      ['FG-4', '4h', '2026-09-09T08:00', '2026-09-10T12:00', 'hard'], ['FG-4', '4h', '2026-09-11T12:00', '2026-09-15T16:00', 'hard'],
+      ['FG-3', '1h', '2026-10-02T08:00', '2026-10-02T18:00', 'easy'], ['FG-6', '15m', '2026-07-19T18:00', '2026-07-20T01:00', 'hard'],
+      ['FG-7', '15m', '2026-07-16T15:15', '2026-07-16T17:45', 'medium'], ['FG-8', '15m', '2026-08-10T20:30', '2026-08-11T07:15', 'hard'],
+    ];
+    for (const [id, tf, a, b, d] of cases) {
+      const c = fibCandles(id);
+      const bi = at(c, b);
+      const T = bi + 5;
+      const ref = buildReactionRef(c.slice(0, T + 1), c.slice(T + 1), { nExt: 5, tf, evalDifficulty: d, aTime: c[at(c, a)]!.openTime, bTime: c[bi]!.openTime });
+      expect(ref, `${id} ${a}`).not.toBeNull();
+      for (const option of OPTIONS) for (const conf of CONF) for (const pd of ['premium', 'discount', null] as const) {
+        check(`reaction/${id}/${option}`, gradeFibReaction(ref!, { candles: c.slice(0, T + 1), tf }, { kind: 'fib-reaction', option, confluence: option === 'deep' ? [] : conf, pd }));
+      }
+    }
+  });
+
+  it('«Цель по Extension»: все цели x смещения точек x направление (FG-2, FG-3, FG-8, FG-1)', () => {
+    const cases: [FibSeriesId, '4h' | '1h' | '15m', string, string, string, string, 'bull' | 'bear'][] = [
+      ['FG-1', '4h', '2026-09-06T20:00', '2026-09-08T12:00', '2026-09-09T08:00', '2026-09-09T16:00', 'bear'],
+      ['FG-3', '1h', '2026-10-02T08:00', '2026-10-02T18:00', '2026-10-04T23:00', '2026-10-05T04:00', 'bear'],
+      ['FG-8', '15m', '2026-08-10T20:30', '2026-08-11T07:15', '2026-08-11T11:00', '2026-08-11T12:15', 'bear'],
+      ['FG-1', '4h', '2026-09-20T00:00', '2026-09-21T20:00', '2026-09-24T08:00', '2026-09-27T04:00', 'bull'],
+    ];
+    for (const [id, tf, a, b, cc, te, dir] of cases) {
+      const c = fibCandles(id);
+      const T = at(c, te);
+      const ref = buildExtensionRef(c.slice(0, T + 1), c.slice(T + 1), { nExt: 5, tf, evalDifficulty: 'hard', aTime: c[at(c, a)]!.openTime, bTime: c[at(c, b)]!.openTime });
+      expect(ref, id).not.toBeNull();
+      const [ia, ib, ic] = [at(c, a), at(c, b), at(c, cc)];
+      const s = dir === 'bull' ? (['low', 'high', 'low'] as const) : (['high', 'low', 'high'] as const);
+      const flip = (side: 'low' | 'high') => (side === 'low' ? 'high' : 'low');
+      for (const target of TARGETS) for (const dA of [0, 1, 6]) for (const dC of [0, 2, -9]) for (const wrongDir of [false, true]) {
+        const pts = [ia + dA, ib, Math.max(0, ic + dC)].map((i, k) => ({ time: c[i]!.openTime, price: c[i]![wrongDir ? flip(s[k]!) : s[k]!] }));
+        check(`extension/${id}/${target}`, gradeFibExtension(ref!, { candles: c.slice(0, T + 1), tf }, {
+          kind: 'fib-extension', target, mark: { id: 'u', kind: 'fib-extension', scope: null, direction: null, author: 'user', anchors: pts },
+        }));
+      }
+    }
+  });
+
+  it('терминал: checkFibMarks (FIB_NOT_IMPULSE, UNCONFIRMED, EXT_WRONG_POINTS)', () => {
+    const c = fibCandles('FG-1');
+    const k = (iso: string, side: 'low' | 'high') => ({ time: c[at(c, iso)]!.openTime, price: c[at(c, iso)]![side] });
+    const m = (kind: 'fib-retracement' | 'fib-extension', ...anchors: { time: number; price: number }[]) => ({ id: 'u' + kind, kind, anchors, scope: null, direction: null, author: 'user' as const });
+    const pend = c.slice(0, at(c, '2026-09-21T20:00') + 3);
+    for (const [series, marks] of [
+      [c.slice(0, at(c, '2026-09-27T04:00') + 1), [m('fib-retracement', k('2026-09-02T08:00', 'low'), k('2026-09-03T20:00', 'high')), m('fib-extension', k('2026-09-20T00:00', 'low'), k('2026-09-21T20:00', 'high'), k('2026-09-22T16:00', 'low'))]],
+      [pend, [m('fib-retracement', k('2026-09-20T00:00', 'low'), k('2026-09-21T20:00', 'high'))]],
+    ] as const) {
+      const r = checkFibMarks(series, '4h', marks);
+      check('terminal', { verdict: r.feedback.verdict.templateKey.endsWith('correct') ? 'correct' : 'partial', score: 0.5, errors: r.results.flatMap((x) => x.errors), ok: [], skillOutcomes: [] });
+    }
+  });
+
+  it('итог: ни одного неподставленного плейсхолдера, покрыты все коды Fibonacci', () => {
+    expect(problems).toEqual([]);
+    expect(FIB_ERROR_CODES.filter((c) => !seenErr.has(c))).toEqual([]);
+    expect(FIB_OK_CODES.filter((c) => !seenOk.has(c))).toEqual([]);
   });
 });

@@ -31,6 +31,8 @@ export const TOOL_DEFS: Readonly<Record<DrawKind, ToolDef>> = {
   hline: { anchors: 1, taps: 1, snapPrice: true, label: '' },
   trendline: { anchors: 2, taps: 2, snapPrice: true, label: '' },
   position: { anchors: 3, taps: 3, snapPrice: false, label: '' },
+  'fib-retracement': { anchors: 2, taps: 2, snapPrice: true, label: 'Fib' },
+  'fib-extension': { anchors: 3, taps: 3, snapPrice: true, label: 'Fib ext' },
 };
 
 /** Инструменты, которым нужен выбор слоя (Внешняя / Внутренняя). */

@@ -33,7 +33,12 @@ export function instructionText(p: Pick<InstructionBarProps, 'tool' | 'step' | '
   if (p.selected) return { text: `${tx.selectedPrefix}: ${describeMark(p.selected, p.fmt)}`, warn: false };
   if (p.tool === 'select') return { text: tx.stripHint, warn: false };
   if (p.tool === 'eraser') return { text: `${tx.toolPrefix(tx.tools_.eraser)} — ${tx.eraserHelp}`, warn: false };
-  const step2 = p.step > 0 ? (tx.helpStep2 as Record<string, string>)[p.tool] : undefined;
+  const step2 =
+    p.step > 1
+      ? ((tx.helpStep3 as Record<string, string>)[p.tool] ?? (tx.helpStep2 as Record<string, string>)[p.tool])
+      : p.step > 0
+        ? (tx.helpStep2 as Record<string, string>)[p.tool]
+        : undefined;
   return { text: `${tx.toolPrefix(tx.tools_[p.tool])} — ${step2 ?? tx.help[p.tool]}`, warn: false };
 }
 

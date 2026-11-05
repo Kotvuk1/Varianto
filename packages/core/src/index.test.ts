@@ -19,7 +19,7 @@ describe('TIMEFRAME_MS', () => {
 });
 
 describe('ALGO_VERSION', () => {
-  it('равна 1.1.0 (задания MS v1.1)', () => {
-    expect(ALGO_VERSION).toBe('1.1.0');
+  it('равна 1.2.0 (Fibonacci Playground)', () => {
+    expect(ALGO_VERSION).toBe('1.2.0');
   });
 });

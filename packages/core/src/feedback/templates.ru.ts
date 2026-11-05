@@ -41,6 +41,8 @@ export const PRINCIPLE_TEMPLATES_RU: Record<ModuleId, string> = {
     'Свечная модель значима только в контексте: зона интереса и направление старшей структуры важнее формы свечи.',
   challenge:
     'Качество решения — это соответствие правилам до входа; исход одной сделки его не доказывает и не опровергает.',
+  fibonacci:
+    'Fibonacci — линейка для импульса, а не сигнал: уровни работают вместе со структурой, зоной интереса и premium/discount.',
 };
 
 export const OK_TEMPLATES_RU: Record<OkCode, string> = {
@@ -59,6 +61,13 @@ export const OK_TEMPLATES_RU: Record<OkCode, string> = {
   OK_SL_PLACEMENT: 'Stop Loss за защищённым swing {level}.',
   OK_RR: 'Соотношение риск/прибыль {rr}R не ниже 2R.',
   OK_WAIT: 'WAIT верен: условий для входа по правилам структуры не было.',
+  OK_FIB_ANCHOR: 'Сетка построена по импульсу верно: начало {startTime}, конец {endTime} (допуск ±{tol} свечей).',
+  OK_FIB_EQUAL_EXTREME: 'Точка {point} стоит на равном экстремуме {userTime}: цена {price} совпадает с эталоном {refTime}, сетка та же.',
+  OK_FIB_REACTION: 'Реакция от {given} определена верно: коррекция остановилась на {cPrice} ({depth} импульса).',
+  OK_FIB_CONFLUENCE: 'Конфлюэнс на выбранном уровне указан верно: {factors}.',
+  OK_PD: 'Premium/Discount определён верно: цена {price} в {expected}, equilibrium {eq}.',
+  OK_EXT_POINTS: 'Точки A–B–C extension поставлены верно.',
+  OK_EXT_TARGET: 'Цель {target} выбрана верно: максимум движения {maxPrice} ({xMax} от AB).',
 };
 
 /** Навык кода ошибки; null — определяется параметрами (pa-* по `params.pattern`, MARK_WRONG_DIRECTION по `params.kind`, QUESTION_WRONG по шаблону). */
@@ -120,6 +129,20 @@ export const ERROR_SKILLS: Record<ErrorCode, SkillId | null> = {
   ENTRY_NO_POI: 'challenge-entry',
   WAIT_MISSED_SETUP: 'challenge-wait',
   REASON_MISMATCH: 'challenge-entry',
+  FIB_WRONG_DIRECTION: 'fib-anchor',
+  FIB_NOT_IMPULSE: 'fib-anchor',
+  FIB_WRONG_ANCHOR_START: 'fib-anchor',
+  FIB_WRONG_ANCHOR_END: 'fib-anchor',
+  FIB_IMPULSE_UNCONFIRMED: 'fib-anchor',
+  FIB_LEVEL_MISS: 'fib-reaction',
+  FIB_DEEP_MISSED: 'fib-reaction',
+  FIB_CONFLUENCE_WRONG: 'fib-reaction',
+  FIB_PD_WRONG: 'premium-discount',
+  EXT_WRONG_DIRECTION: 'fib-anchor',
+  /** A, B - fib-anchor; C - fib-extension (по `params.point`, см. skillForError). */
+  EXT_WRONG_POINTS: null,
+  EXT_TARGET_MISS: 'fib-extension',
+  EXT_TARGET_CONSERVATIVE: 'fib-extension',
 };
 
 export const ERROR_TEMPLATES_RU: Record<ErrorCode, ErrorTemplate> = {
@@ -465,6 +488,85 @@ export const ERROR_TEMPLATES_RU: Record<ErrorCode, ErrorTemplate> = {
     howTo: 'Выбирайте причины, которые можно указать на графике.',
     principle: 'Обоснование — это проверяемые факты, а не ощущения.',
   },
+  // ---- Fibonacci Playground (FIBONACCI.md §11.3) ----
+  FIB_WRONG_DIRECTION: {
+    mistake: 'Сетка протянута {givenDir}, а импульс направлен {expectedDir}.',
+    why: 'Retracement тянут от начала импульса к его концу: тогда уровень 0 стоит на конце импульса, а уровни коррекции — между концом и началом.',
+    howTo: 'Начните с {refStartTime} ({refStartPrice}) и протяните сетку к {refEndTime} ({refEndPrice}).',
+    principle: 'Направление сетки — это направление импульса; перевёрнутая сетка показывает уровни не там, где ждать коррекцию.',
+  },
+  FIB_NOT_IMPULSE: {
+    mistake: 'Сетка построена на {legText} ({userStartTime} – {userEndTime}), а не на импульсе.',
+    why: 'Импульс задания — нога, сломавшая структуру ({eventKind} на {eventTime}): от {refStartTime} ({refStartPrice}) до {refEndTime} ({refEndPrice}).',
+    howTo: 'Найдите последний BOS или CHoCH и протяните сетку от защищённого экстремума ноги пробоя до её конца.',
+    principle: 'Fibonacci измеряет откат импульса; сетка на коррекции или шуме даёт случайные уровни.',
+  },
+  FIB_WRONG_ANCHOR_START: {
+    mistake: 'Начало сетки на {userTime} ({userPrice}), а импульс начинается на {refTime} ({refPrice}): смещение {offset} свечей при допуске ±{tol}.',
+    why: '{reasonText} Начало импульса — крайний {sideName} между пробитым swing ({brokenTime}) и свечой пробоя ({eventTime}); это защищённый уровень тренда.',
+    howTo: 'Перенесите первую точку на свечу {refTime}: магнит привяжет её к {sideName} {refPrice}.',
+    principle: 'Сетка от защищённого swing задаёт dealing range, от которого считаются premium и discount.',
+  },
+  FIB_WRONG_ANCHOR_END: {
+    mistake: 'Конец сетки на {userTime} ({userPrice}), а импульс заканчивается на {refTime} ({refPrice}): смещение {offset} свечей при допуске ±{tol}.',
+    why: '{reasonText} Конец импульса — первый подтверждённый внешний swing за пробитым уровнем {level}; после него началась коррекция.',
+    howTo: 'Поставьте вторую точку на {refTime}: это уровень 0 сетки ({refPrice}).',
+    principle: 'Уровни отката считаются от фактического экстремума; недотянутая сетка сдвигает все уровни.',
+  },
+  FIB_IMPULSE_UNCONFIRMED: {
+    mistake: 'Конец сетки на {userTime} ещё не подтверждён как swing.',
+    why: 'Справа от свечи меньше {n} закрытых свечей: импульс может продолжиться и сдвинуть уровень 0.',
+    howTo: 'Дождитесь {n} закрытых свечей справа от экстремума и при обновлении экстремума перетяните сетку.',
+    principle: 'Сетку строят по завершённому импульсу.',
+  },
+  FIB_LEVEL_MISS: {
+    mistake: 'Выбран {given}, а реакция была от {expected}: коррекция дошла до {cPrice} ({depth} импульса) на {cTime}.',
+    why: 'Реакция — первый разворот коррекции не меньше {thr} по закрытию (порог: {thrText}); разворот подтвердила свеча {reactionTime}. Конфлюэнс в зоне реакции: {confText}.',
+    howTo: 'Перед выбором уровня проверьте, где уровень совпадает с OB, FVG или старым swing, и не выбирайте зону, которую цена уже прошла.',
+    principle: 'Fibonacci показывает, где ждать реакцию; подтверждают её зона интереса и разворот.',
+  },
+  FIB_DEEP_MISSED: {
+    mistake: 'Выбран {given}, но ни один уровень 0.382–0.786 не остановил коррекцию: экстремум {cPrice} ({depth} импульса) на {cTime}.',
+    why: '{endText} Уровни без зоны интереса не удержали цену.',
+    howTo: 'Проверьте, есть ли под уровнями ликвидность (равные экстремумы, начало импульса): её часто снимают перед разворотом или сломом.',
+    principle: 'Уровень без зоны интереса — не поддержка и не сопротивление.',
+  },
+  FIB_CONFLUENCE_WRONG: {
+    mistake: 'Указан конфлюэнс «{factorName}» на {given}, но в зоне [{low}–{high}] его нет.',
+    why: '{factorRule}',
+    howTo: 'Проверяйте конфлюэнс по правилам SMC-движка: OB — валидный и не инвалидированный, FVG — незаполненный, уровень — старый внешний swing в зоне.',
+    principle: 'Конфлюэнс усиливает уровень, только если он есть на графике.',
+  },
+  FIB_PD_WRONG: {
+    mistake: 'Цена {price} отнесена к {given}, а она в {expected}.',
+    why: 'Equilibrium диапазона импульса — {eq} (уровень 0.5): выше — premium, ниже — discount.',
+    howTo: 'Сравните цену с уровнем 0.5 сетки: лонги ищут в discount, шорты — в premium.',
+    principle: 'Smart money покупает в discount и продаёт в premium.',
+  },
+  EXT_WRONG_DIRECTION: {
+    mistake: 'Extension построен {givenDir}, а импульс направлен {expectedDir}.',
+    why: 'Точка A — начало импульса, B — его конец; цели extension лежат за B по направлению импульса.',
+    howTo: 'Поставьте A на {refATime} ({refAPrice}), B на {refBTime} ({refBPrice}), C на {refCTime} ({refCPrice}).',
+    principle: 'Extension проецирует импульс в его же сторону.',
+  },
+  EXT_WRONG_POINTS: {
+    mistake: 'Точка {point} на {userTime} ({userPrice}), эталон — {refTime} ({refPrice}): смещение {offset} свечей при допуске ±{tol}.',
+    why: '{pointRule}',
+    howTo: 'Поставьте точку {point} на свечу {refTime}: магнит привяжет её к {sideName} {refPrice}.',
+    principle: 'Extension проецирует длину AB от конца коррекции C; ошибка любой точки сдвигает все цели.',
+  },
+  EXT_TARGET_MISS: {
+    mistake: 'Цель {target} ({targetPrice}) не достигнута: максимум движения {maxPrice} ({xMax} от AB) на {maxTime}.',
+    why: 'Движение закончилось {endText} {endTime}; максимально достигнутый уровень — {reached}.',
+    howTo: 'Если после C нет BOS по направлению импульса или на пути есть встречная зона интереса, выбирайте ближнюю цель.',
+    principle: 'Цель — там, куда рынок вероятно дойдёт, а не там, где больше прибыль.',
+  },
+  EXT_TARGET_CONSERVATIVE: {
+    mistake: 'Цель {target} достигнута, но рынок дошёл дальше — до {reached} ({maxPrice}).',
+    why: 'После C импульс продолжился с силой не меньше AB, уровень {reached} достигнут до инвалидации.',
+    howTo: 'Когда после C есть BOS по направлению импульса и нет встречной зоны, держите часть позиции до следующего уровня extension.',
+    principle: 'Частичная фиксация с переносом цели забирает продолжение тренда.',
+  },
 };
 
 /** Плоский словарь `feedback.*` — совпадает с `templateKey` в FeedbackBlock. */
@@ -501,6 +603,7 @@ export function skillForError(code: ErrorCode, params?: Record<string, string | 
     return m[String(params?.kind)] ?? 'sweep';
   }
   if (code === 'QUESTION_WRONG') return (params?.skill as SkillId | undefined) ?? 'bos';
+  if (code === 'EXT_WRONG_POINTS') return params?.point === 'C' ? 'fib-extension' : 'fib-anchor';
   const p = String(params?.pattern ?? '');
   const map: Record<string, SkillId> = {
     engulfing: 'pa-engulfing',
@@ -567,3 +670,75 @@ export function kindName(v: string | number): string {
   const k = String(v);
   return KIND_NAMES_RU[k] ?? KIND_NAMES_RU[k.toLowerCase()] ?? k;
 }
+
+// ---- Fibonacci: словари текстовых параметров (FIBONACCI.md §11.4). Ядро кладёт в params готовые строки по значению кода. ----
+
+/** `{givenDir}` / `{expectedDir}`. */
+export const FIB_DIR_TEXT_RU: Record<'bull' | 'bear' | 'none', string> = {
+  bull: 'вверх (от swing low к swing high)',
+  bear: 'вниз (от swing high к swing low)',
+  none: 'горизонтально (точки на одной цене)',
+};
+/** `{legText}` по `legKind`. */
+export const FIB_LEG_TEXT_RU: Record<'correction' | 'previous-leg' | 'other', string> = {
+  correction: 'коррекции после импульса',
+  'previous-leg': 'предыдущей ноге',
+  other: 'участке, который не является импульсом задания',
+};
+/** `{reasonText}` для начала сетки. */
+export const FIB_START_REASON_RU: Record<'previous-leg' | 'internal' | 'offset', string> = {
+  'previous-leg': 'Точка стоит на начале предыдущей ноги, до пробитого swing.',
+  internal: 'Точка стоит на внутреннем откате внутри импульса.',
+  offset: 'Точка стоит рядом, но не на экстремальной свече.',
+};
+/** `{reasonText}` для конца сетки. */
+export const FIB_END_REASON_RU: Record<'short' | 'offset', string> = {
+  short: 'Сетка не дотянута до конца импульса.',
+  offset: 'Точка стоит рядом, но не на экстремальной свече.',
+};
+/** `{thrText}`: слагаемое max(), которое больше. */
+export const FIB_THR_TEXT_RU: Record<'atr' | 'range', string> = { atr: '1.5 × ATR14', range: '0.236 размаха импульса' };
+/** `{endText}` для FIB_DEEP_MISSED. */
+export const FIB_DEEP_END_TEXT_RU: Record<'reaction' | 'fail', string> = {
+  reaction: 'Цена развернулась только за 0.786.',
+  fail: 'Импульс сломан: свеча закрылась за началом импульса.',
+};
+/** `{endText}` для EXT_TARGET_MISS. */
+export const FIB_EXT_END_TEXT_RU: Record<'invalidation' | 'limit', string> = {
+  invalidation: 'закрытием за точкой C на свече',
+  limit: 'по лимиту времени на свече',
+};
+/** `{pointRule}`. */
+export const FIB_POINT_RULE_RU: Record<'A' | 'B' | 'C', string> = {
+  A: 'A — начало импульса, защищённый экстремум ноги, сломавшей структуру.',
+  B: 'B — конец импульса, первый подтверждённый swing за пробитым уровнем.',
+  C: 'C — экстремум коррекции между B и текущей свечой, от которого цена развернулась.',
+};
+/** `{factorName}` / `{factorRule}`. */
+export const FIB_FACTOR_NAME_RU: Record<'order-block' | 'fvg' | 'level', string> = { 'order-block': 'Order Block', fvg: 'FVG', level: 'уровень' };
+export const FIB_FACTOR_RULE_RU: Record<'order-block' | 'fvg' | 'level', string> = {
+  'order-block': 'Учитывается только валидный OB направления импульса (с displacement), не инвалидированный к текущей свече и перекрывающий зону уровня.',
+  fvg: 'Учитывается только FVG направления импульса не меньше 0.5 ATR, не заполненный к текущей свече и перекрывающий зону уровня.',
+  level: 'Учитывается только старый внешний swing до начала импульса, цена которого лежит в зоне уровня.',
+};
+/** `{confText}`: перечень найденных факторов («старый swing» для уровня). */
+export const FIB_CONF_TEXT_RU: Record<'order-block' | 'fvg' | 'level', string> = { 'order-block': 'Order Block', fvg: 'FVG', level: 'старый swing' };
+/** Подписи вариантов «Где реакция?» (`{given}`, `{expected}`). */
+export const FIB_OPTION_LABEL_RU: Record<'0.382' | '0.5' | '0.618' | '0.705' | '0.786' | 'ote' | 'deep', string> = {
+  '0.382': '0.382',
+  '0.5': '0.5',
+  '0.618': '0.618',
+  '0.705': '0.705',
+  '0.786': '0.786',
+  ote: 'OTE (0.62–0.79)',
+  deep: 'глубже 0.786',
+};
+/** Подписи целей extension (`{target}`, `{reached}`). */
+export const FIB_TARGET_LABEL_RU: Record<'1' | '1.272' | '1.618' | 'none', string> = {
+  '1': '1.0',
+  '1.272': '1.272',
+  '1.618': '1.618',
+  none: '«ни одна»',
+};
+/** `{sideName}`. */
+export const FIB_SIDE_NAME = { low: 'low', high: 'high' } as const;

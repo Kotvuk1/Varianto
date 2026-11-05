@@ -1,4 +1,5 @@
 import type { Mark } from '@tl/core';
+import { isFibKind } from '@/chart/fib/model';
 import { patternLabel } from '@/chart/drawing/layout';
 import { formatDateTime } from '@/i18n/format';
 import { tx } from './strings';
@@ -8,6 +9,7 @@ export const formatWhen = formatDateTime;
 
 export function markName(m: Mark): string {
   const d = tx.dir;
+  if (isFibKind(m.kind)) return `${tx.tools_[m.kind]}${m.direction ? ` ${m.direction === 'bear' ? d.down : d.up}` : ''}`;
   switch (m.kind) {
     case 'bos':
     case 'choch':
@@ -28,8 +30,9 @@ export function markName(m: Mark): string {
 export function describeMark(m: Mark, fmt: (p: number) => string): string {
   const a = m.anchors;
   const key = m.kind === 'bos' || m.kind === 'choch' || m.kind === 'sweep' ? a[a.length - 1] : a[0];
-  const price =
-    m.kind === 'fvg' || m.kind === 'order-block'
+  const price = isFibKind(m.kind)
+    ? a.map((x) => fmt(x.price)).join(' → ')
+    : m.kind === 'fvg' || m.kind === 'order-block'
       ? `${fmt(a[0]!.price)} – ${fmt(a[1]!.price)}`
       : a[0]
         ? fmt(a[0].price)

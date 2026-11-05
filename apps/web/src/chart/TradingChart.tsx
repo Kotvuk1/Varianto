@@ -93,6 +93,13 @@ export interface TradingChartProps {
   highlightCandles?: readonly CandleHighlight[];
   /** Императивный handle (centerOn / focusMark). */
   handleRef?: Ref<TradingChartHandle>;
+  /**
+   * Выбор уровня сетки Fibonacci из readOnlyMarks касанием по линии/подписи уровня (задание «Где реакция?»).
+   * level - доля (0.618), markId - id сетки. Работает при инструменте «Выбор» или без инструмента.
+   */
+  onLevelPick?: (level: number, markId: string) => void;
+  /** Подсвеченный уровень сеток (доля): толще линия и маркер у начала. */
+  highlightLevel?: number | null;
 }
 
 const LOCALE = 'ru-RU';
@@ -195,6 +202,7 @@ export function TradingChart(props: TradingChartProps) {
       openCandle: last && !last.closed ? { openTime: last.openTime, high: last.high, low: last.low } : null,
       openBadge: p.openCandleLabel ?? 'Идёт',
       fmt: fmtRef.current,
+      highlightLevel: p.highlightLevel ?? null,
       ...(p.markStates ? { states: p.markStates } : {}),
       ...(p.highlightRange ? { highlightRange: p.highlightRange } : {}),
       ...(p.windowLabel ? { windowLabel: p.windowLabel } : {}),
@@ -277,6 +285,9 @@ export function TradingChart(props: TradingChartProps) {
       notify: (n) => propsRef.current.onNotice?.(n),
       fmt: (v) => fmtRef.current(v),
       scope: () => propsRef.current.scope ?? null,
+      readOnlyMarks: () => propsRef.current.readOnlyMarks ?? [],
+      levelPickEnabled: () => !!propsRef.current.onLevelPick,
+      onLevelPick: (p) => propsRef.current.onLevelPick?.(p.level, p.markId),
     });
 
     chartRef.current = chart;
@@ -599,7 +610,7 @@ export function TradingChart(props: TradingChartProps) {
   // --- Метки, выбор, инструмент ---
   useEffect(() => {
     pushStateRef.current();
-  }, [props.marks, props.readOnlyMarks, props.markStates, props.highlightRange, props.highlightCandles, debugHl, flashId, props.selectedId, props.openCandleLabel, tokens, ready]);
+  }, [props.marks, props.readOnlyMarks, props.markStates, props.highlightRange, props.highlightCandles, debugHl, flashId, props.selectedId, props.highlightLevel, props.openCandleLabel, tokens, ready]);
 
   useEffect(() => {
     controllerRef.current?.reset();

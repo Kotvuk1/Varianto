@@ -48,6 +48,8 @@ export interface PrimitiveState {
   candleHighlights?: readonly (CandleHighlight & { high: number; low: number })[];
   /** Метка, кратко подсвеченная по запросу (focusMark). */
   flashId?: string | null;
+  /** Подсвеченный уровень сеток Fibonacci (доля, например 0.618). */
+  highlightLevel?: number | null;
 }
 
 const ZONE_KINDS = new Set(['order-block', 'fvg']);
@@ -215,7 +217,7 @@ export class DrawingPrimitive implements ISeriesPrimitive<Time> {
           visible.sort((a, b) => Number(ZONE_KINDS.has(b.kind)) - Number(ZONE_KINDS.has(a.kind)));
           for (const m of visible) {
             const state = st.states?.[m.id];
-            const g = buildGeometry(m, proj, { fmt: st.fmt, ...(state ? { state } : {}) });
+            const g = buildGeometry(m, proj, { fmt: st.fmt, level: st.highlightLevel ?? null, ...(state ? { state } : {}) });
             if (g.parts.some((p) => Object.values(p).some((v) => typeof v === 'number' && !Number.isFinite(v)))) continue;
             drawGeometry(context, g, { tokens: st.tokens, selected: m.id === st.selectedId || m.id === st.flashId, ghost: false });
             drawn++;

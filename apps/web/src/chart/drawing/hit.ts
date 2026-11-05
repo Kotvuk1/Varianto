@@ -49,6 +49,7 @@ function partScore(p: Part, x: number, y: number, tol: number): number | null {
       return d <= tol ? d : null;
     }
     case 'rect': {
+      if (p.noStroke) return null; // заливка без контура (OTE) не перехватывает касания: выбирается по линиям уровней
       const d = distToRectEdge(x, y, p);
       if (d <= tol) return d;
       return inside(x, y, p) ? tol + 0.5 : null;
@@ -102,4 +103,20 @@ export function hitTest(
     }
   }
   return bestId ? { markId: bestId, part: 'body' } : null;
+}
+
+/**
+ * Уровень сетки Fibonacci под указателем (для выбора уровня в заданиях): ближайшая линия/подпись с `level`
+ * в допуске тела. Область касания на тач-устройстве - полоса +-22 px (44 px).
+ */
+export function hitLevel(geometries: readonly MarkGeometry[], x: number, y: number, tol: Tolerance): { markId: string; level: number } | null {
+  let best: { markId: string; level: number; d: number } | null = null;
+  for (const g of geometries) {
+    for (const p of g.parts) {
+      if ((p.t !== 'seg' && p.t !== 'text') || p.level === undefined) continue;
+      const d = p.t === 'seg' ? distToSegment(x, y, p.x1, p.y1, p.x2, p.y2) : partScore(p, x, y, tol.body);
+      if (d !== null && d <= tol.body && (!best || d < best.d)) best = { markId: g.mark.id, level: p.level, d };
+    }
+  }
+  return best ? { markId: best.markId, level: best.level } : null;
 }

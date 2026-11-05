@@ -1,6 +1,9 @@
 // Форматирование params разбора (F-02, F-07): ядро округляет числа и даёт словарь отображаемых значений;
 // UI может подменить форматеры (запятая, группировка). Время ядро не форматирует (локальный пояс — задача UI).
 export type ParamValue = string | number;
+
+/** Параметр - момент времени (мс UTC): ключ `time` либо оканчивается на `Time`. Форматирует UI (локальный пояс). */
+export const isTimeParam = (key: string): boolean => key === 'time' || /Time$/.test(key);
 export type ParamKind = 'price' | 'percent' | 'r' | 'number';
 
 /** Тип числового параметра по имени ключа; остальные ключи (count, total, time, ...) не трогаются. */
@@ -8,6 +11,9 @@ export const PARAM_KINDS: Readonly<Record<string, ParamKind>> = {
   price: 'price', prevPrice: 'price', close: 'price', level: 'price', wick: 'price', low: 'price', high: 'price',
   user: 'price', ref: 'price', sl: 'price', tp: 'price', entry: 'price', protected: 'price', size: 'price',
   given: 'price', expected: 'price', // числовые given/expected — цены (BOS_WRONG_LEVEL); строки не затрагиваются
+  // Fibonacci (FIBONACCI.md §11): цены уровней, экстремумов и эталонных точек
+  cPrice: 'price', userPrice: 'price', refPrice: 'price', refStartPrice: 'price', refEndPrice: 'price',
+  refAPrice: 'price', refBPrice: 'price', refCPrice: 'price', maxPrice: 'price', targetPrice: 'price', eq: 'price', thr: 'price',
   devPct: 'percent', tolPct: 'percent', iou: 'percent',
   rr: 'r', r: 'r',
   k: 'number', atr: 'number',

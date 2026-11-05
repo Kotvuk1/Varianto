@@ -56,7 +56,9 @@ export type MarkKind =
   | 'hline'
   | 'trendline'
   | 'pattern'
-  | 'position';
+  | 'position'
+  | 'fib-retracement'
+  | 'fib-extension';
 
 export interface Mark {
   id: string;
@@ -71,7 +73,7 @@ export interface Mark {
 }
 
 // ---- Расширения контрактов (API_CONTRACTS §2.2) ----
-export type ModuleId = 'market-structure' | 'price-action' | 'challenge';
+export type ModuleId = 'market-structure' | 'price-action' | 'challenge' | 'fibonacci';
 export type TaskTimeframe = '15m' | '1h' | '4h' | '1d';
 export type TaskSymbol = 'BTCUSDT' | 'ETHUSDT' | 'SOLUSDT';
 export type Difficulty = 'easy' | 'medium' | 'hard';
@@ -94,7 +96,11 @@ export type SkillId =
   | 'pa-context'
   | 'challenge-entry'
   | 'challenge-risk'
-  | 'challenge-wait';
+  | 'challenge-wait'
+  | 'fib-anchor'
+  | 'fib-reaction'
+  | 'fib-extension'
+  | 'premium-discount';
 export type Verdict = 'correct' | 'partial' | 'incorrect';
 
 /** Полный список кодов ошибок (API_CONTRACTS §5.3 + новые из ALGORITHMS §17.4). */
@@ -158,7 +164,21 @@ export type ErrorCode =
   | 'TRADE_IN_RANGE'
   | 'ENTRY_NO_POI'
   | 'WAIT_MISSED_SETUP'
-  | 'REASON_MISMATCH';
+  | 'REASON_MISMATCH'
+  // Fibonacci (FIBONACCI.md §11.3)
+  | 'FIB_WRONG_DIRECTION'
+  | 'FIB_NOT_IMPULSE'
+  | 'FIB_WRONG_ANCHOR_START'
+  | 'FIB_WRONG_ANCHOR_END'
+  | 'FIB_IMPULSE_UNCONFIRMED'
+  | 'FIB_LEVEL_MISS'
+  | 'FIB_DEEP_MISSED'
+  | 'FIB_CONFLUENCE_WRONG'
+  | 'FIB_PD_WRONG'
+  | 'EXT_WRONG_DIRECTION'
+  | 'EXT_WRONG_POINTS'
+  | 'EXT_TARGET_MISS'
+  | 'EXT_TARGET_CONSERVATIVE';
 
 export type OkCode =
   | 'OK_SWING'
@@ -175,7 +195,14 @@ export type OkCode =
   | 'OK_HTF'
   | 'OK_SL_PLACEMENT'
   | 'OK_RR'
-  | 'OK_WAIT';
+  | 'OK_WAIT'
+  | 'OK_FIB_ANCHOR'
+  | 'OK_FIB_EQUAL_EXTREME'
+  | 'OK_FIB_REACTION'
+  | 'OK_FIB_CONFLUENCE'
+  | 'OK_PD'
+  | 'OK_EXT_POINTS'
+  | 'OK_EXT_TARGET';
 
 export interface SkillOutcome {
   skill: SkillId;
