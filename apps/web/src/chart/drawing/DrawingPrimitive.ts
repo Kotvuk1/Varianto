@@ -15,7 +15,8 @@ import type { TimeIndex } from '../geometry/timeIndex';
 import type { ChartTokens } from '../theme/chartTokens';
 import { dimSpans, highlightColumns, labelTop, type CandleHighlight, type HighlightRange } from './highlight';
 import { withAlpha } from '../theme/chartTokens';
-import { buildGeometry, isMarkVisible, type MarkState } from './layout';
+import { buildGeometry, isMarkVisible, PILL_H, textWidth, type MarkGeometry, type MarkState } from './layout';
+import { resolveLabelCollisions } from '../fib/labels';
 import { lwcProjection } from './lwcProjection';
 import { drawGeometry } from './render';
 
@@ -215,15 +216,20 @@ export class DrawingPrimitive implements ISeriesPrimitive<Time> {
           const visible = all.filter((m) => isMarkVisible(m, proj));
           // Зоны под линиями и подписями.
           visible.sort((a, b) => Number(ZONE_KINDS.has(b.kind)) - Number(ZONE_KINDS.has(a.kind)));
+          const built: MarkGeometry[] = [];
           for (const m of visible) {
             const state = st.states?.[m.id];
             const g = buildGeometry(m, proj, { fmt: st.fmt, level: st.highlightLevel ?? null, ...(state ? { state } : {}) });
             if (g.parts.some((p) => Object.values(p).some((v) => typeof v === 'number' && !Number.isFinite(v)))) continue;
-            drawGeometry(context, g, { tokens: st.tokens, selected: m.id === st.selectedId || m.id === st.flashId, ghost: false });
+            built.push(g);
+          }
+          // подписи сеток и ценовых плашек всех меток раскладываются вместе: без наложений
+          for (const g of resolveLabelCollisions(built, PILL_H, (p) => textWidth(p.text, p.state))) {
+            drawGeometry(context, g, { tokens: st.tokens, selected: g.mark.id === st.selectedId || g.mark.id === st.flashId, ghost: false });
             drawn++;
             if (g.handles.length) {
               centers.push({
-                id: m.id,
+                id: g.mark.id,
                 x: g.handles.reduce((a, h) => a + h.x, 0) / g.handles.length,
                 y: g.handles.reduce((a, h) => a + h.y, 0) / g.handles.length,
               });

@@ -18,7 +18,7 @@ const proj: Projection = {
 };
 const a = (i: number, price: number) => ({ time: T0 + i * H, price });
 const mk = (kind: string, anchors: Mark['anchors'], extra: Partial<Mark> = {}): Mark =>
-  ({ id: 'f1', kind, anchors, scope: null, direction: null, author: 'user', ...extra }) as Mark;
+  ({ id: 'f1', kind, anchors, scope: null, direction: null, author: 'algo', ...extra }) as Mark; // эталон: подписи у правого края
 const fmt = (p: number) => p.toFixed(1);
 const segs = (parts: Part[]) => parts.filter((p): p is Extract<Part, { t: 'seg' }> => p.t === 'seg');
 const texts = (parts: Part[]) => parts.filter((p): p is Extract<Part, { t: 'text' }> => p.t === 'text');

@@ -2,7 +2,8 @@
 // уровни различаются толщиной, штрихом и подписью, зона OTE - заливкой токена.
 import type { Anchor } from '@tl/core';
 import type { Part } from '../drawing/layout';
-import { extensionLevels, fibLevelPrice, labelPriority, oteRange, retracementLevels, thinLabels, type FibKind, type FibLevel } from './model';
+import { layoutLabels, type LabelItem } from './labels';
+import { extensionLevels, fibLevelPrice, labelPriority, oteRange, retracementLevels, type FibKind, type FibLevel } from './model';
 
 export interface FibPartsInput {
   kind: FibKind;
@@ -17,6 +18,10 @@ export interface FibPartsInput {
   pillH: number;
   /** Выбранный уровень (подсветка). */
   highlight?: number | null;
+  /** Сторона подписей уровней: эталон - справа, пользователь - у левого якоря. */
+  side?: 'left' | 'right';
+  /** Узкая панель: Premium/Discount сворачиваются в одну пометку «P/D». */
+  compact?: boolean;
   /** Сколько касаний уже сделано (превью): меньше нужного - только ножки. */
   draft?: number;
 }
@@ -85,24 +90,38 @@ export function fibParts(i: FibPartsInput): Part[] {
     if (hi) parts.push({ t: 'glyph', g: 'dot', x: x0, y });
   }
 
-  // подписи у правого края; слипающиеся - прореживаются по приоритету, выбранный уровень остаётся всегда
-  const keep = thinLabels(
-    rows.map((r) => ({ key: String(r.l.ratio), y: r.y, priority: i.highlight === r.l.ratio ? -1 : labelPriority(r.l.ratio) })),
-    i.pillH,
-  );
+  // Подписи: эталон (algo) - у правого края, пользователь - у левого якоря; P/D - с противоположной стороны.
+  // Раскладка без наложений: важные (0, 0.5, 0.618, 1, выбранный) сдвигаются по вертикали, остальные скрываются.
+  const left = i.side === 'left';
+  const items: LabelItem[] = [];
+  const texts = new Map<string, { text: string; level?: number; prio: number; w: number }>();
+  const add = (key: string, text: string, x: number, y: number, prio: number, level?: number) => {
+    const w = i.tw(text);
+    texts.set(key, { text, prio, w, ...(level !== undefined ? { level } : {}) });
+    items.push({ key, x, y, w, prio });
+  };
   for (const { l, y } of rows) {
-    if (!keep.has(String(l.ratio))) continue;
     const text = `${l.ratio} · ${i.fmt(l.price)}`;
-    parts.push({ t: 'text', text, x: x1 - i.tw(text) / 2 - LABEL_PAD, y, level: l.ratio });
+    const w = i.tw(text);
+    const prio = i.highlight === l.ratio ? -1 : labelPriority(l.ratio);
+    add(`l${l.ratio}`, text, left ? x0 + w / 2 + LABEL_PAD + 8 : x1 - w / 2 - LABEL_PAD, y, prio, l.ratio);
   }
-
   if (retr) {
     // Premium / Discount - абсолютно (FIBONACCI §2.3): выше EQ - Premium, ниже - Discount, при любом направлении импульса
     const eqY = i.priceToY(fibLevelPrice(A, B, 0.5));
     const gap = i.pillH / 2 + 3;
-    for (const [text, dy] of [['Premium', -gap], ['Discount', gap]] as const) {
-      parts.push({ t: 'text', text, x: x0 + i.tw(text) / 2 + 6, y: eqY + dy });
+    const px = (t: string) => (left ? x1 - i.tw(t) / 2 - LABEL_PAD : x0 + i.tw(t) / 2 + 6);
+    if (i.compact) add('pd', 'P/D', px('P/D'), eqY - gap, 2.5);
+    else {
+      add('pdp', 'Premium', px('Premium'), eqY - gap, 2.5);
+      add('pdd', 'Discount', px('Discount'), eqY + gap, 2.5);
     }
+  }
+  const placed = layoutLabels(items, i.pillH);
+  for (const it of items) {
+    const pos = placed.get(it.key);
+    const t = texts.get(it.key)!;
+    if (pos) parts.push({ t: 'text', text: t.text, x: pos.x, y: pos.y, prio: t.prio, ...(t.level !== undefined ? { level: t.level } : {}) });
   }
   return parts;
 }

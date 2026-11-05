@@ -16,7 +16,7 @@ export type Part =
   | { t: 'rect'; x1: number; y1: number; x2: number; y2: number; dash: Dash; hatch: boolean; noStroke?: boolean }
   | { t: 'glyph'; g: GlyphKind; x: number; y: number }
   /** Подпись-плашка (залитая у user, контурная у algo). (x, y) - центр. */
-  | { t: 'text'; text: string; x: number; y: number; state?: MarkState; level?: number };
+  | { t: 'text'; text: string; x: number; y: number; state?: MarkState; level?: number; prio?: number };
 
 export interface Handle {
   x: number;
@@ -144,6 +144,8 @@ export function buildGeometry(mark: Mark, proj: Projection, opts: GeometryOption
         tw: (t) => textWidth(t),
         pillH: PILL_H,
         highlight: opts.level ?? null,
+        side: algo ? 'right' : 'left',
+        compact: proj.width < 520,
         ...(draft !== undefined ? { draft } : {}),
       }),
     );
