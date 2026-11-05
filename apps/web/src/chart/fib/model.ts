@@ -1,24 +1,7 @@
-// Чистая математика Fibonacci (docs/specs/FIBONACCI.md §2). Цены не округляются: округление - только при показе.
-// TODO(core): когда packages/core экспортирует fibLevelPrice/fibDepth/fibExtensionPrice/pdZone - реэкспортировать оттуда.
+// Формулы Fibonacci живут в @tl/core (FIBONACCI.md §2); здесь только отрисовочные надстройки.
+import { FIB_EXTENSION_INFO, FIB_EXTENSION_TARGETS, FIB_OTE, FIB_RETRACEMENT_LEVELS, fibDepth, fibExtensionPrice, fibLevelPrice, pdZone, type FibDirection } from '@tl/core';
 
-export type FibDirection = 'bull' | 'bear';
-
-export const FIB_RETRACEMENT_LEVELS = [0, 0.236, 0.382, 0.5, 0.618, 0.705, 0.786, 1] as const;
-export const FIB_OTE = { from: 0.62, to: 0.79 } as const;
-export const FIB_EXTENSION_TARGETS = [1, 1.272, 1.618] as const;
-export const FIB_EXTENSION_INFO = [2] as const;
-
-/** B + r*(A-B): уровень 0 на B (конец импульса), уровень 1 на A (начало). */
-export const fibLevelPrice = (A: number, B: number, r: number): number => B + r * (A - B);
-/** (B-price)/(B-A): глубина коррекции в долях импульса. */
-export const fibDepth = (A: number, B: number, price: number): number => (B - price) / (B - A);
-/** C + x*(B-A): для bear (B-A)<0, цели ниже C. */
-export const fibExtensionPrice = (A: number, B: number, C: number, x: number): number => C + x * (B - A);
-
-export function pdZone(A: number, B: number, price: number): 'premium' | 'discount' | 'equilibrium' {
-  const eq = fibLevelPrice(A, B, 0.5);
-  return price > eq ? 'premium' : price < eq ? 'discount' : 'equilibrium';
-}
+export { FIB_EXTENSION_INFO, FIB_EXTENSION_TARGETS, FIB_OTE, FIB_RETRACEMENT_LEVELS, fibDepth, fibExtensionPrice, fibLevelPrice, pdZone, type FibDirection };
 
 export const fibDirection = (A: number, B: number): FibDirection | null => (B > A ? 'bull' : B < A ? 'bear' : null);
 

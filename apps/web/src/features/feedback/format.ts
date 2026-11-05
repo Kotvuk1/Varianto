@@ -1,7 +1,6 @@
 import { formatDateTime, formatDecimal, formatPercentValue, formatRValue } from '@/i18n/format';
-import { fillTemplate, flattenTemplates, formatFeedbackParams, kindName } from '@tl/core';
+import { fillTemplate, flattenTemplates, formatFeedbackParams, isTimeParam, kindName } from '@tl/core';
 
-const TIME_KEYS = new Set(['time', 'refTime', 'eventTime', 'fromTime', 'toTime']);
 const KIND_KEYS = new Set(['kind', 'given', 'expected', 'eventKind', 'kindName']);
 const DIR: Record<string, string> = { bull: 'бычий', bear: 'медвежий', none: 'не задано' };
 
@@ -16,7 +15,7 @@ export function formatWhen(t: number): string {
  * (цены - форматером графика, % и R по-русски), время и типы меток - слой UI.
  */
 export function formatParam(key: string, v: string | number, fmtPrice: (p: number) => string): string | number {
-  if (typeof v === 'number' && TIME_KEYS.has(key)) return formatWhen(v);
+  if (typeof v === 'number' && isTimeParam(key)) return formatWhen(v);
   if (typeof v === 'number' && KIND_KEYS.has(key) && v > 1) return fmtPrice(v);
   const out = formatFeedbackParams({ [key]: v }, FORMATTERS(fmtPrice))[key]!;
   if (typeof v === 'string' && KIND_KEYS.has(key) && out === v) return DIR[v] ?? kindName(v);

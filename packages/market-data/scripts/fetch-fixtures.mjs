@@ -39,6 +39,10 @@ items.push({ kind: 'klines', period: 'monthly', symbol: 'ETHUSDT', tf: '1h', dat
 items.push({ kind: 'klines', period: 'monthly', symbol: 'ETHUSDT', tf: '4h', date: '2026-09' });
 for (const d of ['2026-07-15', '2026-07-16', '2026-07-17', '2026-07-19', '2026-07-20', '2026-07-21', '2026-08-10', '2026-08-11', '2026-08-12'])
   items.push({ kind: 'klines', period: 'daily', symbol: 'SOLUSDT', tf: '15m', date: d });
+// Elliott Wave Lab: golden EW-1..EW-6 (docs/specs/ELLIOTT.md §15.1)
+items.push({ kind: 'klines', period: 'monthly', symbol: 'SOLUSDT', tf: '1h', date: '2026-08' });
+items.push({ kind: 'klines', period: 'monthly', symbol: 'ETHUSDT', tf: '4h', date: '2026-10' });
+for (const d of ['2026-06', '2026-07']) items.push({ kind: 'klines', period: 'monthly', symbol: 'BTCUSDT', tf: '1h', date: d });
 items.push({ kind: 'aggTrades', period: 'daily', symbol: 'BTCUSDT', date: day, excerpt: AGG_LINES });
 
 const sha = (buf) => createHash('sha256').update(buf).digest('hex');
@@ -117,6 +121,7 @@ ${table}
 \`golden/*.golden.json\` - ожидаемые значения GS-1..GS-4b, GS-7..GS-9 для \`analyzeStructure\`/\`detectSwings\`/\`detectSweeps\`: значения перенесены из \`docs/specs/ALGORITHMS.md\` §18.2 (получены Technical Analyst вручную по OHLC), а не сгенерированы кодом. Поля: \`algoVersion\`, \`source\` (CSV + SHA-256), \`params\`, \`expected\`, \`rationale\`. Время - ISO UTC (\`openTime\` свечи). Тесты: \`packages/core/src/smc/golden.*.test.ts\`. Изменение golden без смены \`ALGO_VERSION\` запрещено. SHA-256 дневного CSV SOLUSDT/BTCUSDT 15m отличается от значений в спецификации (там хэши месячных архивов): файлы здесь - дневные архивы, чьи zip сверены с \`.CHECKSUM\`.
 Дополнительные непрерывные ряды для тестов генерации заданий (\`BTCUSDT-1h-2026-08/09\`, 1464 свечи) и примеров ALGORITHMS §5.5/§7.1 (\`BTCUSDT-4h-2026-07/08\`).
 Fibonacci (docs/specs/FIBONACCI.md §12): \`golden/fib_FG-*\` - значения перенесены из спецификации (Technical Analyst, вручную по OHLC); ряды: \`BTCUSDT-4h-2026-09/10\`, \`ETHUSDT-1h-2026-10\`, \`ETHUSDT-4h-2026-09\`, \`SOLUSDT-15m-2026-07-15..21\`, \`SOLUSDT-15m-2026-08-09..12\`.
+Elliott (docs/specs/ELLIOTT.md §15): \`golden/ew_*\` - участки EW-1..EW-6; ряды: \`SOLUSDT-1h-2026-08\`, \`ETHUSDT-4h-2026-09/10\`, \`BTCUSDT-1h-2026-06/07\`, \`BTCUSDT-4h-2026-07/08/09\`. В monthly-архивах 2026-10 (BTC/ETH/SOL, 1h и 4h) нет свечей 2026-10-28 (пропуск источника, сохранён как есть).
 
 ## recorded/ - записанные форматы API (fapi/fstream недоступны из облака, 451)
 
