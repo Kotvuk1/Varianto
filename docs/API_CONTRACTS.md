@@ -83,7 +83,8 @@ interface Anchor { time: UtcMs; price: number }
 type MarkKind =
   | 'swing-high' | 'swing-low' | 'hh' | 'hl' | 'lh' | 'll'
   | 'bos' | 'choch' | 'sweep' | 'order-block' | 'fvg'
-  | 'level' | 'hline' | 'trendline' | 'pattern' | 'position';
+  | 'level' | 'hline' | 'trendline' | 'pattern' | 'position'
+  | 'fib-retracement' | 'fib-extension';              // (новое, FIBONACCI.md §9.1): 2 и 3 якоря
 interface Mark {
   id: string; kind: MarkKind; anchors: Anchor[];         // 1..3 точки по типу
   scope: 'internal' | 'external' | null;                 // для структуры
@@ -99,7 +100,7 @@ interface Mark {
 ### 2.2 Расширения контрактов (предложение — фиксируются при реализации в `@tl/core`)
 
 ```ts
-type ModuleId = 'market-structure' | 'price-action' | 'challenge';
+type ModuleId = 'market-structure' | 'price-action' | 'challenge' | 'fibonacci';   // 'fibonacci' (новое, ALGO_VERSION 1.2.0)
 type TaskTimeframe = '15m' | '1h' | '4h' | '1d';               // FR-DATA-05
 type TaskSymbol = 'BTCUSDT' | 'ETHUSDT' | 'SOLUSDT';           // FR-DATA-03
 type Difficulty = 'easy' | 'medium' | 'hard';
@@ -113,7 +114,8 @@ type SkillId =
   | 'sweep' | 'order-block' | 'fvg'
   | 'pa-engulfing' | 'pa-pin-bar' | 'pa-inside-bar' | 'pa-doji' | 'pa-star'
   | 'pa-level' | 'pa-context'
-  | 'challenge-entry' | 'challenge-risk' | 'challenge-wait';
+  | 'challenge-entry' | 'challenge-risk' | 'challenge-wait'
+  | 'fib-anchor' | 'fib-reaction' | 'fib-extension' | 'premium-discount';   // (новое, FIBONACCI.md §10)
 
 type Verdict = 'correct' | 'partial' | 'incorrect';
 ```
@@ -181,7 +183,8 @@ interface NextBase {
 type NextRequest =
   | (NextBase & { module: 'market-structure'; mode: 'mark' | 'question'; tf: TaskTimeframe })
   | (NextBase & { module: 'price-action'; taskType: 'find-pattern' | 'draw-level' | 'context'; tf: TaskTimeframe })
-  | (NextBase & { module: 'challenge' });     // ТФ выбирается пользователем в UI; сервер отдаёт все четыре
+  | (NextBase & { module: 'challenge' })      // ТФ выбирается пользователем в UI; сервер отдаёт все четыре
+  | (NextBase & { module: 'fibonacci'; taskType: 'grid' | 'reaction' | 'extension'; tf: TaskTimeframe });   // (новое) FIBONACCI.md §9.2; series — только запрошенный tf, 500 закрытых свечей (1d — 365)
 ```
 `module` в теле дублирует путь и должен совпадать с ним (иначе 400).
 
@@ -195,7 +198,7 @@ interface TaskEnvelope<P extends TaskPayload = TaskPayload> {
   symbol: TaskSymbol;
   algoVersion: string;
   expiresAt: UtcMs;              // = exp токена
-  timeline: { mode: 'relative' | 'absolute' };   // challenge — всегда 'relative'
+  timeline: { mode: 'relative' | 'absolute' };   // challenge, fib-reaction, fib-extension — 'relative'; fib-grid — 'absolute'
   decisionTime: UtcMs;           // T на шкале задания
   series: Partial<Record<TaskTimeframe, Candle[]>>;   // времена на шкале задания; closeTime < T, плюс частичная свеча старших ТФ (closed=false)
   payload: P;
@@ -283,10 +286,10 @@ v1.<header>.<sealed>.<mac>      // base64url-сегменты
 
 ### 4.1 Шкала задания
 - `timeline.mode = 'absolute'`: времена в `series`, якорях и ответах — реальные `UtcMs`.
-- `timeline.mode = 'relative'` (Challenge): все времена — `real − shiftMs`, где `shiftMs` секретный, кратен 1 суткам (сетка 4h/1d сохраняется). UI для Challenge не показывает дату (на оси — время суток или номера свечей; AC-08).
+- `timeline.mode = 'relative'` (Challenge, Fibonacci `reaction` и `extension` — дата скрыта, будущее проигрывается): все времена — `real − shiftMs`, где `shiftMs` секретный, кратен 1 суткам (сетка 4h/1d сохраняется). UI для Challenge не показывает дату (на оси — время суток или номера свечей; AC-08).
 - Якоря в `answer` отправляются на шкале задания; сервер переводит в реальное время.
 - После `grade` клиент получает `reveal.shiftMs` и `reveal.decisionTime` (реальное) и показывает дату в локальном часовом поясе. Все времена внутри `GradeResult` остаются на шкале задания (чтобы разметка ложилась на тот же график); реальное время = `time + reveal.shiftMs`.
-- Для `market-structure` / `price-action` режим по умолчанию `absolute` (скрывать ли дату — вопрос 8.6).
+- Для `fibonacci/grid`, `market-structure` и `price-action` режим по умолчанию `absolute` (скрывать ли дату — вопрос 8.6).
 
 ### 4.2 Типы ответа (`Answer`)
 
@@ -313,6 +316,15 @@ interface ContextFactorAnswer {
   sweep: boolean; orderBlock: boolean; keyLevel: boolean;
   htfTrend: 'up' | 'down' | 'range';
 }
+
+// fibonacci (новое, FIBONACCI.md §9.2-§9.3; типы — packages/core/src/fib/types.ts)
+type FibReactionOption = '0.382' | '0.5' | '0.618' | '0.705' | '0.786' | 'ote' | 'deep';
+type FibConfluenceKey = 'order-block' | 'fvg' | 'level';
+type FibTarget = '1' | '1.272' | '1.618' | 'none';
+interface FibGridAnswer      { kind: 'fib-grid';      mark: Mark }                  // kind 'fib-retracement', author 'user', ровно 2 якоря [начало, конец]
+interface FibReactionAnswer  { kind: 'fib-reaction';  option: FibReactionOption; confluence: FibConfluenceKey[]; pd: 'premium' | 'discount' | null }
+interface FibExtensionAnswer { kind: 'fib-extension'; mark: Mark; target: FibTarget }   // kind 'fib-extension', ровно 3 якоря [A, B, C]
+// validation (400, попытка не оценивается): FIB_ANCHORS_COUNT, FIB_ANCHOR_OUT_OF_RANGE, FIB_OPTION_UNAVAILABLE, FIB_CONFLUENCE_INVALID, FIB_PD_MISMATCH
 
 // challenge
 type ReasonCode =                                                                    // начальный список (OQ-08)
@@ -366,7 +378,7 @@ interface GradeResult {
   reference: Mark[];                         // эталонная разметка алгоритма (author: 'algo'), на шкале задания
   detail: ModuleDetail;
   feedback: Feedback;
-  replay?: ChallengeReplay;                  // только challenge
+  replay?: TaskReplay;                       // challenge и fibonacci (reaction, extension); тип ChallengeReplay переименован в TaskReplay
 }
 
 interface RevealedTask {
@@ -388,7 +400,8 @@ type ModuleDetail =
   | { kind: 'ms-question'; chosenOptionId: string; correctOptionId: string }
   | { kind: 'pa-level'; userPrice: number; referencePrice: number; deviationPct: number; tolerancePct: number }
   | { kind: 'pa-context'; expected: ContextFactorAnswer & { significant: boolean }; given: ContextFactorAnswer & { significant: boolean } }
-  | { kind: 'challenge'; challenge: ChallengeDetail };
+  | { kind: 'challenge'; challenge: ChallengeDetail }
+  | { kind: 'fib-grid' | 'fib-reaction' | 'fib-extension'; fib: FibDetail };   // (новое) FibDetail — FIBONACCI.md §9.3, packages/core/src/fib/types.ts
 
 interface MarkGrade {
   matched: { userMarkId: string; algoMarkId: string; timeOffsetCandles: number; priceOffsetPct: number }[];
@@ -412,7 +425,7 @@ interface ChallengeOutcome {
   rMultiple: number;                         // 1R = |entry - sl|; sl = -1; tp = +RR; timeout = по close последней свечи окна
   method: 'candle' | 'drill-1m' | 'drill-aggtrades' | 'conservative-sl' | 'timeout';   // ADR-0007
 }
-interface ChallengeReplay {
+interface TaskReplay {
   tf: TaskTimeframe;
   candles: Candle[];                         // после T на шкале задания, до выхода (или окончания окна для WAIT)
   exitIndex: number | null;
@@ -440,7 +453,8 @@ interface FeedbackBlock {
 }
 type OkCode = 'OK_SWING' | 'OK_BOS' | 'OK_CHOCH' | 'OK_OB' | 'OK_FVG' | 'OK_LEVEL' | 'OK_PATTERN'
             | 'OK_CONTEXT' | 'OK_SL_PLACEMENT' | 'OK_WAIT'
-            | 'OK_LABEL' | 'OK_SCOPE' | 'OK_SWEEP' | 'OK_HTF' | 'OK_RR';   // OK_LABEL…OK_RR — (новое), ALGORITHMS §19 п.5
+            | 'OK_LABEL' | 'OK_SCOPE' | 'OK_SWEEP' | 'OK_HTF' | 'OK_RR'
+            | 'OK_FIB_ANCHOR' | 'OK_FIB_EQUAL_EXTREME' | 'OK_FIB_REACTION' | 'OK_FIB_CONFLUENCE' | 'OK_PD' | 'OK_EXT_POINTS' | 'OK_EXT_TARGET';   // Fibonacci (новое), FIBONACCI.md §11.2   // OK_LABEL…OK_RR — (новое), ALGORITHMS §19 п.5
 ```
 Элементы массивов `mistakes`, `why`, `howTo` соответствуют друг другу по `code` (один `GradeError` порождает по одному блоку в каждой из трёх частей).
 
@@ -472,7 +486,11 @@ type ErrorCode =
   | 'SL_TOO_WIDE'                                                                        // (новое)
   | 'TRADE_AGAINST_HTF' | 'TRADE_AGAINST_STRUCTURE' | 'TRADE_IN_RANGE'                   // TRADE_AGAINST_STRUCTURE (новое)
   | 'ENTRY_NO_POI'                                                                       // (новое)
-  | 'WAIT_MISSED_SETUP' | 'REASON_MISMATCH';
+  | 'WAIT_MISSED_SETUP' | 'REASON_MISMATCH'
+  // Fibonacci (новое), FIBONACCI.md §11.3
+  | 'FIB_WRONG_DIRECTION' | 'FIB_NOT_IMPULSE' | 'FIB_WRONG_ANCHOR_START' | 'FIB_WRONG_ANCHOR_END' | 'FIB_IMPULSE_UNCONFIRMED'
+  | 'FIB_LEVEL_MISS' | 'FIB_DEEP_MISSED' | 'FIB_CONFLUENCE_WRONG' | 'FIB_PD_WRONG'
+  | 'EXT_WRONG_DIRECTION' | 'EXT_WRONG_POINTS' | 'EXT_TARGET_MISS' | 'EXT_TARGET_CONSERVATIVE';
 ```
 
 | Код | Навык (`SkillId`) | Смысл |
@@ -521,6 +539,16 @@ type ErrorCode =
 | `TRADE_IN_RANGE` | `challenge-entry` | Позиция во флэте, где корректен WAIT |
 | `WAIT_MISSED_SETUP` | `challenge-wait` | WAIT при наличии валидной точки входа |
 | `REASON_MISMATCH` | `challenge-entry` | Выбранные причины не соответствуют распознанной структуре |
+| `FIB_WRONG_DIRECTION` | `fib-anchor` | Сетка протянута от конца импульса к началу |
+| `FIB_NOT_IMPULSE` | `fib-anchor` | Сетка построена не на импульсе задания (коррекция, предыдущая нога, шум) |
+| `FIB_WRONG_ANCHOR_START` / `FIB_WRONG_ANCHOR_END` | `fib-anchor` | Начало / конец сетки вне допуска ±2 свечи |
+| `FIB_IMPULSE_UNCONFIRMED` | `fib-anchor` | Конец импульса ещё не подтверждён swing (терминал) |
+| `FIB_LEVEL_MISS` / `FIB_DEEP_MISSED` | `fib-reaction` | Выбран не тот уровень реакции / пропущена глубокая реакция или слом |
+| `FIB_CONFLUENCE_WRONG` | `fib-reaction` | Заявлен конфлюэнс, которого нет в зоне |
+| `FIB_PD_WRONG` | `premium-discount` | Premium/Discount определён неверно |
+| `EXT_WRONG_DIRECTION` | `fib-anchor` | Extension построен в обратную сторону |
+| `EXT_WRONG_POINTS` | `fib-anchor` (A, B) / `fib-extension` (C) | Точка A, B или C вне допуска |
+| `EXT_TARGET_MISS` / `EXT_TARGET_CONSERVATIVE` | `fib-extension` | Цель не достигнута / достигнута, но рынок дошёл дальше |
 
 ## 6. Внешние API Binance
 

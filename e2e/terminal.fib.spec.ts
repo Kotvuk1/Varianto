@@ -60,13 +60,13 @@ async function findFib(page: Page, box: { x: number; y: number; width: number; h
       const b = await vis(cs[j]!, 'high');
       if (!b || b.pt.x - a.pt.x < gx || a.pt.y - b.pt.y < gy) continue;
       if (!withC) {
-        if (a.pt.y - b.pt.y > bestSize) (best = { a, b }), (bestSize = a.pt.y - b.pt.y);
+        if (a.pt.y - b.pt.y > bestSize) { best = { a, b }; bestSize = a.pt.y - b.pt.y; }
         continue;
       }
       for (let k = j + 6; k < cs.length - 3 && k < j + 40; k++) {
         if (!pivot(cs, k, 'low') || cs[k]!.low <= cs[i]!.low || cs[k]!.low >= cs[j]!.high) continue;
         const c = await vis(cs[k]!, 'low');
-        if (c && c.pt.x - b.pt.x >= gx && c.pt.y - b.pt.y >= 30 && a.pt.y - b.pt.y > bestSize) (best = { a, b, c }), (bestSize = a.pt.y - b.pt.y);
+        if (c && c.pt.x - b.pt.x >= gx && c.pt.y - b.pt.y >= 30 && a.pt.y - b.pt.y > bestSize) { best = { a, b, c }; bestSize = a.pt.y - b.pt.y; }
       }
     }
   }

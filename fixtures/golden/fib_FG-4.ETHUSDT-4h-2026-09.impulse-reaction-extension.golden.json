@@ -1,0 +1,130 @@
+{
+ "algoVersion": "1.0.0",
+ "author": "technical-analyst (значения из docs/specs/FIBONACCI.md §12.2)",
+ "date": "2026-11-04",
+ "source": [
+  {
+   "path": "klines/ETHUSDT/4h/ETHUSDT-4h-2026-09.csv",
+   "sha256": "23775ef5e2b2ad47d88370a8f8e222ccf1f1c0e3f605daae9f3fb031855ff2be"
+  }
+ ],
+ "function": "findImpulses / resolveReaction / resolveExtension",
+ "params": {
+  "nExt": 5,
+  "tf": "4h",
+  "limitCandles": 60,
+  "note": "ряд обрезан перед первым пропуском (в октябрьских месячных архивах BTC/ETH нет суток 2026-10-28); T = индекс B + nExt"
+ },
+ "expected": {
+  "impulses": [
+   {
+    "eventKind": "choch",
+    "direction": "bull",
+    "breakTime": "2026-09-11T12:00:00Z",
+    "a": {
+     "time": "2026-09-10T12:00:00Z",
+     "price": 2403.33
+    },
+    "b": {
+     "time": "2026-09-11T12:00:00Z",
+     "price": 2666.0
+    },
+    "candles": 6,
+    "rangeAtr": 7.704
+   },
+   {
+    "eventKind": "bos",
+    "direction": "bear",
+    "breakTime": "2026-09-10T12:00:00Z",
+    "a": {
+     "time": "2026-09-09T08:00:00Z",
+     "price": 2522.75
+    },
+    "b": {
+     "time": "2026-09-10T12:00:00Z",
+     "price": 2403.33
+    },
+    "candles": 7,
+    "rangeAtr": 3.836
+   },
+   {
+    "eventKind": "choch",
+    "direction": "bear",
+    "breakTime": "2026-09-15T20:00:00Z",
+    "a": {
+     "time": "2026-09-11T12:00:00Z",
+     "price": 2666.0
+    },
+    "b": {
+     "time": "2026-09-15T16:00:00Z",
+     "price": 2357.0
+    },
+    "candles": 25,
+    "rangeAtr": 6.308
+   }
+  ],
+  "rejected": [],
+  "reaction": [
+   {
+    "direction": "bull",
+    "a": "2026-09-10T12:00:00Z",
+    "b": "2026-09-11T12:00:00Z",
+    "T": "b+5",
+    "kind": "reaction",
+    "index": "2026-09-14T16:00:00Z",
+    "correctOptions": [
+     "0.786",
+     "ote"
+    ],
+    "cls": "0.786",
+    "extremeTime": "2026-09-13T12:00:00Z",
+    "extremePrice": 2460.3,
+    "depth": 0.7831,
+    "threshold": 68.0614
+   },
+   {
+    "direction": "bear",
+    "a": "2026-09-09T08:00:00Z",
+    "b": "2026-09-10T12:00:00Z",
+    "T": "b+5",
+    "kind": "fail",
+    "index": "2026-09-11T12:00:00Z",
+    "correctOptions": [
+     "deep"
+    ],
+    "cls": "deep"
+   },
+   {
+    "direction": "bear",
+    "a": "2026-09-11T12:00:00Z",
+    "b": "2026-09-15T16:00:00Z",
+    "T": "b+5",
+    "kind": "reaction",
+    "index": "2026-09-20T00:00:00Z",
+    "correctOptions": [
+     "deep"
+    ],
+    "cls": "deep",
+    "extremeTime": "2026-09-19T16:00:00Z",
+    "extremePrice": 2669.0,
+    "depth": 1.0097,
+    "threshold": 72.924
+   }
+  ],
+  "extension": [
+   {
+    "direction": "bull",
+    "a": "2026-09-10T12:00:00Z",
+    "b": "2026-09-11T12:00:00Z",
+    "c": "2026-09-13T12:00:00Z",
+    "Te": "2026-09-14T16:00:00Z",
+    "reached": "none",
+    "xMax": 0.5889,
+    "extremePrice": 2614.99,
+    "extremeTime": "2026-09-14T20:00:00Z",
+    "invalidationTime": "2026-09-15T12:00:00Z"
+   }
+  ]
+ },
+ "rationale": "Значения перенесены из спецификации (получены вручную по OHLC); изменение без смены FIB_ALGO_VERSION запрещено."
+}

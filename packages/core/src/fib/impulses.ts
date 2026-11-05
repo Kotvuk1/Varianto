@@ -3,7 +3,7 @@ import { FIB_ALGO_VERSION } from '../version';
 import { analyzeStructure } from '../smc/analyze';
 import { atr14, closedOnly } from '../smc/series';
 import type { Candle, Swing } from '../types';
-import type { Impulse, ImpulseRejectReason, ImpulseScan } from './types';
+import type { ImpulseRejectReason, ImpulseScan } from './types';
 
 export interface ImpulseParams {
   nExt: number;

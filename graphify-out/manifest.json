@@ -258,9 +258,9 @@
     "semantic_hash": ""
   },
   "docs/API_CONTRACTS.md": {
-    "mtime": 1793678235.0939114,
-    "seen": 1793678479.743954,
-    "ast_hash": "b5e7c91e67e3da68170f03789ead4de2",
+    "mtime": 1793859356.7423613,
+    "seen": 1793859441.1648347,
+    "ast_hash": "a5d4bf75e25e89bce16c822b61ed288a",
     "semantic_hash": ""
   },
   "docs/ARCHITECTURE.md": {
@@ -270,9 +270,9 @@
     "semantic_hash": ""
   },
   "docs/DATABASE_SCHEMA.md": {
-    "mtime": 1793678238.3859115,
-    "seen": 1793678479.7439554,
-    "ast_hash": "83ac3c996d4f0717475e8caa5f8f4673",
+    "mtime": 1793859356.7426581,
+    "seen": 1793859441.1648502,
+    "ast_hash": "f295bf34e30e889a613409f91b96a30c",
     "semantic_hash": ""
   },
   "docs/DECISIONS/0001-nextjs-typescript-monorepo.md": {
@@ -822,9 +822,9 @@
     "semantic_hash": ""
   },
   "apps/web/src/storage/types.ts": {
-    "mtime": 1793677455.0692415,
-    "seen": 1793677917.5679233,
-    "ast_hash": "ac9b0c372f54c6ebce3916482132f6c5",
+    "mtime": 1793859068.7213721,
+    "seen": 1793859441.1619103,
+    "ast_hash": "92d537a77dbd20e627dbee2973875ebe",
     "semantic_hash": ""
   },
   "apps/web/src/storage/useRepository.tsx": {
@@ -1080,15 +1080,15 @@
     "semantic_hash": ""
   },
   "packages/core/src/progress/skills.test.ts": {
-    "mtime": 1793678344.659378,
-    "seen": 1793678479.743907,
-    "ast_hash": "893b084242d0d039c2db9d99c5b95aed",
+    "mtime": 1793859093.492685,
+    "seen": 1793859441.1638415,
+    "ast_hash": "258509dfe5910254a25c2c7e2a385870",
     "semantic_hash": ""
   },
   "packages/core/src/progress/skills.ts": {
-    "mtime": 1793678368.195079,
-    "seen": 1793678479.7439077,
-    "ast_hash": "91cad8ec94bde4d9f576631738960cf1",
+    "mtime": 1793859093.4928706,
+    "seen": 1793859441.1638432,
+    "ast_hash": "c03451d125b408a34fe85b9cc3d08e5c",
     "semantic_hash": ""
   },
   "packages/core/src/progress/streak.test.ts": {
@@ -1290,9 +1290,9 @@
     "semantic_hash": ""
   },
   "packages/core/src/feedback/build.test.ts": {
-    "mtime": 1793752074.0389304,
-    "seen": 1793752116.7160437,
-    "ast_hash": "08f91498fed89e9672c847ec88b254ff",
+    "mtime": 1793859152.5640242,
+    "seen": 1793859441.163112,
+    "ast_hash": "6e8e2caf2beeabac29ea6982f91edea0",
     "semantic_hash": ""
   },
   "packages/core/src/feedback/build.ts": {
@@ -1596,9 +1596,9 @@
     "semantic_hash": ""
   },
   "apps/web/src/server/tasks.ts": {
-    "mtime": 1793761149.5033245,
-    "seen": 1793761225.6076233,
-    "ast_hash": "a8e42ec66a1b8e807f629ef3ed6bb314",
+    "mtime": 1793859068.7173722,
+    "seen": 1793859441.1615613,
+    "ast_hash": "995ea9d18d8e18081d5fcc05e59b20fd",
     "semantic_hash": ""
   },
   "apps/web/src/server/token.test.ts": {
@@ -2124,9 +2124,9 @@
     "semantic_hash": ""
   },
   "apps/web/src/features/progress/progressLogic.ts": {
-    "mtime": 1793752093.9337966,
-    "seen": 1793752116.7134693,
-    "ast_hash": "c304140fc33cd1d25c564f765a7cf667",
+    "mtime": 1793859093.4942045,
+    "seen": 1793859441.1601624,
+    "ast_hash": "6395d5d2a815dfa5881e6e5a2c3bef30",
     "semantic_hash": ""
   },
   "apps/web/src/features/progress/useLiveData.ts": {
@@ -2136,9 +2136,9 @@
     "semantic_hash": ""
   },
   "apps/web/src/i18n/ru/progress.ts": {
-    "mtime": 1793752086.594345,
-    "seen": 1793752116.7143145,
-    "ast_hash": "e6437516647b9579ecfb6ee3d67216e6",
+    "mtime": 1793859093.4940536,
+    "seen": 1793859441.1613283,
+    "ast_hash": "0a96e2d55c09bef15994cea8ababbe0d",
     "semantic_hash": ""
   },
   "apps/web/src/storage/LocalRepository.contract.test.ts": {
@@ -2568,9 +2568,9 @@
     "semantic_hash": ""
   },
   "packages/core/src/fib/check.ts": {
-    "mtime": 1793834059.9237661,
-    "seen": 1793859011.9347887,
-    "ast_hash": "ab02289fc33815973fceff7437b11aca",
+    "mtime": 1793859221.0723023,
+    "seen": 1793859441.1632495,
+    "ast_hash": "8618032f3bfc0d29c082d7026c1f9cee",
     "semantic_hash": ""
   },
   "packages/core/src/fib/confluence.test.ts": {
@@ -2604,21 +2604,21 @@
     "semantic_hash": ""
   },
   "packages/core/src/fib/generate.ts": {
-    "mtime": 1793833972.3221004,
-    "seen": 1793859011.9347944,
-    "ast_hash": "6d5d06836c3636e32e8af6c40ff8c8a3",
+    "mtime": 1793859221.0729337,
+    "seen": 1793859441.1633377,
+    "ast_hash": "4e0e195f63b84db0a0c1794d578123f7",
     "semantic_hash": ""
   },
   "packages/core/src/fib/grade.test.ts": {
-    "mtime": 1793833803.789118,
-    "seen": 1793859011.9347956,
-    "ast_hash": "6f78ddce23f70d40221178965de2744f",
+    "mtime": 1793859221.0732555,
+    "seen": 1793859441.16334,
+    "ast_hash": "57442afed675a2d97c24ecfc45a63f43",
     "semantic_hash": ""
   },
   "packages/core/src/fib/grade.ts": {
-    "mtime": 1793834059.9120333,
-    "seen": 1793859011.9347968,
-    "ast_hash": "e94d0b903ca7aba3c044620298e6d37f",
+    "mtime": 1793859221.0726063,
+    "seen": 1793859441.1633413,
+    "ast_hash": "b3476f48c96dc3955a006323cead55b9",
     "semantic_hash": ""
   },
   "packages/core/src/fib/impulses.test.ts": {
@@ -2628,9 +2628,9 @@
     "semantic_hash": ""
   },
   "packages/core/src/fib/impulses.ts": {
-    "mtime": 1793833277.4530149,
-    "seen": 1793859011.9347985,
-    "ast_hash": "718c56a1ce6406f7f17ac3ee3da50abf",
+    "mtime": 1793859221.0730827,
+    "seen": 1793859441.16336,
+    "ast_hash": "250b5770963694d341622cf938f4babd",
     "semantic_hash": ""
   },
   "packages/core/src/fib/index.ts": {
@@ -2697,6 +2697,54 @@
     "mtime": 1793858976.1653764,
     "seen": 1793859011.9364924,
     "ast_hash": "4279df21f5a9f8233474e51847d2d022",
+    "semantic_hash": ""
+  },
+  "apps/web/src/server/fib.test.ts": {
+    "mtime": 1793859195.1241884,
+    "seen": 1793859441.1614027,
+    "ast_hash": "a72d217e8d52cb5d5378779a369a1bab",
+    "semantic_hash": ""
+  },
+  "fixtures/golden/fib_FG-1.BTCUSDT-4h-2026-09_10.impulse-reaction-extension.golden.json": {
+    "mtime": 1793859315.6921284,
+    "seen": 1793859441.162789,
+    "ast_hash": "5e456c918739cfc1924888ea2b1d0c06",
+    "semantic_hash": ""
+  },
+  "fixtures/golden/fib_FG-3.ETHUSDT-1h-2026-10.impulse-reaction-extension.golden.json": {
+    "mtime": 1793859315.6923327,
+    "seen": 1793859441.1627903,
+    "ast_hash": "4c36348f763e5af8af139762c7cac703",
+    "semantic_hash": ""
+  },
+  "fixtures/golden/fib_FG-4.ETHUSDT-4h-2026-09.impulse-reaction-extension.golden.json": {
+    "mtime": 1793859315.6927693,
+    "seen": 1793859441.1627913,
+    "ast_hash": "5c519272c228662c606e3dbc0c3e7653",
+    "semantic_hash": ""
+  },
+  "fixtures/golden/fib_FG-6.SOLUSDT-15m-2026-07-19_21.impulse-reaction-extension.golden.json": {
+    "mtime": 1793859315.692899,
+    "seen": 1793859441.162792,
+    "ast_hash": "76878e0690c87d8e62a75e408746d964",
+    "semantic_hash": ""
+  },
+  "fixtures/golden/fib_FG-7.SOLUSDT-15m-2026-07-15_17.impulse-reaction-extension.golden.json": {
+    "mtime": 1793859315.6930153,
+    "seen": 1793859441.162793,
+    "ast_hash": "befa784ce86ad529e09e2695ebaab033",
+    "semantic_hash": ""
+  },
+  "fixtures/golden/fib_FG-8.SOLUSDT-15m-2026-08-09_12.impulse-reaction-extension.golden.json": {
+    "mtime": 1793859315.6931438,
+    "seen": 1793859441.1627939,
+    "ast_hash": "0ce5ba17b14977270be97b60fb2e89c1",
+    "semantic_hash": ""
+  },
+  "packages/core/src/fib/golden.fib.test.ts": {
+    "mtime": 1793859331.9677842,
+    "seen": 1793859441.1633387,
+    "ast_hash": "202b099ddadfc4c6db0a0c828fcefe10",
     "semantic_hash": ""
   },
   "pnpm-lock.yaml": {

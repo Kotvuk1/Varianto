@@ -108,7 +108,11 @@ function checkPoint(c: SnapInput, ref: PointRef, userIndex: number, userDir: Fib
     snapIndex: userIndex,
   };
 }
-const strip = ({ snapIndex: _s, ...rest }: FibAnchorCheck & { snapIndex: number }): FibAnchorCheck => rest;
+const strip = (k: FibAnchorCheck & { snapIndex: number }): FibAnchorCheck => {
+  const { snapIndex, ...rest } = k;
+  void snapIndex;
+  return rest;
+};
 
 // ------------------------------------------------------------------ grid
 

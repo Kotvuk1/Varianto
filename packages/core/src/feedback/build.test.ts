@@ -84,13 +84,13 @@ describe('okFromOutcomes', () => {
 describe('шаблоны (ALGORITHMS §17)', () => {
   const flat = flattenTemplates();
   it('есть шаблоны для всех кодов ошибок и ok-кодов (полнота по типам)', () => {
-    expect(Object.keys(ERROR_TEMPLATES_RU)).toHaveLength(57);
-    expect(Object.keys(ERROR_SKILLS)).toHaveLength(57);
-    expect(Object.keys(OK_TEMPLATES_RU)).toHaveLength(15);
+    expect(Object.keys(ERROR_TEMPLATES_RU)).toHaveLength(70);
+    expect(Object.keys(ERROR_SKILLS)).toHaveLength(70);
+    expect(Object.keys(OK_TEMPLATES_RU)).toHaveLength(22);
     expect(Object.keys(VERDICT_TEMPLATES_RU)).toHaveLength(3);
-    expect(Object.keys(PRINCIPLE_TEMPLATES_RU)).toHaveLength(3);
+    expect(Object.keys(PRINCIPLE_TEMPLATES_RU)).toHaveLength(4);
     expect(flat['feedback.BOS_WICK_ONLY.mistake']).toContain('{kind}');
-    expect(Object.keys(flat)).toHaveLength(3 + 3 + 3 + 3 + 15 + 57 * 4);
+    expect(Object.keys(flat)).toHaveLength(3 + 3 + 3 + 4 + 22 + 70 * 4);
   });
   it('каждый ключ buildFeedback существует в словаре', () => {
     const codes = Object.keys(ERROR_TEMPLATES_RU) as ErrorCode[];

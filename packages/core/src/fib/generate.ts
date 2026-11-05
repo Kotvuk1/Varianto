@@ -20,7 +20,6 @@ import {
   type ReactionRef,
 } from './ref';
 import type {
-  FibConfluenceKey,
   FibDirection,
   FibExtensionTask,
   FibGridTask,
@@ -99,16 +98,6 @@ function shuffled<T>(items: readonly T[], rng: () => number): T[] {
     [a[i], a[j]] = [a[j]!, a[i]!];
   }
   return a;
-}
-
-function pickWeighted<T>(items: readonly T[], weight: (x: T) => number, rng: () => number): T {
-  const total = items.reduce((s, x) => s + weight(x), 0);
-  let x = rng() * total;
-  for (const it of items) {
-    x -= weight(it);
-    if (x < 0) return it;
-  }
-  return items[items.length - 1]!;
 }
 
 interface PoolEntry<R> {

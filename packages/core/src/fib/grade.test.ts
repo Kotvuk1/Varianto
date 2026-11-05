@@ -37,7 +37,7 @@ describe('gradeFibGrid: FG-1 (§5.3)', () => {
     expect(r.skillOutcomes).toEqual([{ skill: 'fib-anchor', correct: 2, total: 2 }]);
     expect(r.detail.anchors).toHaveLength(2);
     expect(r.detail.anchors[0]).toMatchObject({ point: 'A', offsetCandles: 1, ok: true, equalExtreme: false });
-    expect(r.detail.gridShift).toBeCloseTo((81295 - 80095.9 > 0 ? Math.abs(c[at(c, '2026-09-20T04:00')]!.low - 80095.9) : 0) / (87385.1 - 80095.9), 9);
+    expect(r.detail.gridShift).toBeCloseTo(Math.abs(c[at(c, '2026-09-20T04:00')]!.low - 80095.9) / (87385.1 - 80095.9), 9);
     expect(r.reference[0]!.kind).toBe('fib-retracement');
   });
   it('начало на предыдущей ноге (74909.4) -> partial, FIB_WRONG_ANCHOR_START, previous-leg', () => {

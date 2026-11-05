@@ -1,0 +1,79 @@
+{
+ "algoVersion": "1.0.0",
+ "author": "technical-analyst (значения из docs/specs/FIBONACCI.md §12.2)",
+ "date": "2026-11-04",
+ "source": [
+  {
+   "path": "klines/SOLUSDT/15m/SOLUSDT-15m-2026-07-19.csv",
+   "sha256": "d13b94a03ec4a0c57f766609f35ceebef1ba1ba5a7b66bc40cc4fec90d9024c6"
+  },
+  {
+   "path": "klines/SOLUSDT/15m/SOLUSDT-15m-2026-07-20.csv",
+   "sha256": "95bebca9c5ce9e35d4a6a05c6ddfdb94a0c4c810be2b98e3928e3a603bbb9214"
+  },
+  {
+   "path": "klines/SOLUSDT/15m/SOLUSDT-15m-2026-07-21.csv",
+   "sha256": "723ba4374e910a944749c48c04903b406a5256157f0ff57dafc7b51648649327"
+  }
+ ],
+ "function": "findImpulses / resolveReaction / resolveExtension",
+ "params": {
+  "nExt": 5,
+  "tf": "15m",
+  "limitCandles": 96,
+  "note": "ряд обрезан перед первым пропуском (в октябрьских месячных архивах BTC/ETH нет суток 2026-10-28); T = индекс B + nExt"
+ },
+ "expected": {
+  "impulses": [
+   {
+    "eventKind": "choch",
+    "direction": "bull",
+    "breakTime": "2026-07-20T00:00:00Z",
+    "a": {
+     "time": "2026-07-19T18:00:00Z",
+     "price": 75.31
+    },
+    "b": {
+     "time": "2026-07-20T01:00:00Z",
+     "price": 77.39
+    },
+    "candles": 28,
+    "rangeAtr": 7.724
+   }
+  ],
+  "rejected": [],
+  "reaction": [
+   {
+    "direction": "bull",
+    "a": "2026-07-19T18:00:00Z",
+    "b": "2026-07-20T01:00:00Z",
+    "T": "b+5",
+    "kind": "reaction",
+    "index": "2026-07-20T08:00:00Z",
+    "correctOptions": [
+     "deep"
+    ],
+    "cls": "deep",
+    "extremeTime": "2026-07-20T06:30:00Z",
+    "extremePrice": 75.45,
+    "depth": 0.9327,
+    "threshold": 0.7682
+   }
+  ],
+  "extension": [
+   {
+    "direction": "bull",
+    "a": "2026-07-19T18:00:00Z",
+    "b": "2026-07-20T01:00:00Z",
+    "c": "2026-07-20T06:30:00Z",
+    "Te": "2026-07-20T08:00:00Z",
+    "reached": "1.618",
+    "xMax": 1.6442,
+    "extremePrice": 78.87,
+    "extremeTime": "2026-07-21T06:30:00Z",
+    "invalidationTime": null
+   }
+  ]
+ },
+ "rationale": "Значения перенесены из спецификации (получены вручную по OHLC); изменение без смены FIB_ALGO_VERSION запрещено."
+}

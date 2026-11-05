@@ -1,0 +1,72 @@
+{
+ "algoVersion": "1.0.0",
+ "author": "technical-analyst (значения из docs/specs/FIBONACCI.md §12.2)",
+ "date": "2026-11-04",
+ "source": [
+  {
+   "path": "klines/ETHUSDT/1h/ETHUSDT-1h-2026-10.csv",
+   "sha256": "1043120d4704071add0bb0b541d6288867d73942be59d76bf57bb6e90e69ea34"
+  }
+ ],
+ "function": "findImpulses / resolveReaction / resolveExtension",
+ "params": {
+  "nExt": 5,
+  "tf": "1h",
+  "limitCandles": 72,
+  "note": "ряд обрезан перед первым пропуском (в октябрьских месячных архивах BTC/ETH нет суток 2026-10-28); T = индекс B + nExt"
+ },
+ "expected": {
+  "impulses": [
+   {
+    "eventKind": "choch",
+    "direction": "bear",
+    "breakTime": "2026-10-02T18:00:00Z",
+    "a": {
+     "time": "2026-10-02T08:00:00Z",
+     "price": 2779.0
+    },
+    "b": {
+     "time": "2026-10-02T18:00:00Z",
+     "price": 2647.9
+    },
+    "candles": 10,
+    "rangeAtr": 7.162
+   }
+  ],
+  "rejected": [],
+  "reaction": [
+   {
+    "direction": "bear",
+    "a": "2026-10-02T08:00:00Z",
+    "b": "2026-10-02T18:00:00Z",
+    "T": "b+5",
+    "kind": "reaction",
+    "index": "2026-10-05T04:00:00Z",
+    "correctOptions": [
+     "0.705",
+     "ote"
+    ],
+    "cls": "0.705",
+    "extremeTime": "2026-10-04T23:00:00Z",
+    "extremePrice": 2738.68,
+    "depth": 0.6924,
+    "threshold": 30.9396
+   }
+  ],
+  "extension": [
+   {
+    "direction": "bear",
+    "a": "2026-10-02T08:00:00Z",
+    "b": "2026-10-02T18:00:00Z",
+    "c": "2026-10-04T23:00:00Z",
+    "Te": "2026-10-05T04:00:00Z",
+    "reached": "1.272",
+    "xMax": 1.5522,
+    "extremePrice": 2535.19,
+    "extremeTime": "2026-10-07T17:00:00Z",
+    "invalidationTime": null
+   }
+  ]
+ },
+ "rationale": "Значения перенесены из спецификации (получены вручную по OHLC); изменение без смены FIB_ALGO_VERSION запрещено."
+}

@@ -107,7 +107,7 @@ create trigger on_auth_user_created after insert on auth.users
 create table public.attempts (
   id                 uuid primary key default gen_random_uuid(),
   user_id            uuid not null references auth.users (id) on delete cascade default auth.uid(),
-  module             text not null check (module in ('market-structure', 'price-action', 'challenge')),
+  module             text not null check (module in ('market-structure', 'price-action', 'challenge', 'fibonacci'))   -- 'fibonacci' добавлен миграцией 0003,
   task_id            text not null,
   task_token_payload jsonb not null,           -- RevealedTask: параметры задания, reveal.decisionTime/shiftMs
   answer             jsonb not null,           -- Answer

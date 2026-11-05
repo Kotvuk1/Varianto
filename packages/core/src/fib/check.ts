@@ -19,6 +19,11 @@ export interface FibMarkCheck {
 export const FIB_TERMINAL_NEXT = 5;
 export const FIB_TERMINAL_MAX_DISTANCE = 10;
 
+const omitSnap = <T extends { snapIndex: number }>(k: T): Omit<T, 'snapIndex'> => {
+  const { snapIndex, ...rest } = k;
+  void snapIndex;
+  return rest;
+};
 const dirOf = (a: number, b: number): FibDirection | null => (b > a ? 'bull' : b < a ? 'bear' : null);
 
 /** Ближайший импульс того же направления: min |i0 - a| + |i1 - b|, при равенстве - с более поздним B. */
@@ -93,7 +98,7 @@ export function checkFibMarks(candles: readonly Candle[], tf: Timeframe, marks: 
       results.push({
         markId: m.id,
         impulse: imp,
-        detail: { direction: { user: r.userDir, ref: imp.direction }, anchors: r.checks.map(({ snapIndex: _s, ...k }) => k), gridShift: null },
+        detail: { direction: { user: r.userDir, ref: imp.direction }, anchors: r.checks.map((k) => omitSnap(k)), gridShift: null },
         errors,
       });
       allErrors.push(...errors);
