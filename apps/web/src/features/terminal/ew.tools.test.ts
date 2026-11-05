@@ -3,7 +3,7 @@ import { GROUPS, HOTKEYS, MOBILE_GROUPS, TOOL_ICON, groupOf } from './toolCatalo
 import { instructionText } from './InstructionBar';
 import { tx } from './strings';
 import { msToolGroups } from '../session/toolGroups';
-import { liveChecks, liveHints } from '../elliott/adapters';
+import { liveHints } from '../elliott/adapters';
 
 const base = { notice: null, selected: null, fmt: (p: number) => String(p) };
 
@@ -47,7 +47,7 @@ describe('строка-инструкция Elliott', () => {
 
 describe('живые подсказки правил', () => {
   it('нарушенное правило «wave 3 самая короткая» попадает в подсказки', () => {
-    const hints = liveHints(liveChecks([{ orderBroken: false, points: [], guides: [], rules: [{ rule: 'w3-shortest', ok: false, actual: 1, limit: 2 }] }]));
+    const hints = liveHints([{ orderBroken: false, points: [], guides: [], rules: [{ rule: 'w3-shortest', ok: false, actual: 1, limit: 2 }] }]);
     expect(hints[0]!.tone).toBe('rule');
     expect(hints[0]!.text).toContain('Проверьте правило');
     expect(tx.ewLive(hints[0]!.text, 2)).toContain('ещё замечаний: 2');
