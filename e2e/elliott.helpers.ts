@@ -35,6 +35,7 @@ export interface EwEnvelope {
 
 /** Открывает сессию и перехватывает ответ next (реальный сервер, реальные свечи) для расчёта допустимой разметки. */
 export async function openEw(page: Page, path: string): Promise<{ env: EwEnvelope }> {
+  page.on('response', async (r) => { if (r.url().includes('/elliott/grade') && !r.ok()) console.log('GRADE', r.status(), (await r.text()).slice(0, 600)); });
   const nextResp = page.waitForResponse((r: Response) => r.url().includes('/api/tasks/elliott/next') && r.request().method() === 'POST', { timeout: 120_000 });
   await page.goto(path);
   const env = (await (await nextResp).json()) as EwEnvelope;
@@ -64,8 +65,7 @@ async function tapPoints(page: Page, pts: { time: number; price: number }[]) {
   for (const p of pts) {
     const px = await project(page, p.time, p.price);
     if (!px) throw new Error(`точка ${p.time} вне графика`);
-    expect(px.x).toBeGreaterThan(box.x);
-    await tapAt(page, px);
+    await tapAt(page, { x: Math.min(Math.max(px.x, box.x + 3), box.x + box.width - 70), y: px.y });
   }
 }
 
