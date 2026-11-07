@@ -4,7 +4,7 @@ import { analyzeStructure } from '../smc/analyze';
 import { atr14 } from '../smc/series';
 import { detectSwings, labelSwings } from '../smc/swings';
 import { drawMsCandidate, MS_MAX_ATTEMPTS, MS_MIN_WARMUP, type MsSelectInput } from '../tasks/market-structure';
-import type { Candle, Difficulty, Mark, Swing, SwingLabel, TaskTimeframe, UtcMs } from '../types';
+import type { Candle, Difficulty, GradeError, Mark, OkCode, SkillOutcome, Swing, SwingLabel, TaskTimeframe, UtcMs, Verdict } from '../types';
 
 export type SwTrend = 'up' | 'down' | 'range';
 export const SW_TREND_OPTIONS: readonly SwTrend[] = ['up', 'down', 'range'];
@@ -120,3 +120,53 @@ export function swTrendHints(visible: readonly Candle[], nExt: number): Mark[] {
     }));
 }
 
+
+export const SW_TREND_TEXT_RU: Record<SwTrend, string> = { up: 'восходящий', down: 'нисходящий', range: 'диапазон' };
+
+export interface SwTrendGrade {
+  verdict: Verdict;
+  score: number;
+  errors: GradeError[];
+  ok: { code: OkCode; params?: Record<string, string | number> }[];
+  skillOutcomes: SkillOutcome[];
+  detail: {
+    chosen: SwTrend;
+    correct: SwTrend;
+    lastHigh: SwingRefInfo;
+    prevHigh: SwingRefInfo;
+    lastLow: SwingRefInfo;
+    prevLow: SwingRefInfo;
+    bosTrend: SwTrend;
+  };
+}
+
+/** Оценка sw-trend (§2.3): correct/incorrect, score 1/0, ошибка SWING_TREND_WRONG (major), навык `swing-trend`. */
+export function gradeSwTrend(r: SwingTrendResult, chosen: SwTrend): SwTrendGrade {
+  const ok = chosen === r.trend;
+  const labels = { lastHighLabel: r.lastHigh.label ?? '', lastLowLabel: r.lastLow.label ?? '' };
+  return {
+    verdict: ok ? 'correct' : 'incorrect',
+    score: ok ? 1 : 0,
+    errors: ok
+      ? []
+      : [
+          {
+            code: 'SWING_TREND_WRONG',
+            skill: 'swing-trend',
+            severity: 'major',
+            params: {
+              given: SW_TREND_TEXT_RU[chosen],
+              expected: SW_TREND_TEXT_RU[r.trend],
+              lastHigh: r.lastHigh.price,
+              prevHigh: r.prevHigh.price,
+              lastLow: r.lastLow.price,
+              prevLow: r.prevLow.price,
+              ...labels,
+            },
+          },
+        ],
+    ok: ok ? [{ code: 'OK_SWING_TREND', params: labels }] : [],
+    skillOutcomes: [{ skill: 'swing-trend', correct: ok ? 1 : 0, total: 1 }],
+    detail: { chosen, correct: r.trend, lastHigh: r.lastHigh, prevHigh: r.prevHigh, lastLow: r.lastLow, prevLow: r.prevLow, bosTrend: r.bosTrend },
+  };
+}

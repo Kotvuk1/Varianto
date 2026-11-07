@@ -253,3 +253,15 @@ function comboCase(gr: { parts: { key: string; score: number }[]; quality: numbe
     stopHunted: play.hunt.hunted,
   };
 }
+
+/** Реальные ряды BTCUSDT для тестов курса: 1h 2026-08/09 и 4h 2026-07..10. */
+export const btc1h = (): Candle[] => series(['klines/BTCUSDT/1h/BTCUSDT-1h-2026-08.csv', 'klines/BTCUSDT/1h/BTCUSDT-1h-2026-09.csv']);
+export const btc4h = (): Candle[] =>
+  series(['07', '08', '09', '10'].map((m) => `klines/BTCUSDT/4h/BTCUSDT-4h-2026-${m}.csv`));
+/** Видимый ряд (500) до свечи с openTime = iso и её индекс в ряду. */
+export function visibleAt(candles: readonly Candle[], isoTime: string, depth = 500): { iT: number; visible: Candle[]; T: number } {
+  const iT = candles.findIndex((c) => c.openTime === Date.parse(isoTime));
+  if (iT < 0) throw new Error(`no candle ${isoTime}`);
+  return { iT, visible: candles.slice(Math.max(0, iT - depth + 1), iT + 1) as Candle[], T: candles[iT]!.closeTime + 1 };
+}
+export const isoOf = iso;
