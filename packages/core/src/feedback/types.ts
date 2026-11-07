@@ -27,6 +27,8 @@ export interface OkItem {
 
 export interface FeedbackInput {
   module: ModuleId;
+  /** Вид задания (`stage-swings`: sw-mark - «N из M», sw-trend - plain). */
+  taskKind?: string;
   verdict: Verdict;
   /** 0..1. */
   score: number;

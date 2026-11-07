@@ -152,7 +152,7 @@ export function gradeLevel(
     return {
       verdict: 'partial',
       score: 0.5,
-      errors: [err('LEVEL_NOT_STRONGEST', { user: userPrice, ref: ref.center, touches: ref.touches })],
+      errors: [err('LEVEL_NOT_STRONGEST', { user: userPrice, ref: ref.center, touches: ref.touches, refStrength: ref.touches, userStrength: sameType.touches })],
       skillOutcomes: outcome(0),
       ok: [],
       detail,
@@ -165,7 +165,7 @@ export function gradeLevel(
       verdict: 'incorrect',
       score: 0,
       errors: [
-        err('LEVEL_WRONG_TYPE', { user: userPrice, given: other.type, expected: levelType, close: P }),
+        err('LEVEL_WRONG_TYPE', { user: userPrice, givenText: other.type === 'support' ? 'поддержка' : other.type === 'resistance' ? 'сопротивление' : 'уровень внутри диапазона', expectedText: levelType === 'support' ? 'поддержка' : 'сопротивление', close: P }),
       ],
       skillOutcomes: outcome(0),
       ok: [],

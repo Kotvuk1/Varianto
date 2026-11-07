@@ -6,10 +6,9 @@ import { gaps } from '../smc/series';
 import {
   MS_DEPTH,
   MS_HARD_EXTRAS,
+  MS_FOCUS_SMC,
+  msWindowProfile,
   MS_MIN_WARMUP,
-  MS_REQUIRED_MAX,
-  MS_REQUIRED_MIN,
-  MS_WINDOW_MAX,
   MS_WINDOW_MIN,
   msQuestionWindow,
   msResolveFocus,
@@ -31,56 +30,68 @@ import { TIMEFRAME_MS, type Difficulty } from '../types';
 // Непрерывный реальный ряд: BTCUSDT 1h, 2026-08 + 2026-09 (1464 свечи)
 const archive = [...readKlines('klines/BTCUSDT/1h/BTCUSDT-1h-2026-08.csv'), ...readKlines('klines/BTCUSDT/1h/BTCUSDT-1h-2026-09.csv')];
 
-describe('параметры по сложности (§1.6, §13.2 v1.1)', () => {
-  it('N, окна и понятия', () => {
-    expect(msParamsFor('easy')).toMatchObject({ nExt: 7, nInt: null, sweepHoldK: 3, fvgMinAtr: 0.5, obDisplacementAtr: 1.2 });
-    expect(msParamsFor('medium')).toMatchObject({ nExt: 5, nInt: 3 });
+describe('параметры по ступеням и сложностям (CURRICULUM_STAGES.md §2.2, §9.1)', () => {
+  it('ступень 5: N, окна и понятия', () => {
+    expect(msParamsFor('easy')).toMatchObject({ nExt: 5, nInt: null, sweepHoldK: 3, fvgMinAtr: 0.5, obDisplacementAtr: 1.2 });
+    expect(msParamsFor('medium')).toMatchObject({ nExt: 5, nInt: null });
     expect(msParamsFor('hard')).toMatchObject({ nExt: 5, nInt: 2 });
-    for (const d of ['easy', 'medium', 'hard'] as Difficulty[]) {
-      expect(msWindowSize(d)).toBeGreaterThanOrEqual(MS_WINDOW_MIN);
-      expect(msWindowSize(d)).toBeLessThanOrEqual(MS_WINDOW_MAX);
-    }
-    expect(msQuestionWindow('easy')).toBe(120);
+    expect(msWindowProfile('easy')).toEqual({ windowMin: 120, windowMax: 150, requiredMin: 2, requiredMax: 8 });
+    expect(msWindowProfile('medium')).toEqual({ windowMin: 40, windowMax: 80, requiredMin: 3, requiredMax: 10 });
+    expect(msWindowProfile('hard')).toEqual({ windowMin: 40, windowMax: 80, requiredMin: 4, requiredMax: 12 });
+    expect(msQuestionWindow('easy')).toBe(150);
     expect(msQuestionWindow('hard')).toBe(150);
-    expect(msConceptsFor('easy')).toEqual(['swing']);
-    expect(msConceptsFor('medium')).toEqual(['swing', 'structure-labels', 'bos', 'choch']);
+    expect(msConceptsFor('easy')).toEqual(['bos', 'choch']);
+    expect(msConceptsFor('medium', ['sweep'])).toEqual(['bos', 'choch', 'sweep']);
+    expect(msConceptsFor('hard', ['fvg'])).toEqual(['bos', 'choch', 'internal-external', 'fvg']);
     expect(msConceptsFor('hard')).toEqual(expect.arrayContaining(['order-block', 'sweep', 'fvg', 'internal-external']));
   });
 
-  it('hard: focus выбирает дополнительные понятия; по умолчанию одно по seed; easy/medium focus игнорируют', () => {
-    expect(msConceptsFor('hard', ['sweep'])).toEqual(['swing', 'structure-labels', 'bos', 'choch', 'sweep']);
-    expect(msConceptsFor('hard', ['fvg', 'order-block'])).toEqual(['swing', 'structure-labels', 'bos', 'choch', 'order-block', 'fvg']);
-    // внутренний слой: без HH/HL/LH/LL, чтобы уложиться в 12 меток
-    expect(msConceptsFor('hard', ['internal-external'])).toEqual(['swing', 'bos', 'choch', 'internal-external']);
-    expect(msConceptsFor('easy', ['order-block'])).toEqual(['swing']);
-    expect(msConceptsFor('medium', ['sweep'])).toEqual(msConceptsFor('medium'));
+  it('ступень 1: swing / swing + метки; N = 7, 7, 5; окна 60, 60, 70', () => {
+    expect(msParamsFor('easy', 'swings')).toMatchObject({ nExt: 7, nInt: null });
+    expect(msParamsFor('medium', 'swings')).toMatchObject({ nExt: 7, nInt: null });
+    expect(msParamsFor('hard', 'swings')).toMatchObject({ nExt: 5, nInt: null });
+    expect(msWindowSize('easy', 'swings')).toBe(60);
+    expect(msWindowSize('medium', 'swings')).toBe(60);
+    expect(msWindowSize('hard', 'swings')).toBe(70);
+    expect(msConceptsFor('easy', undefined, 'swings')).toEqual(['swing']);
+    expect(msConceptsFor('hard', undefined, 'swings')).toEqual(['swing', 'structure-labels']);
+  });
+
+  it('focus ступени 5: medium - одно понятие, hard - все выбранные; easy и ступень 1 - []', () => {
     expect(msResolveFocus('easy', ['sweep'], 1)).toEqual([]);
+    expect(msResolveFocus('medium', ['fvg', 'sweep'], 1)).toHaveLength(1);
     expect(msResolveFocus('hard', ['fvg', 'bos'], 1)).toEqual(['fvg']);
+    expect(msResolveFocus('hard', ['fvg', 'order-block'], 1)).toEqual(['order-block', 'fvg']);
+    expect(msResolveFocus('hard', ['sweep'], 1, 'swings')).toEqual([]);
     const picks = new Set([1, 2, 3, 4, 5, 6, 7, 8].map((seed) => msResolveFocus('hard', undefined, seed).join()));
     expect(picks.size).toBeGreaterThan(1);
-    for (const p of picks) expect(MS_HARD_EXTRAS).toContain(p as never);
+    for (const p of picks) expect(MS_FOCUS_SMC).toContain(p as never);
     expect(msResolveFocus('hard', undefined, 3)).toEqual(msResolveFocus('hard', undefined, 3));
+    expect(MS_HARD_EXTRAS).toContain('internal-external');
   });
 
   it('инструменты соответствуют понятиям', () => {
     expect(msToolsFor(['swing', 'bos'])).toEqual(['swing-high', 'swing-low', 'bos']);
     expect(msToolsFor(msConceptsFor('hard'))).toContain('order-block');
-    expect(msToolsFor(msConceptsFor('easy'))).toEqual(['swing-high', 'swing-low']);
+    expect(msToolsFor(msConceptsFor('easy', undefined, 'swings'))).toEqual(['swing-high', 'swing-low']);
+    expect(msToolsFor(msConceptsFor('easy'))).toEqual(['bos', 'choch']);
   });
 });
 
-describe('selectMsMarkTask (v1.1: окно 40-80, 4-12 меток)', () => {
+describe('selectMsMarkTask: ступень 5 (окно и число меток по профилю)', () => {
   for (const difficulty of ['easy', 'medium', 'hard'] as Difficulty[]) {
     for (const seed of [7, 8, 9]) {
-      it(`${difficulty}/seed ${seed}: сетка 15m, закрытый непрерывный ряд, прогрев >= 300, 4-12 меток в окне 40-80`, () => {
+      it(`${difficulty}/seed ${seed}: сетка 15m, закрытый непрерывный ряд, прогрев >= 300, метки и окно по профилю`, () => {
+        const prof = msWindowProfile(difficulty);
         const sel = selectMsMarkTask({ candles: archive, tf: '1h', difficulty, seed })!;
         expect(sel).not.toBeNull();
+        expect(sel.stage).toBe('smc');
         expect(sel.T % TIMEFRAME_MS['15m']).toBe(0);
         expect(sel.visible.length).toBeLessThanOrEqual(MS_DEPTH['1h']);
         expect(sel.visible.every((c) => c.closed && c.closeTime < sel.T)).toBe(true);
         expect(gaps(sel.visible, '1h')).toEqual([]);
-        expect(sel.windowSize).toBeGreaterThanOrEqual(MS_WINDOW_MIN);
-        expect(sel.windowSize).toBeLessThanOrEqual(msWindowSize(difficulty));
+        expect(sel.windowSize).toBeGreaterThanOrEqual(prof.windowMin);
+        expect(sel.windowSize).toBeLessThanOrEqual(prof.windowMax);
         expect(sel.window).toEqual({ fromIndex: sel.visible.length - sel.windowSize, toIndex: sel.visible.length - 1 });
         expect(sel.window.fromIndex).toBeGreaterThanOrEqual(MS_MIN_WARMUP);
         expect(sel.scoped).toBe(sel.concepts.includes('internal-external'));
@@ -88,49 +99,76 @@ describe('selectMsMarkTask (v1.1: окно 40-80, 4-12 меток)', () => {
         const r = analyzeStructure(sel.visible, sel.params);
         const required = buildAlgoMarkSet(r, { concepts: sel.concepts, window: sel.window }).required;
         expect(required.length).toBe(sel.requiredCount);
-        expect(required.length).toBeGreaterThanOrEqual(MS_REQUIRED_MIN);
-        expect(required.length).toBeLessThanOrEqual(MS_REQUIRED_MAX);
-        expect(meetsMsCriteria(r, sel.visible, sel.window, sel.criteria, sel.concepts)).toBe(true);
+        expect(required.length).toBeGreaterThanOrEqual(prof.requiredMin);
+        expect(required.length).toBeLessThanOrEqual(prof.requiredMax);
+        expect(meetsMsCriteria(r, sel.visible, sel.window, sel.criteria, sel.concepts, prof, 'smc')).toBe(true);
         expect(sel.concepts).toEqual(msConceptsFor(difficulty, sel.focus));
       });
     }
   }
 
-  it('easy: только swing-high/swing-low внешнего слоя', () => {
+  it('easy: только BOS/CHoCH внешнего слоя (swing и HH/LL как метки не оцениваются)', () => {
     const sel = selectMsMarkTask({ candles: archive, tf: '1h', difficulty: 'easy', seed: 3 })!;
-    expect(sel.concepts).toEqual(['swing']);
-    expect(sel.tools).toEqual(['swing-high', 'swing-low']);
+    expect(sel.concepts).toEqual(['bos', 'choch']);
+    expect(sel.tools).toEqual(['bos', 'choch']);
     expect(sel.focus).toEqual([]);
     const r = analyzeStructure(sel.visible, sel.params);
     const marks = buildAlgoMarkSet(r, { concepts: sel.concepts, window: sel.window }).required;
-    expect(marks.every((m) => (m.kind === 'swing-high' || m.kind === 'swing-low') && m.scope === 'external')).toBe(true);
+    expect(marks.every((m) => (m.kind === 'bos' || m.kind === 'choch') && m.scope === 'external')).toBe(true);
   });
 
-  it('medium: внешняя структура (swing, метки, BOS/CHoCH), без внутренней; есть хотя бы один BOS/CHoCH', () => {
+  it('medium: BOS/CHoCH + одно понятие focus, метка focus есть в эталоне; без внутреннего слоя', () => {
     const sel = selectMsMarkTask({ candles: archive, tf: '1h', difficulty: 'medium', seed: 3 })!;
-    expect(sel.concepts).toEqual(['swing', 'structure-labels', 'bos', 'choch']);
+    expect(sel.concepts.slice(0, 2)).toEqual(['bos', 'choch']);
+    expect(sel.focus).toHaveLength(1);
     expect(sel.scoped).toBe(false);
     const r = analyzeStructure(sel.visible, sel.params);
     const marks = buildAlgoMarkSet(r, { concepts: sel.concepts, window: sel.window }).required;
-    expect(marks.every((m) => m.scope === 'external')).toBe(true);
+    expect(marks.every((m) => m.scope === 'external' || m.scope === null)).toBe(true);
     expect(marks.some((m) => m.kind === 'bos' || m.kind === 'choch')).toBe(true);
+    expect(marks.some((m) => m.kind === sel.focus[0])).toBe(true);
   });
 
-  it('hard: focus явный, каждое понятие focus представлено в эталоне окна', () => {
-    for (const focus of [['sweep'], ['order-block'], ['fvg'], ['internal-external']] as const) {
+  it('hard: внутренний слой и каждое понятие focus представлены в эталоне окна', () => {
+    for (const focus of [['sweep'], ['order-block'], ['fvg']] as const) {
       const sel = selectMsMarkTask({ candles: archive, tf: '1h', difficulty: 'hard', seed: 5, focus: [...focus] })!;
       expect(sel).not.toBeNull();
       expect(sel.focus).toEqual(focus);
+      expect(sel.scoped).toBe(true);
       const r = analyzeStructure(sel.visible, sel.params);
       const marks = buildAlgoMarkSet(r, { concepts: sel.concepts, window: sel.window }).required;
-      const f = focus[0];
-      if (f === 'internal-external') expect(marks.some((m) => m.scope === 'internal' && (m.kind === 'bos' || m.kind === 'choch'))).toBe(true);
-      else expect(marks.some((m) => m.kind === f)).toBe(true);
+      expect(marks.some((m) => m.kind === focus[0])).toBe(true);
+      expect(marks.some((m) => m.scope === 'internal' && (m.kind === 'bos' || m.kind === 'choch'))).toBe(true);
     }
     const auto = selectMsMarkTask({ candles: archive, tf: '1h', difficulty: 'hard', seed: 5 })!;
     expect(auto.focus).toHaveLength(1);
   });
+});
 
+describe('selectMsMarkTask: ступень 1 «Свинги» (sw-mark)', () => {
+  for (const difficulty of ['easy', 'medium', 'hard'] as Difficulty[]) {
+    it(`${difficulty}: 4-12 меток в окне <= ${msWindowSize(difficulty, 'swings')}; medium/hard: есть {HH, LH} и {HL, LL}`, () => {
+      const sel = selectMsMarkTask({ candles: archive, tf: '1h', difficulty, seed: 4, stage: 'swings' })!;
+      expect(sel).not.toBeNull();
+      expect(sel.stage).toBe('swings');
+      expect(sel.windowSize).toBeLessThanOrEqual(msWindowSize(difficulty, 'swings'));
+      expect(sel.windowSize).toBeGreaterThanOrEqual(MS_WINDOW_MIN);
+      expect(sel.concepts).toEqual(msConceptsFor(difficulty, undefined, 'swings'));
+      expect(sel.scoped).toBe(false);
+      const r = analyzeStructure(sel.visible, sel.params);
+      const required = buildAlgoMarkSet(r, { concepts: sel.concepts, window: sel.window }).required;
+      expect(required.length).toBe(sel.requiredCount);
+      expect(required.length).toBeGreaterThanOrEqual(4);
+      expect(required.length).toBeLessThanOrEqual(12);
+      if (difficulty !== 'easy' && sel.criteria !== 'easy') {
+        expect(required.some((m) => m.kind === 'hh' || m.kind === 'lh')).toBe(true);
+        expect(required.some((m) => m.kind === 'hl' || m.kind === 'll')).toBe(true);
+      }
+    });
+  }
+});
+
+describe('selectMsMarkTask: общее', () => {
   it('детерминирован по seed; разные seed дают разные T', () => {
     const a = selectMsMarkTask({ candles: archive, tf: '1h', difficulty: 'medium', seed: 11 })!;
     const b = selectMsMarkTask({ candles: archive, tf: '1h', difficulty: 'medium', seed: 11 })!;
@@ -139,12 +177,13 @@ describe('selectMsMarkTask (v1.1: окно 40-80, 4-12 меток)', () => {
     expect(Ts.size).toBeGreaterThan(1);
   });
 
-  it('meetsMsCriteria: меньше 4 или больше 12 меток - отказ', () => {
-    const sel = selectMsMarkTask({ candles: archive, tf: '1h', difficulty: 'medium', seed: 11 })!;
+  it('meetsMsCriteria: меньше минимума или больше максимума меток - отказ', () => {
+    const sel = selectMsMarkTask({ candles: archive, tf: '1h', difficulty: 'hard', seed: 11 })!;
     const r = analyzeStructure(sel.visible, sel.params);
     const n = sel.visible.length;
-    expect(meetsMsCriteria(r, sel.visible, { fromIndex: n - 3, toIndex: n - 1 }, 'easy', ['swing'])).toBe(false);
-    expect(meetsMsCriteria(r, sel.visible, { fromIndex: n - 300, toIndex: n - 1 }, 'easy', ['swing', 'structure-labels'])).toBe(false);
+    const prof = msWindowProfile('hard');
+    expect(meetsMsCriteria(r, sel.visible, { fromIndex: n - 3, toIndex: n - 1 }, 'easy', ['bos', 'choch'], prof)).toBe(false);
+    expect(meetsMsCriteria(r, sel.visible, { fromIndex: n - 300, toIndex: n - 1 }, 'easy', ['bos', 'choch'], prof)).toBe(false);
   });
 
   it('исключения: isExcluded и maxT учитываются', () => {

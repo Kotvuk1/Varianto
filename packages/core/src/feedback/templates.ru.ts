@@ -45,6 +45,38 @@ export const PRINCIPLE_TEMPLATES_RU: Record<ModuleId, string> = {
     'Fibonacci — линейка для импульса, а не сигнал: уровни работают вместе со структурой, зоной интереса и premium/discount.',
   elliott:
     'Подсчёт волн — гипотеза, а не факт: правила отсекают невозможные разметки, invalidation level говорит, когда гипотеза сломана, а альтернатива — что делать дальше.',
+  'stage-swings': 'Swing — подтверждённый экстремум; тренд по свингам читается по двум последним максимумам и минимумам.',
+  levels: 'Уровень — зона, где цена несколько раз разворачивалась; сила уровня — правило чтения, а не гарантия реакции.',
+  'limit-entry':
+    'Лимитка ставится там, где её исполнит реакция: у ближнего края или с небольшим опережением; глубже — лучше цена, но больше пропущенных сделок.',
+  'stop-take':
+    'Стоп — за структурой с запасом от фитилей, тейк — у следующего уровня или ликвидности; качество плана не зависит от исхода одной сделки.',
+  'combo-level-trade':
+    'Сделка от уровня — это цепочка: зона, лимитка, стоп за структурой, тейк у следующего уровня; слабое звено обесценивает остальные.',
+  'combo-smc-entry': 'POI работает по направлению структуры: свежий OB или FVG, лимитка у его края, стоп за зоной или защищённым уровнем.',
+};
+
+/** Ступени 3-4 и комбо: вердикт с исходом (CURRICULUM_STAGES.md §12.1). `{outcomeText}` и `{outcomeTime}` готовит ядро. */
+export const LIMIT_VERDICT_TEMPLATES_RU: Record<Verdict, string> = {
+  correct: 'Верно: оценка {score}%. {outcomeText} ({outcomeTime}).',
+  partial: 'Частично верно: оценка {score}%, есть ошибки ниже. {outcomeText} ({outcomeTime}).',
+  incorrect: 'Неверно: оценка {score}%. {outcomeText} ({outcomeTime}).',
+};
+export const TRADE_VERDICT_TEMPLATES_RU: Record<Verdict, string> = {
+  correct: 'Верно: оценка {score}%. {outcomeText} ({outcomeTime}), R = {r}.',
+  partial: 'Частично верно: оценка {score}%, есть ошибки ниже. {outcomeText} ({outcomeTime}), R = {r}.',
+  incorrect: 'Неверно: оценка {score}%. {outcomeText} ({outcomeTime}), R = {r}.',
+};
+/** Словарь `outcomeText` ступеней 3-4 и комбо (§12.4). */
+export const CUR_OUTCOME_TEXT_RU: Record<'filled' | 'missed' | 'tp' | 'sl' | 'timeout' | 'cancelled-reaction' | 'cancelled-target' | 'not-filled', string> = {
+  filled: 'Лимитка исполнилась',
+  missed: 'Лимитка не исполнилась',
+  tp: 'Исход: Take Profit',
+  sl: 'Исход: Stop Loss',
+  timeout: 'Исход: лимит времени',
+  'cancelled-reaction': 'Ордер снят: реакция прошла без исполнения',
+  'cancelled-target': 'Ордер снят: цель достигнута без входа',
+  'not-filled': 'Ордер не исполнился за лимит времени',
 };
 
 /** Elliott: вердикт с исходом проигрывания (ELLIOTT.md §14.1). `{outcomeText}` и `{outcomeTime}` готовит ядро. */
@@ -84,6 +116,14 @@ export const OK_TEMPLATES_RU: Record<OkCode, string> = {
   OK_EW_CORRECTION: 'Коррекция названа верно: {type} (B {retrB} от A, C за концом A на {cBeyond}).',
   OK_EW_INVALIDATION: 'Invalidation level {price} стоит по правилу: {ruleText}.',
   OK_EW_ALT: 'Альтернатива «{alt}» допустима и проверяется другим триггером: {altTrigger}.',
+  OK_SWING_TREND: 'Тренд по свингам определён верно: последний максимум {lastHighLabel}, последний минимум {lastLowLabel}.',
+  OK_ZONE: 'Зона [{low}–{high}] накрывает все развороты уровня ({touches} касаний) и не шире нужного.',
+  OK_LEVEL_REACTION: 'Верно: реакция была от зоны [{low}–{high}], экстремум {extreme}, разворот подтверждён {reactionTime}.',
+  OK_LIMIT_PLACEMENT: 'Лимитка {price} стоит по правилам: {typeText}.',
+  OK_LIMIT_FILLED: 'Лимитка исполнилась {fillTime} через {fillCandles} свеч.; просадка {maeAtr} ATR, ход в плюс {mfeAtr} ATR.',
+  OK_TP_LEVEL: 'Take Profit {tp} стоит перед целью {target} ({sourceText}).',
+  OK_STOP_HUNT_RULES: 'Стоп {sl} стоял по правилам; его снял фитиль {time} до {wick}, после чего цена дошла до цели. Это исход, а не ошибка решения.',
+  OK_POI: 'Зона интереса выбрана верно: {kindText} [{low}–{high}] по направлению структуры.',
 };
 
 /** Навык кода ошибки; null — определяется параметрами (pa-* по `params.pattern`, MARK_WRONG_DIRECTION по `params.kind`, QUESTION_WRONG по шаблону). */
@@ -181,6 +221,27 @@ export const ERROR_SKILLS: Record<ErrorCode, SkillId | null> = {
   EW_ALT_MISSING: 'ew-invalidation',
   EW_ALT_SAME: 'ew-invalidation',
   EW_ALT_INCONSISTENT: 'ew-invalidation',
+  SWING_TREND_WRONG: 'swing-trend',
+  ZONE_TOO_WIDE: 'level-zone',
+  ZONE_EDGE_OFF: 'level-zone',
+  ZONE_OFF: 'level-zone',
+  LEVEL_REACTION_BROKEN: 'level-reaction',
+  LEVEL_REACTION_EARLIER: 'level-reaction',
+  LEVEL_REACTION_FALSE_NONE: 'level-reaction',
+  LIMIT_FAR_FROM_ZONE: 'limit-placement',
+  LIMIT_FRONT_TOO_FAR: 'limit-placement',
+  LIMIT_DEEP_IN_ZONE: 'limit-placement',
+  LIMIT_AT_FAR_EDGE: 'limit-placement',
+  LIMIT_BEYOND_ZONE: 'limit-placement',
+  LIMIT_TYPE_MISMATCH: 'limit-placement',
+  LIMIT_NOT_FILLED: 'limit-fill',
+  SL_NO_BUFFER: 'stop-placement',
+  TP_NOT_AT_LEVEL: 'take-profit',
+  TP_BEYOND_TARGETS: 'take-profit',
+  STOP_HUNTED: 'stop-placement',
+  /** order-block / fvg - по `params.kindText` (см. skillForError). */
+  POI_OFF: null,
+  POI_NOT_FRESH: null,
 };
 
 export const ERROR_TEMPLATES_RU: Record<ErrorCode, ErrorTemplate> = {
@@ -407,13 +468,13 @@ export const ERROR_TEMPLATES_RU: Record<ErrorCode, ErrorTemplate> = {
     principle: 'Уровень — зона повторных реакций, а не одна точка.',
   },
   LEVEL_NOT_STRONGEST: {
-    mistake: 'Уровень {user} реален, но сильнее уровень {ref} ({touches} касаний).',
-    why: 'Нужен наиболее значимый уровень: больше касаний, затем свежее.',
-    howTo: 'Сравните число реакций у кандидатов перед выбором.',
+    mistake: 'Уровень {user} реален, но сильнее уровень {ref}: сила {refStrength} против {userStrength}.',
+    why: 'Сила складывается из касаний ({touches}), реакций, свежести и совпадения со старшим ТФ.',
+    howTo: 'Сравните кандидатов по числу разворотов и их размеру, затем по свежести.',
     principle: 'Чем больше реакций, тем больше ордеров на уровне.',
   },
   LEVEL_WRONG_TYPE: {
-    mistake: 'Уровень {user} — {given}, а требовался {expected}.',
+    mistake: 'Уровень {user} — {givenText}, а требовался {expectedText}.',
     why: 'Поддержка ниже текущей цены, сопротивление — выше.',
     howTo: 'Определите положение уровня относительно последнего закрытия {close}.',
     principle: 'Роль уровня определяется положением цены.',
@@ -726,6 +787,126 @@ export const ERROR_TEMPLATES_RU: Record<ErrorCode, ErrorTemplate> = {
     howTo: 'Для «{primary}» подходят: {allowedText}.',
     principle: 'Альтернатива — тоже подсчёт по правилам, а не любой другой исход.',
   },
+  SWING_TREND_WRONG: {
+    mistake: 'Выбран тренд «{given}», а по свингам он «{expected}».',
+    why: 'Последний swing high {lastHigh} — {lastHighLabel} к {prevHigh}, последний swing low {lastLow} — {lastLowLabel} к {prevLow}.',
+    howTo: 'Сравните два последних максимума и два последних минимума: HH и HL — восходящий, LH и LL — нисходящий, смешанные метки — диапазон.',
+    principle: 'Тренд по свингам — это последовательность экстремумов, а не наклон последних свечей.',
+  },
+  ZONE_TOO_WIDE: {
+    mistake: 'Зона [{userLow}–{userHigh}] шире нужного: {height} при допустимых {maxHeight}.',
+    why: 'Широкая зона не задаёт ни цену лимитки, ни место стопа: внутри неё нет конкретного края.',
+    howTo: 'Сожмите зону до разворотов уровня [{low}–{high}] с запасом не больше 1 ATR.',
+    principle: 'Зона должна быть такой, чтобы от её краёв можно было поставить ордер и стоп.',
+  },
+  ZONE_EDGE_OFF: {
+    mistake: 'Зона [{userLow}–{userHigh}] не накрывает {edgeText} уровня [{low}–{high}] (перекрытие {sharePct}%).',
+    why: 'Края зоны — крайние развороты уровня; без них лимитка или стоп окажутся не там, где реагировала цена.',
+    howTo: 'Дотяните край до крайнего swing уровня с допуском 0.1 ATR.',
+    principle: 'Край зоны — это последний разворот, а не середина скопления.',
+  },
+  ZONE_OFF: {
+    mistake: 'Зона [{userLow}–{userHigh}] не совпадает ни с одним уровнем; сильнейший — [{low}–{high}] ({touches} касаний).',
+    why: 'В отмеченном месте цена не разворачивалась несколько раз.',
+    howTo: 'Найдите место, где swing high и swing low собираются в узкий диапазон, и отметьте его.',
+    principle: 'Зона рисуется по фактическим разворотам, а не по круглой цене.',
+  },
+  LEVEL_REACTION_BROKEN: {
+    mistake: 'Выбрана зона [{givenLow}–{givenHigh}], но {breakTime} свеча закрылась за ней на {close}.',
+    why: 'Закрытие за дальним краем — пробой: ордера уровня поглощены. Итог: {expectedText}.',
+    howTo: 'Сравните силу зон и направление внешнего тренда: уровни против тренда пробиваются чаще.',
+    principle: 'Уровень держит, пока цена не закрылась за ним.',
+  },
+  LEVEL_REACTION_EARLIER: {
+    mistake: 'Выбрана зона [{givenLow}–{givenHigh}], а цена развернулась раньше — от [{low}–{high}]: экстремум {extreme}, разворот {reactionTime}.',
+    why: 'Ближняя зона удержала цену, до выбранной цена не дошла.',
+    howTo: 'Начинайте с ближней сильной зоны: дальняя работает, только если ближняя пробита.',
+    principle: 'Первая сильная зона на пути цены — первый кандидат на реакцию.',
+  },
+  LEVEL_REACTION_FALSE_NONE: {
+    mistake: 'Выбран вариант «ни один не удержит», а зона [{low}–{high}] удержала: экстремум {extreme}, разворот {reactionTime}.',
+    why: 'Цена дошла до зоны и закрылась в обратную сторону не меньше чем на 1.5 ATR от экстремума.',
+    howTo: 'Если зона сильная и по направлению тренда, ждите реакцию от неё.',
+    principle: 'Отсутствие реакции — тоже прогноз, и его нужно обосновать.',
+  },
+  LIMIT_FAR_FROM_ZONE: {
+    mistake: 'Лимитка {price} дальше 0.5 ATR от края зоны {near} (опережение {offsetAtr} ATR).',
+    why: 'Ордер исполнится в середине движения к уровню, а не на реакции.',
+    howTo: 'Ставьте лимитку у края {near} или с опережением до 0.3 ATR.',
+    principle: 'Вход от уровня — у уровня.',
+  },
+  LIMIT_FRONT_TOO_FAR: {
+    mistake: 'Опережение {offsetAtr} ATR от края {near} больше 0.3 ATR.',
+    why: 'Исполнение почти гарантировано, но цена входа хуже, а стоп за зоной становится дальше.',
+    howTo: 'Опережайте край на 0.1–0.3 ATR: этого хватает, чтобы взять ранние развороты.',
+    principle: 'Опережение — страховка от недохода, а не вход заранее.',
+  },
+  LIMIT_DEEP_IN_ZONE: {
+    mistake: 'Лимитка {price} внутри зоны на {depthAtr} ATR от края {near}.',
+    why: 'Чем глубже ордер, тем чаще реакция проходит без исполнения: цена часто разворачивается у края.',
+    howTo: 'Если не готовы пропустить сделку, ставьте ордер у края или с небольшим опережением.',
+    principle: 'Лучшая цена бесполезна, если ордер не исполнился.',
+  },
+  LIMIT_AT_FAR_EDGE: {
+    mistake: 'Лимитка {price} у дальнего края зоны {far} ({depthAtr} ATR от ближнего).',
+    why: 'До дальнего края цена доходит меньше чем в половине реакций.',
+    howTo: 'Дальний край — место стопа, а не входа: вход — у ближнего края.',
+    principle: 'Вход у ближнего края, стоп за дальним.',
+  },
+  LIMIT_BEYOND_ZONE: {
+    mistake: 'Лимитка {price} за дальним краем зоны {far}.',
+    why: 'Исполнение за зоной означает, что уровень уже пробит: вход против идеи.',
+    howTo: 'Перенесите ордер к ближнему краю зоны.',
+    principle: 'Ордер за уровнем исполняется только при его пробое.',
+  },
+  LIMIT_TYPE_MISMATCH: {
+    mistake: 'Лимитка {price} заявлена как «{typeText}», но для этого типа цена должна быть около {expected} (допуск 0.1 ATR).',
+    why: 'Тип входа задаёт цену ордера; несовпадение значит, что план и ордер расходятся.',
+    howTo: 'Выберите тип, который соответствует цене, или передвиньте ордер к {expected}.',
+    principle: 'План входа и ордер должны совпадать.',
+  },
+  LIMIT_NOT_FILLED: {
+    mistake: 'Лимитка {price} не исполнилась: цена развернулась от {extreme} ({extremeTime}), не дойдя {gapAtr} ATR.',
+    why: 'Разворот подтвердился закрытием {reactionTime}; сделка упущена.',
+    howTo: 'Ставьте ордер ближе к краю или с опережением: заметная часть реакций не доходит до края зоны.',
+    principle: 'Пропущенная сделка — тоже результат размещения ордера.',
+  },
+  SL_NO_BUFFER: {
+    mistake: 'Stop Loss {sl} сразу за структурой {level}: запас {bufferAtr} ATR меньше 0.25 ATR.',
+    why: 'Ликвидность за краем зоны часто снимают фитилём перед разворотом.',
+    howTo: 'Отодвиньте стоп за {level} не меньше чем на 0.25 ATR, но не дальше 1.5 ATR.',
+    principle: 'Стоп ставят за фитили, а не на них.',
+  },
+  TP_NOT_AT_LEVEL: {
+    mistake: 'Take Profit {tp} стоит между уровнями: ближайшая цель — {target} ({sourceText}).',
+    why: 'Тейк вне уровня либо отдаёт часть хода, либо ждёт цену, которую встречная зона может не пропустить.',
+    howTo: 'Ставьте тейк в пределах 0.5 ATR перед ближним краем встречной зоны или перед ликвидностью.',
+    principle: 'Цель — следующий уровень на пути цены.',
+  },
+  TP_BEYOND_TARGETS: {
+    mistake: 'Take Profit {tp} дальше допустимых целей: последняя — {target} ({sourceText}).',
+    why: 'По пути цена встречает уровни, от которых может развернуться; первая цель на 2R — {firstTarget}.',
+    howTo: 'Выберите цель не дальше следующей за первой целью на 2R.',
+    principle: 'Тейк за несколькими уровнями — надежда, а не план.',
+  },
+  STOP_HUNTED: {
+    mistake: 'Стоп {sl} снял фитиль {time} до {wick}: свеча закрылась обратно на {close}, затем цена дошла до цели.',
+    why: 'Запас за структурой {level} был {bufferAtr} ATR; выносы за край зоны обычно глубже.',
+    howTo: 'Держите стоп за структурой с запасом 0.25–1.5 ATR.',
+    principle: 'Ликвидность за уровнем снимают перед разворотом.',
+  },
+  POI_OFF: {
+    mistake: 'Зона [{userLow}–{userHigh}] не совпадает с POI: ближайший — {kindText} [{low}–{high}].',
+    why: 'Вход по SMC делается от свежего OB или незаполненного FVG по направлению структуры.',
+    howTo: 'Найдите последний BOS/CHoCH по тренду и его OB или FVG.',
+    principle: 'Зона интереса — след импульса, сломавшего структуру.',
+  },
+  POI_NOT_FRESH: {
+    mistake: '{kindText} [{low}–{high}] уже {statusText}.',
+    why: 'Отработанная зона уже исполнила часть ордеров и держит хуже.',
+    howTo: 'Выбирайте зону, к которой цена ещё не возвращалась.',
+    principle: 'Первое касание зоны — самое сильное.',
+  },
 };
 
 /** Плоский словарь `feedback.*` — совпадает с `templateKey` в FeedbackBlock. */
@@ -735,6 +916,8 @@ export function flattenTemplates(): Record<string, string> {
   for (const [k, v] of Object.entries(VERDICT_PLAIN_TEMPLATES_RU)) out[`feedback.verdict.plain.${k}`] = v;
   for (const [k, v] of Object.entries(CHALLENGE_VERDICT_TEMPLATES_RU)) out[`feedback.verdict.challenge.${k}`] = v;
   for (const [k, v] of Object.entries(ELLIOTT_VERDICT_TEMPLATES_RU)) out[`feedback.verdict.elliott.${k}`] = v;
+  for (const [k, v] of Object.entries(LIMIT_VERDICT_TEMPLATES_RU)) out[`feedback.verdict.limit.${k}`] = v;
+  for (const [k, v] of Object.entries(TRADE_VERDICT_TEMPLATES_RU)) out[`feedback.verdict.trade.${k}`] = v;
   for (const [k, v] of Object.entries(PRINCIPLE_TEMPLATES_RU)) out[`feedback.principle.${k}`] = v;
   for (const [k, v] of Object.entries(OK_TEMPLATES_RU)) out[`feedback.ok.${k}`] = v;
   for (const [code, t] of Object.entries(ERROR_TEMPLATES_RU)) {
@@ -763,6 +946,7 @@ export function skillForError(code: ErrorCode, params?: Record<string, string | 
     return m[String(params?.kind)] ?? 'sweep';
   }
   if (code === 'QUESTION_WRONG') return (params?.skill as SkillId | undefined) ?? 'bos';
+  if (code === 'POI_OFF' || code === 'POI_NOT_FRESH') return String(params?.kindText) === 'FVG' ? 'fvg' : 'order-block';
   if (code === 'EXT_WRONG_POINTS') return params?.point === 'C' ? 'fib-extension' : 'fib-anchor';
   if (code === 'EW_POINT_NOT_EXTREME' || code === 'EW_POINT_NOT_SWING') return ['A', 'B', 'C'].includes(String(params?.label)) ? 'ew-correction' : 'ew-impulse';
   if (code === 'EW_GUIDE_MISS') return /^(zigzag|flat)/.test(String(params?.guide)) ? 'ew-correction' : 'ew-impulse';

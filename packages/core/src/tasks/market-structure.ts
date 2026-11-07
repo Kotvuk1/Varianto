@@ -27,59 +27,86 @@ export const MS_DEPTH: Readonly<Record<TaskTimeframe, number>> = { '15m': 500, '
 export const MS_MIN_WARMUP = 300;
 export const MS_MAX_ATTEMPTS = 200;
 
-/** Параметры структуры по сложности (§1.6). */
-export function msParamsFor(difficulty: Difficulty): StructureParams {
-  const nExt = difficulty === 'easy' ? 7 : 5;
-  const nInt = difficulty === 'easy' ? null : difficulty === 'medium' ? 3 : 2;
-  return { nExt, nInt, sweepHoldK: 3, fvgMinAtr: 0.5, obDisplacementAtr: 1.2 };
+/**
+ * Ступень, к которой относится «Разметка» (CURRICULUM_STAGES.md §2.2, §9.1): `swings` - ступень 1 (swing, HH/HL/LH/LL),
+ * `smc` - ступень 5 (BOS/CHoCH, sweep, OB, FVG; модуль market-structure).
+ */
+export type MsStage = 'swings' | 'smc';
+
+/** Параметры структуры по ступени и сложности (§2.2, §9.1). */
+export function msParamsFor(difficulty: Difficulty, stage: MsStage = 'smc'): StructureParams {
+  if (stage === 'swings') return { nExt: difficulty === 'hard' ? 5 : 7, nInt: null, sweepHoldK: 3, fvgMinAtr: 0.5, obDisplacementAtr: 1.2 };
+  return { nExt: 5, nInt: difficulty === 'hard' ? 2 : null, sweepHoldK: 3, fvgMinAtr: 0.5, obDisplacementAtr: 1.2 };
 }
 
-/** Окно оценки «Разметки»: границы, свечей (§13.2, v1.1). Фактическое окно подбирается в [MIN, max(difficulty)]. */
+/** Окно оценки «Разметки» ступени 5 hard и ступени 1: границы, свечей. Фактическое окно подбирается в [min, max(stage, difficulty)]. */
 export const MS_WINDOW_MIN = 40;
 export const MS_WINDOW_MAX = 80;
-/** Допустимое число обязательных эталонных меток в окне (§13.2, v1.1). */
+/** Допустимое число обязательных эталонных меток в окне (§13.2, v1.1; ступень 1 и ступень 5 hard). */
 export const MS_REQUIRED_MIN = 4;
 export const MS_REQUIRED_MAX = 12;
 const MS_WINDOW_STEP = 4;
 
-/** Максимальное окно оценки «Разметки» по сложности, свечей. */
-export function msWindowSize(difficulty: Difficulty): number {
-  return difficulty === 'easy' ? 60 : difficulty === 'medium' ? 70 : MS_WINDOW_MAX;
+/** Профиль окна и числа меток: ступень x сложность. */
+export interface MsWindowProfile {
+  windowMin: number;
+  windowMax: number;
+  requiredMin: number;
+  requiredMax: number;
 }
 
-/** Окно вопросов режима «Вопрос» (§13.3) — не менялось в v1.1. */
-export function msQuestionWindow(difficulty: Difficulty): number {
-  return difficulty === 'easy' ? 120 : 150;
+export function msWindowProfile(difficulty: Difficulty, stage: MsStage = 'smc'): MsWindowProfile {
+  if (stage === 'swings') {
+    return { windowMin: MS_WINDOW_MIN, windowMax: difficulty === 'hard' ? 70 : 60, requiredMin: 4, requiredMax: 12 };
+  }
+  if (difficulty === 'easy') return { windowMin: 120, windowMax: 150, requiredMin: 2, requiredMax: 8 };
+  if (difficulty === 'medium') return { windowMin: MS_WINDOW_MIN, windowMax: MS_WINDOW_MAX, requiredMin: 3, requiredMax: 10 };
+  return { windowMin: MS_WINDOW_MIN, windowMax: MS_WINDOW_MAX, requiredMin: 4, requiredMax: 12 };
 }
 
-/** Базовые (внешние) понятия medium/hard. */
-const CORE_CONCEPTS: SkillId[] = ['swing', 'structure-labels', 'bos', 'choch'];
-/** Дополнительные понятия hard; по focus выбирается подмножество. */
+/** Максимальное окно оценки «Разметки» по ступени и сложности, свечей. */
+export function msWindowSize(difficulty: Difficulty, stage: MsStage = 'smc'): number {
+  return msWindowProfile(difficulty, stage).windowMax;
+}
+
+/** Окно вопросов режима «Вопрос» (§9.1): 150 на всех сложностях ступени 5. */
+export function msQuestionWindow(_difficulty?: Difficulty): number {
+  return 150;
+}
+
+/** Параметры структуры «Вопроса»: nExt = 5 на всех сложностях (§9.1). */
+export function msQuestionParams(): StructureParams {
+  return { nExt: 5, nInt: null, sweepHoldK: 3, fvgMinAtr: 0.5, obDisplacementAtr: 1.2 };
+}
+
+/** Дополнительные понятия ступени 5 medium/hard (focus), §9.1. */
+export const MS_FOCUS_SMC: readonly SkillId[] = ['sweep', 'order-block', 'fvg'];
+/** Совместимость: прежнее имя набора дополнительных понятий hard (до 2.0.0 включало internal-external). */
 export const MS_HARD_EXTRAS: readonly SkillId[] = ['internal-external', 'sweep', 'order-block', 'fvg'];
 
 /**
- * Focus задания «Разметка» (что именно отметить сверх базы). Только hard: понятия из MS_HARD_EXTRAS в `focus`;
- * если их нет — один по seed. easy/medium -> [] (набор понятий фиксирован сложностью).
+ * Focus задания «Разметка» ступени 5: medium - ровно одно понятие из {sweep, order-block, fvg} (из `focus`, иначе по seed);
+ * hard - все понятия из `focus` (если нет - одно по seed). easy и ступень 1 -> [].
  */
-export function msResolveFocus(difficulty: Difficulty, focus: readonly SkillId[] | undefined, seed: number): SkillId[] {
-  if (difficulty !== 'hard') return [];
-  const picked = MS_HARD_EXTRAS.filter((c) => focus?.includes(c));
-  if (picked.length > 0) return picked;
-  return [MS_HARD_EXTRAS[randInt(mulberry32(seed ^ 0x5bd1e995), MS_HARD_EXTRAS.length)]!];
+export function msResolveFocus(difficulty: Difficulty, focus: readonly SkillId[] | undefined, seed: number, stage: MsStage = 'smc'): SkillId[] {
+  if (stage === 'swings' || difficulty === 'easy') return [];
+  const picked = MS_FOCUS_SMC.filter((c) => focus?.includes(c));
+  const rng = mulberry32(seed ^ 0x5bd1e995);
+  if (picked.length === 0) return [MS_FOCUS_SMC[randInt(rng, MS_FOCUS_SMC.length)]!];
+  if (difficulty === 'medium') return [picked[randInt(rng, picked.length)]!];
+  return picked;
 }
 
 /**
- * Понятия задания (§13.2, v1.1): easy - swing (внешний слой); medium - внешняя структура (swing, HH/HL/LH/LL, BOS/CHoCH);
- * hard - внешняя структура + понятия focus (без focus - все дополнительные); при internal-external без HH/HL/LH/LL.
+ * Понятия задания: ступень 1 - easy swing, medium/hard swing + structure-labels; ступень 5 - easy bos/choch,
+ * medium bos/choch + один focus, hard bos/choch/internal-external + focus.
  */
-export function msConceptsFor(difficulty: Difficulty, focus?: readonly SkillId[]): SkillId[] {
-  if (difficulty === 'easy') return ['swing'];
-  if (difficulty === 'medium') return [...CORE_CONCEPTS];
-  const extras = MS_HARD_EXTRAS.filter((c) => focus?.includes(c));
-  const chosen = extras.length > 0 ? extras : MS_HARD_EXTRAS;
-  // внутренний слой удваивает число swing: при focus на нём подписи HH/HL/LH/LL не требуются (укладываемся в 12 меток)
-  const core = chosen.includes('internal-external') ? CORE_CONCEPTS.filter((c) => c !== 'structure-labels') : CORE_CONCEPTS;
-  return [...core, ...chosen];
+export function msConceptsFor(difficulty: Difficulty, focus?: readonly SkillId[], stage: MsStage = 'smc'): SkillId[] {
+  if (stage === 'swings') return difficulty === 'easy' ? ['swing'] : ['swing', 'structure-labels'];
+  if (difficulty === 'easy') return ['bos', 'choch'];
+  const chosen = MS_FOCUS_SMC.filter((c) => focus?.includes(c));
+  const f = chosen.length > 0 ? chosen : [...MS_FOCUS_SMC];
+  return difficulty === 'medium' ? ['bos', 'choch', ...f.slice(0, 1)] : ['bos', 'choch', 'internal-external', ...f];
 }
 
 /** Инструменты рисования, нужные для понятий. */
@@ -101,8 +128,9 @@ export function msToolsFor(concepts: readonly SkillId[]): MarkKind[] {
 const ORDER: Difficulty[] = ['hard', 'medium', 'easy'];
 
 /**
- * Пригодность ситуации по критерию сложности `level` (§13.1-§13.2, v1.1): ATR14 != 0, обязательных эталонных меток
- * в окне 4-12; medium - есть BOS/CHoCH; hard - каждое понятие focus представлено хотя бы одной меткой.
+ * Пригодность ситуации по критерию сложности `level`: ATR14 != 0, число обязательных меток в границах профиля;
+ * ступень 1: medium/hard - в эталоне есть {HH, LH} и {HL, LL}; ступень 5: medium - есть BOS/CHoCH и метка каждого focus,
+ * hard - дополнительно внутреннее событие.
  */
 export function meetsMsCriteria(
   r: StructureResult,
@@ -110,15 +138,16 @@ export function meetsMsCriteria(
   window: { fromIndex: number; toIndex: number },
   level: Difficulty,
   concepts: readonly SkillId[],
+  profile: MsWindowProfile = msWindowProfile('hard', 'smc'),
+  stage: MsStage = 'smc',
 ): boolean {
-  const c = checkMsWindow(r, candles, window, level, concepts);
-  return c.ok;
+  return checkMsWindow(r, candles, window, level, concepts, profile, stage).ok;
 }
 
 interface WindowCheck {
   ok: boolean;
   required: number;
-  /** true — обязательных меток больше MS_REQUIRED_MAX (окно можно сузить). */
+  /** true — обязательных меток больше максимума (окно можно сузить). */
   tooMany: boolean;
 }
 
@@ -128,24 +157,31 @@ function checkMsWindow(
   window: { fromIndex: number; toIndex: number },
   level: Difficulty,
   concepts: readonly SkillId[],
+  profile: MsWindowProfile,
+  stage: MsStage,
 ): WindowCheck {
   const last = candles[window.toIndex];
   const atr = last ? atrAt(candles, window.toIndex) : null;
   if (!last || atr === null || atr === 0) return { ok: false, required: 0, tooMany: false };
   const required = buildAlgoMarkSet(r, { concepts: [...concepts], window }).required;
   const count = required.length;
-  if (count > MS_REQUIRED_MAX) return { ok: false, required: count, tooMany: true };
-  if (count < MS_REQUIRED_MIN) return { ok: false, required: count, tooMany: false };
+  if (count > profile.requiredMax) return { ok: false, required: count, tooMany: true };
+  if (count < profile.requiredMin) return { ok: false, required: count, tooMany: false };
   let ok = true;
-  if (level !== 'easy') ok = required.some((m) => m.kind === 'bos' || m.kind === 'choch');
-  if (ok && level === 'hard') {
-    for (const c of concepts) {
-      if (!MS_HARD_EXTRAS.includes(c)) continue;
-      const has =
-        c === 'internal-external'
-          ? required.some((m) => m.scope === 'internal' && (m.kind === 'bos' || m.kind === 'choch'))
-          : required.some((m) => m.kind === c);
-      if (!has) ok = false;
+  if (stage === 'swings') {
+    if (level !== 'easy') {
+      ok = required.some((m) => m.kind === 'hh' || m.kind === 'lh') && required.some((m) => m.kind === 'hl' || m.kind === 'll');
+    }
+  } else if (level !== 'easy') {
+    ok = required.some((m) => m.kind === 'bos' || m.kind === 'choch');
+    if (ok) {
+      for (const c of concepts) {
+        if (!MS_FOCUS_SMC.includes(c)) continue;
+        if (!required.some((m) => m.kind === c)) ok = false;
+      }
+    }
+    if (ok && level === 'hard' && concepts.includes('internal-external')) {
+      ok = required.some((m) => m.scope === 'internal' && (m.kind === 'bos' || m.kind === 'choch'));
     }
   }
   return { ok, required: count, tooMany: false };
@@ -168,6 +204,8 @@ export interface MsSelectInput {
   tf: TaskTimeframe;
   difficulty: Difficulty;
   seed: number;
+  /** Ступень: по умолчанию `smc` (модуль market-structure). */
+  stage?: MsStage;
   focus?: readonly SkillId[];
   /** Исключения (ранее выданные задания): true — момент T не использовать. */
   isExcluded?: (T: UtcMs) => boolean;
@@ -187,16 +225,17 @@ export interface MsMarkSelection {
   window: { fromIndex: number; toIndex: number };
   params: StructureParams;
   concepts: SkillId[];
-  /** Что именно отметить сверх базы (hard); [] для easy/medium. Сохраняется в params задания для grade. */
+  /** Что именно отметить сверх базы (ступень 5 medium/hard); [] иначе. Сохраняется в params задания для grade. */
   focus: SkillId[];
   tools: MarkKind[];
   scoped: boolean;
-  /** Размер окна оценки, свечей (40-80). */
+  /** Размер окна оценки, свечей. */
   windowSize: number;
-  /** Число обязательных эталонных меток в окне (4-12). */
+  /** Число обязательных эталонных меток в окне. */
   requiredCount: number;
   /** Критерий, по которому задание отобрано (ниже `difficulty` — результат ослабления). */
   criteria: Difficulty;
+  stage: MsStage;
   attempts: number;
 }
 
@@ -207,7 +246,11 @@ interface Candidate {
 }
 
 /** Случайный T на сетке 15m и видимый ряд для него; null, если ряд непригоден (мало истории, пропуски, исключение). */
-function drawCandidate(inp: MsSelectInput, rng: () => number, minVisible: number): Candidate | null {
+export function drawMsCandidate(inp: Pick<MsSelectInput, 'candles' | 'tf' | 'maxT' | 'isExcluded'>, rng: () => number, minVisible: number): Candidate | null {
+  return drawCandidate(inp, rng, minVisible);
+}
+
+function drawCandidate(inp: Pick<MsSelectInput, 'candles' | 'tf' | 'maxT' | 'isExcluded'>, rng: () => number, minVisible: number): Candidate | null {
   const { candles, tf } = inp;
   const step = TIMEFRAME_MS[tf];
   if (candles.length < minVisible) return null;
@@ -234,23 +277,28 @@ function drawCandidate(inp: MsSelectInput, rng: () => number, minVisible: number
  */
 export function selectMsMarkTask(inp: MsSelectInput): MsMarkSelection | null {
   const rng = mulberry32(inp.seed);
-  const maxW = msWindowSize(inp.difficulty);
-  const params = msParamsFor(inp.difficulty);
-  const focus = msResolveFocus(inp.difficulty, inp.focus, inp.seed);
-  const concepts = msConceptsFor(inp.difficulty, focus);
+  const stage = inp.stage ?? 'smc';
+  const profile = msWindowProfile(inp.difficulty, stage);
+  const params = msParamsFor(inp.difficulty, stage);
+  const focus = msResolveFocus(inp.difficulty, inp.focus, inp.seed, stage);
+  const concepts = msConceptsFor(inp.difficulty, focus, stage);
   const max = inp.maxAttempts ?? MS_MAX_ATTEMPTS;
   let attempts = 0;
   for (const level of ORDER.slice(ORDER.indexOf(inp.difficulty))) {
     for (let a = 0; a < max; a++) {
       attempts++;
-      const cand = drawCandidate(inp, rng, maxW + MS_MIN_WARMUP);
+      const cand = drawCandidate(inp, rng, profile.windowMax + MS_MIN_WARMUP);
       if (!cand) continue;
       const n = cand.visible.length;
       const r = analyzeStructure(cand.visible, params, { tf: inp.tf });
       // окно заканчивается на последней видимой свече; при избытке меток сужается, при нехватке - другое T
-      for (let W = maxW; W >= MS_WINDOW_MIN; W = W === MS_WINDOW_MIN ? 0 : Math.max(MS_WINDOW_MIN, W - MS_WINDOW_STEP)) {
+      for (
+        let W = profile.windowMax;
+        W >= profile.windowMin;
+        W = W === profile.windowMin ? 0 : Math.max(profile.windowMin, W - MS_WINDOW_STEP)
+      ) {
         const window = { fromIndex: n - W, toIndex: n - 1 };
-        const chk = checkMsWindow(r, cand.visible, window, level, concepts);
+        const chk = checkMsWindow(r, cand.visible, window, level, concepts, profile, stage);
         if (chk.ok) {
           return {
             T: cand.T,
@@ -265,6 +313,7 @@ export function selectMsMarkTask(inp: MsSelectInput): MsMarkSelection | null {
             windowSize: W,
             requiredCount: chk.required,
             criteria: level,
+            stage,
             attempts,
           };
         }
@@ -328,7 +377,7 @@ export function buildMsQuestion(
   template: MsQuestionTemplate,
   seed: number,
 ): MsQuestion | null {
-  const params = msParamsFor(difficulty);
+  const params = msQuestionParams();
   const r = analyzeStructure(visible, params, { tf });
   const n = visible.length;
   const from = Math.max(0, n - msQuestionWindow(difficulty));
@@ -561,7 +610,7 @@ export function selectMsQuestionTask(inp: MsSelectInput):
   const rng = mulberry32(inp.seed);
   const W = msQuestionWindow(inp.difficulty);
   const max = inp.maxAttempts ?? MS_MAX_ATTEMPTS;
-  const params = msParamsFor(inp.difficulty);
+  const params = msQuestionParams();
   for (let a = 1; a <= max; a++) {
     const cand = drawCandidate(inp, rng, W + MS_MIN_WARMUP);
     if (!cand) continue;

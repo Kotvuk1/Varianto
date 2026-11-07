@@ -74,12 +74,23 @@ export function buildFeedback(input: FeedbackInput): Feedback {
   const worst = errors.find((e) => e.severity === 'major') ?? errors[0];
   const score = Math.round(input.score * 100);
   // challenge, fibonacci и elliott оценивают не «совпадение меток», а качество решения: вердикт plain (FIBONACCI.md §11.1)
-  const mt = input.module === 'challenge' || input.module === 'fibonacci' || input.module === 'elliott' ? null : matchedOf(input.skillOutcomes);
+  const plainModule =
+    input.module === 'challenge' || input.module === 'fibonacci' || input.module === 'elliott' || input.module === 'levels' ||
+    (input.module === 'stage-swings' && input.taskKind === 'sw-trend');
+  const tradeModule = input.module === 'stop-take' || input.module === 'combo-level-trade' || input.module === 'combo-smc-entry';
+  const mt = plainModule || tradeModule || input.module === 'limit-entry' ? null : matchedOf(input.skillOutcomes);
   const elliottOutcome = input.module === 'elliott' && input.verdictParams?.outcomeText !== undefined;
   const verdict: FeedbackBlock = elliottOutcome
     ? { templateKey: `feedback.verdict.elliott.${input.verdict}`, code: null, params: { score, ...input.verdictParams }, glyph: 'info' }
     : input.module === 'challenge'
     ? { templateKey: `feedback.verdict.challenge.${input.verdict}`, code: null, params: { score }, glyph: 'info' }
+    : (input.module === 'limit-entry' || tradeModule) && input.verdictParams?.outcomeText !== undefined
+    ? {
+        templateKey: `feedback.verdict.${tradeModule ? 'trade' : 'limit'}.${input.verdict}`,
+        code: null,
+        params: { score, ...input.verdictParams },
+        glyph: 'info',
+      }
     : mt
       ? { templateKey: `feedback.verdict.${input.verdict}`, code: null, params: { matched: mt.matched, total: mt.total, score }, glyph: 'info' }
       : { templateKey: `feedback.verdict.plain.${input.verdict}`, code: null, params: { score }, glyph: 'info' };

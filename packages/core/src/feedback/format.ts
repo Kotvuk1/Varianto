@@ -18,6 +18,12 @@ export const PARAM_KINDS: Readonly<Record<string, ParamKind>> = {
   pZero: 'price', pOne: 'price', pTwo: 'price', pThree: 'price', pFour: 'price', pFive: 'price', pA: 'price', pB: 'price', pC: 'price',
   priceA: 'price', priceB: 'price', lenOne: 'price', lenThree: 'price', lenFive: 'price', extremePrice: 'price', lastPrice: 'price',
   ruleLevel: 'price', invTol: 'price', confirm: 'price', altConfirm: 'price', invalidation: 'price',
+  // ступени 1-4 и комбо (CURRICULUM_STAGES.md §12)
+  lastHigh: 'price', prevHigh: 'price', lastLow: 'price', prevLow: 'price', userLow: 'price', userHigh: 'price',
+  givenLow: 'price', givenHigh: 'price', extreme: 'price', near: 'price', far: 'price', target: 'price', firstTarget: 'price',
+  height: 'price', maxHeight: 'price',
+  refStrength: 'number', userStrength: 'number', offsetAtr: 'number', depthAtr: 'number', gapAtr: 'number', bufferAtr: 'number',
+  maeAtr: 'number', mfeAtr: 'number',
   devPct: 'percent', tolPct: 'percent', iou: 'percent',
   rr: 'r', r: 'r',
   k: 'number', atr: 'number',

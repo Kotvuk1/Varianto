@@ -85,7 +85,7 @@ describe('шаблоны разбора: нет неподставленных �
 // ---------------------------------------------------------------------------------------------------------------------
 // Расширение: ВСЕ коды Market Structure и Price Action, по режиму задания, на реальных фикстурах.
 const MS_PA_CODES = (Object.keys(ERROR_TEMPLATES_RU) as ErrorCode[]).filter(
-  (c) => /^(SWING_|STRUCTURE_|BOS_|CHOCH_|INTERNAL_|EXTERNAL_|SWEEP_|MARK_|OB_|FVG_|QUESTION_|PATTERN_|LEVEL_|CONTEXT_)/.test(c),
+  (c) => /^(SWING_|STRUCTURE_|BOS_|CHOCH_|INTERNAL_|EXTERNAL_|SWEEP_|MARK_|OB_|FVG_|QUESTION_|PATTERN_|LEVEL_|CONTEXT_)/.test(c) && !/^(SWING_TREND_|LEVEL_REACTION_)/.test(c),
 );
 const flat = flattenTemplates();
 const seenAll = new Set<ErrorCode>();
@@ -107,10 +107,10 @@ function assertFilled(mode: string, module: 'market-structure' | 'price-action',
 describe('шаблоны: все коды MS и PA, по режимам, реальные данные', () => {
   it('MS «Разметка»: конфигурации easy/medium/hard (v1.1) на реальных заданиях, случайная разметка', () => {
     const archive = [...readKlines('klines/BTCUSDT/1h/BTCUSDT-1h-2026-08.csv'), ...readKlines('klines/BTCUSDT/1h/BTCUSDT-1h-2026-09.csv')];
-    for (const difficulty of ['easy', 'medium', 'hard'] as const) {
+    for (const [stage, difficulty] of [['swings', 'easy'], ['swings', 'medium'], ['swings', 'hard'], ['smc', 'easy'], ['smc', 'medium'], ['smc', 'hard']] as const) {
       for (let seed = 1; seed <= 6; seed++) {
-        const focus = difficulty === 'hard' ? (['sweep', 'order-block', 'fvg', 'internal-external'] as const)[seed % 4]! : undefined;
-        const sel = selectMsMarkTask({ candles: archive, tf: '1h', difficulty, seed, ...(focus ? { focus: [focus] } : {}) });
+        const focus = difficulty !== 'easy' && stage === 'smc' ? (['sweep', 'order-block', 'fvg'] as const)[seed % 3]! : undefined;
+        const sel = selectMsMarkTask({ candles: archive, tf: '1h', difficulty, seed, stage, ...(focus ? { focus: [focus] } : {}) });
         expect(sel).not.toBeNull();
         const a = buildAlgoMarkSet(analyzeStructure(sel!.visible, sel!.params, { tf: '1h' }), { concepts: sel!.concepts, window: sel!.window });
         const H1 = 3600_000;
@@ -135,8 +135,13 @@ describe('шаблоны: все коды MS и PA, по режимам, реа�
             user.push({ id: `x${k}-${i}`, kind, scope: null, direction: rnd() < 0.5 ? 'bull' : 'bear', author: 'user',
               anchors: Array.from({ length: n }, (_, j) => ({ time: c.openTime + j * 3 * H1, price: j === 0 ? c.high : c.low })) });
           }
+          if (stage === 'swings') {
+            // свеча у правого края: swing ещё не подтверждён (SWING_UNCONFIRMED)
+            const pend = sel!.visible[sel!.visible.length - 3]!;
+            user.push({ id: `pend${k}`, kind: 'swing-high', scope: null, direction: null, author: 'user', anchors: [{ time: pend.openTime, price: pend.high }] });
+          }
           const res = gradeMarks(user, a, { candles: sel!.visible, window: sel!.window, concepts: sel!.concepts, toleranceCandles: 2, iouMin: 0.5, levelPricePct: 0.1, scoped: sel!.scoped });
-          assertFilled(`ms-mark/${difficulty}`, 'market-structure', res);
+          assertFilled(`ms-mark/${stage}/${difficulty}`, 'market-structure', res);
         }
       }
     }

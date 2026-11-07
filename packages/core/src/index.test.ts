@@ -19,7 +19,7 @@ describe('TIMEFRAME_MS', () => {
 });
 
 describe('ALGO_VERSION', () => {
-  it('равна 1.3.0 (Elliott Wave Lab)', () => {
-    expect(ALGO_VERSION).toBe('1.3.0');
+  it('равна 2.0.0 (курс по ступеням: MS переразмечен, запас стопа в Challenge)', () => {
+    expect(ALGO_VERSION).toBe('2.0.0');
   });
 });

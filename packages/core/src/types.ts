@@ -53,6 +53,7 @@ export type MarkKind =
   | 'order-block'
   | 'fvg'
   | 'level'
+  | 'zone'
   | 'hline'
   | 'trendline'
   | 'pattern'
@@ -76,7 +77,18 @@ export interface Mark {
 }
 
 // ---- Расширения контрактов (API_CONTRACTS §2.2) ----
-export type ModuleId = 'market-structure' | 'price-action' | 'challenge' | 'fibonacci' | 'elliott';
+export type ModuleId =
+  | 'market-structure'
+  | 'price-action'
+  | 'challenge'
+  | 'fibonacci'
+  | 'elliott'
+  | 'stage-swings'
+  | 'levels'
+  | 'limit-entry'
+  | 'stop-take'
+  | 'combo-level-trade'
+  | 'combo-smc-entry';
 export type TaskTimeframe = '15m' | '1h' | '4h' | '1d';
 export type TaskSymbol = 'BTCUSDT' | 'ETHUSDT' | 'SOLUSDT';
 export type Difficulty = 'easy' | 'medium' | 'hard';
@@ -107,7 +119,16 @@ export type SkillId =
   | 'ew-impulse'
   | 'ew-correction'
   | 'ew-rules'
-  | 'ew-invalidation';
+  | 'ew-invalidation'
+  // Курс по ступеням (CURRICULUM_STAGES.md §10.1)
+  | 'swing-trend'
+  | 'level-zone'
+  | 'level-reaction'
+  | 'limit-placement'
+  | 'limit-fill'
+  | 'stop-placement'
+  | 'take-profit'
+  | 'risk-reward';
 export type Verdict = 'correct' | 'partial' | 'incorrect';
 
 /** Полный список кодов ошибок (API_CONTRACTS §5.3 + новые из ALGORITHMS §17.4). */
@@ -206,7 +227,28 @@ export type ErrorCode =
   | 'EW_INVALIDATION_TOO_TIGHT'
   | 'EW_ALT_MISSING'
   | 'EW_ALT_SAME'
-  | 'EW_ALT_INCONSISTENT';
+  | 'EW_ALT_INCONSISTENT'
+  // Курс по ступеням (CURRICULUM_STAGES.md §12.3)
+  | 'SWING_TREND_WRONG'
+  | 'ZONE_TOO_WIDE'
+  | 'ZONE_EDGE_OFF'
+  | 'ZONE_OFF'
+  | 'LEVEL_REACTION_BROKEN'
+  | 'LEVEL_REACTION_EARLIER'
+  | 'LEVEL_REACTION_FALSE_NONE'
+  | 'LIMIT_FAR_FROM_ZONE'
+  | 'LIMIT_FRONT_TOO_FAR'
+  | 'LIMIT_DEEP_IN_ZONE'
+  | 'LIMIT_AT_FAR_EDGE'
+  | 'LIMIT_BEYOND_ZONE'
+  | 'LIMIT_TYPE_MISMATCH'
+  | 'LIMIT_NOT_FILLED'
+  | 'SL_NO_BUFFER'
+  | 'TP_NOT_AT_LEVEL'
+  | 'TP_BEYOND_TARGETS'
+  | 'STOP_HUNTED'
+  | 'POI_OFF'
+  | 'POI_NOT_FRESH';
 
 export type OkCode =
   | 'OK_SWING'
@@ -237,7 +279,16 @@ export type OkCode =
   | 'OK_EW_EXTENDED3'
   | 'OK_EW_CORRECTION'
   | 'OK_EW_INVALIDATION'
-  | 'OK_EW_ALT';
+  | 'OK_EW_ALT'
+  // Курс по ступеням (CURRICULUM_STAGES.md §12.2)
+  | 'OK_SWING_TREND'
+  | 'OK_ZONE'
+  | 'OK_LEVEL_REACTION'
+  | 'OK_LIMIT_PLACEMENT'
+  | 'OK_LIMIT_FILLED'
+  | 'OK_TP_LEVEL'
+  | 'OK_STOP_HUNT_RULES'
+  | 'OK_POI';
 
 export interface SkillOutcome {
   skill: SkillId;
