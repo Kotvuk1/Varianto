@@ -26,7 +26,7 @@ test('пустой /progress и главная до первой попытки'
   await expect(page.getByText('Ошибок пока нет')).toBeVisible();
   await page.goto('/');
   await expect(page.getByText('Сегодня: 0 из 10 заданий')).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'Начать с Market Structure' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Начать курс со ступени 1' })).toBeVisible();
   await noHScroll(page);
 });
 

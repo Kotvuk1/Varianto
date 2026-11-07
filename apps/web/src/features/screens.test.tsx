@@ -47,7 +47,7 @@ describe('Обучение (главная)', () => {
       expect(row.querySelector('a')).toBeNull();
     }
     expect(screen.getByTestId('combo-combo-level-trade-remaining').textContent).toContain('Ступень 2 «Уровни»: ещё 10 заданий');
-    expect(screen.getByRole('heading', { name: 'Начать с Market Structure' })).toBeTruthy();
+    expect(screen.getByRole('heading', { name: 'Начать курс со ступени 1' })).toBeTruthy();
   });
 
   it('цель и прогресс берутся из репозитория', async () => {

@@ -3,7 +3,7 @@ import { expect, test } from '@playwright/test';
 test.describe('главная', () => {
   test('показывает структуру Обучения с пустыми состояниями', async ({ page }) => {
     await page.goto('/');
-    await expect(page.getByRole('heading', { name: 'Начать с Market Structure' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Начать курс со ступени 1' })).toBeVisible();
     await expect(page.getByText('Сегодня: 0 из 10 заданий')).toBeVisible();
     await expect(page.getByText('Пока нет данных')).toBeVisible();
     // курс: 8 ступеней-ссылок; комбо и Challenge закрыты (не ссылки)
@@ -11,7 +11,7 @@ test.describe('главная', () => {
       await expect(page.getByRole('link', { name: new RegExp(`${name}`) }).first()).toBeVisible();
     }
     await expect(page.getByTestId('combo-challenge')).toHaveAttribute('data-locked', 'true');
-    await expect(page.getByRole('link', { name: 'Начать Market Structure' })).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Начать ступень 1' })).toBeVisible();
   });
 });
 

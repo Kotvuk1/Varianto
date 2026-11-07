@@ -39,7 +39,7 @@ export function ContinueBlock() {
         {ru.home.start}
       </h2>
       <p className="mt-1 text-sm text-text-2">{ru.home.startHint}</p>
-      <ButtonLink href="/learn/market-structure" variant="primary" size="lg" className="mt-4 w-full lg:w-auto">
+      <ButtonLink href="/learn/stage-swings" variant="primary" size="lg" className="mt-4 w-full lg:w-auto">
         {ru.actions.startMarketStructure}
       </ButtonLink>
     </section>

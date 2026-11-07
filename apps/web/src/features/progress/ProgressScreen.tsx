@@ -61,7 +61,7 @@ function WeakBody({ stats }: { stats: Parameters<typeof selectWeak>[0] }) {
         title={ru.empty.weakTitle}
         text={ru.empty.weakText}
         action={
-          <ButtonLink href="/learn/market-structure" variant="primary" size="lg">
+          <ButtonLink href="/learn/stage-swings" variant="primary" size="lg">
             {ru.actions.startMarketStructure}
           </ButtonLink>
         }
