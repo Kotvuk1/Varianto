@@ -1,9 +1,14 @@
 import type { Anchor, Mark, MarkKind, Scope } from '@tl/core';
 
+/** Вид метки «зона уровня» (CURRICULUM_STAGES §3.5). */
+export const ZONE_KIND = 'zone' satisfies MarkKind;
 /** Виды меток, которые пользователь может рисовать (pattern - только алгоритм). */
 export type DrawKind = Exclude<MarkKind, 'pattern'>;
-/** 'ew-invalidation' - горизонталь invalidation (hline с meta.role = 'ew-invalidation'). */
-export type ToolId = 'select' | 'eraser' | 'ew-invalidation' | DrawKind;
+/**
+ * 'ew-invalidation' - горизонталь invalidation (hline с meta.role = 'ew-invalidation');
+ * 'limit' - лимитный ордер (hline с meta.role = 'limit', meta.side = 'buy' | 'sell').
+ */
+export type ToolId = 'select' | 'eraser' | 'ew-invalidation' | 'limit' | DrawKind;
 
 export interface ToolDef {
   /** Сколько якорей хранит метка. */
@@ -31,6 +36,8 @@ export const TOOL_DEFS: Readonly<Record<DrawKind, ToolDef>> = {
   level: { anchors: 1, taps: 1, snapPrice: true, label: '' },
   hline: { anchors: 1, taps: 1, snapPrice: true, label: '' },
   trendline: { anchors: 2, taps: 2, snapPrice: true, label: '' },
+  /** Зона уровня: 2 якоря (верх, низ цены), общее время начала; тянется вправо. */
+  zone: { anchors: 2, taps: 2, snapPrice: true, label: '' },
   position: { anchors: 3, taps: 3, snapPrice: false, label: '' },
   'fib-retracement': { anchors: 2, taps: 2, snapPrice: true, label: 'Fib' },
   'fib-extension': { anchors: 3, taps: 3, snapPrice: true, label: 'Fib ext' },
@@ -41,12 +48,12 @@ export const TOOL_DEFS: Readonly<Record<DrawKind, ToolDef>> = {
 };
 
 /** Инструмент -> вид создаваемой метки. */
-export const drawKindOf = (t: ToolId): DrawKind | null => (t === 'select' || t === 'eraser' ? null : t === 'ew-invalidation' ? 'hline' : t);
+export const drawKindOf = (t: ToolId): DrawKind | null => (t === 'select' || t === 'eraser' ? null : t === 'ew-invalidation' || t === 'limit' ? 'hline' : t);
 
 /** Инструменты, которым нужен выбор слоя (Внешняя / Внутренняя). */
 export const isScopedKind = (t: ToolId | null): boolean => t === 'bos' || t === 'choch';
 
-export const isDrawKind = (t: ToolId | null): t is DrawKind => t !== null && t !== 'select' && t !== 'eraser' && t !== 'ew-invalidation';
+export const isDrawKind = (t: ToolId | null): t is DrawKind => t !== null && t !== 'select' && t !== 'eraser' && t !== 'ew-invalidation' && t !== 'limit';
 /** Любой инструмент рисования (включая «Инвалидацию»). */
 export const isDrawTool = (t: ToolId | null): t is Exclude<ToolId, 'select' | 'eraser'> => t !== null && t !== 'select' && t !== 'eraser';
 
@@ -58,6 +65,14 @@ export const isDrawTool = (t: ToolId | null): t is Exclude<ToolId, 'select' | 'e
 export function constrainAnchors(kind: MarkKind, anchors: readonly Anchor[]): Anchor[] {
   const a = anchors.map((x) => ({ ...x }));
   if ((kind === 'bos' || kind === 'choch') && a.length >= 2) a[1]!.price = a[0]!.price;
+  if (kind === ZONE_KIND && a.length >= 2) {
+    // верх/низ упорядочены по цене, время начала общее (время первого касания)
+    const hi = Math.max(a[0]!.price, a[1]!.price);
+    const lo = Math.min(a[0]!.price, a[1]!.price);
+    a[0]!.price = hi;
+    a[1]!.price = lo;
+    a[1]!.time = a[0]!.time;
+  }
   if (kind === 'position') for (let i = 1; i < a.length; i++) a[i]!.time = a[0]!.time;
   return a;
 }
@@ -95,4 +110,4 @@ export function createMark(kind: DrawKind, anchors: readonly Anchor[], id: strin
 
 /** Для горизонтали/уровня время не важно визуально, но хранится (привязка к свече). */
 export const FULL_WIDTH_KINDS: ReadonlySet<MarkKind> = new Set(['level']);
-export const RAY_RIGHT_KINDS: ReadonlySet<MarkKind> = new Set(['hline', 'position']);
+export const RAY_RIGHT_KINDS: ReadonlySet<MarkKind> = new Set([ZONE_KIND, 'hline', 'position']);

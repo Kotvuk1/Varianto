@@ -19,6 +19,7 @@ import { buildGeometry, isMarkVisible, PILL_H, textWidth, type MarkGeometry, typ
 import { resolveLabelCollisions } from '../fib/labels';
 import { lwcProjection } from './lwcProjection';
 import { drawGeometry } from './render';
+import { guideBandParts, replayMarkerParts, type ReplayMarker } from '../replay/markers';
 
 /** Отступ слева для подписи окна: логотип TradingView (атрибуция LWC) занимает левый нижний угол панели. */
 const LOGO_CLEAR = 60;
@@ -47,13 +48,26 @@ export interface PrimitiveState {
   windowLabel?: string;
   /** Подсветка свечей модели: колонка за свечой + подпись над high. high - цена верха свечи. */
   candleHighlights?: readonly (CandleHighlight & { high: number; low: number })[];
+  /** Маркеры проигрывания отложенного ордера (исполнение / ордер снят / stop hunt). */
+  replayMarkers?: readonly ReplayMarker[];
+  /** Зона цен «полный балл» лимитного входа. */
+  guideBand?: { from: number; to: number } | null;
+  /** Запас стопа в ATR на подписи SL позиции: структура и ATR. */
+  slHint?: { structure: number; atr: number } | null;
   /** Метка, кратко подсвеченная по запросу (focusMark). */
   flashId?: string | null;
   /** Подсвеченный уровень сеток Fibonacci (доля, например 0.618). */
   highlightLevel?: number | null;
 }
 
-const ZONE_KINDS = new Set(['order-block', 'fvg']);
+const ZONE_KINDS = new Set(['order-block', 'fvg', 'zone']);
+
+/** Служебные части (полоса, маркеры проигрывания) рисуются как метка алгоритма: контур, без ручек. */
+function drawParts(ctx: CanvasRenderingContext2D, parts: ReturnType<typeof guideBandParts>, st: PrimitiveState) {
+  if (!parts.length) return;
+  const mark: Mark = { id: '__overlay__', kind: 'hline', anchors: [], scope: null, direction: null, author: 'algo' };
+  drawGeometry(ctx, { mark, parts, handles: [] }, { tokens: st.tokens, selected: false, ghost: false });
+}
 
 export class DrawingPrimitive implements ISeriesPrimitive<Time> {
   private chart: IChartApi | null = null;
@@ -210,6 +224,10 @@ export class DrawingPrimitive implements ISeriesPrimitive<Time> {
             }
           }
 
+          // Полоса «полный балл»: под метками
+          if (st.guideBand) {
+            drawParts(context, guideBandParts(st.guideBand, proj), st);
+          }
           const all: Mark[] = [];
           for (const m of st.algoMarks) all.push(m);
           for (const m of st.userMarks) all.push(st.override && st.override.id === m.id ? st.override : m);
@@ -219,7 +237,7 @@ export class DrawingPrimitive implements ISeriesPrimitive<Time> {
           const built: MarkGeometry[] = [];
           for (const m of visible) {
             const state = st.states?.[m.id];
-            const g = buildGeometry(m, proj, { fmt: st.fmt, level: st.highlightLevel ?? null, ...(state ? { state } : {}) });
+            const g = buildGeometry(m, proj, { fmt: st.fmt, level: st.highlightLevel ?? null, ...(state ? { state } : {}), ...(st.slHint ? { slHint: st.slHint } : {}) });
             if (g.parts.some((p) => Object.values(p).some((v) => typeof v === 'number' && !Number.isFinite(v)))) continue;
             built.push(g);
           }
@@ -235,6 +253,7 @@ export class DrawingPrimitive implements ISeriesPrimitive<Time> {
               });
             }
           }
+          if (st.replayMarkers?.length) drawParts(context, replayMarkerParts(st.replayMarkers, proj, st.fmt), st);
           if (st.preview) {
             const g = buildGeometry(st.preview, proj, { fmt: st.fmt });
             drawGeometry(context, g, { tokens: st.tokens, selected: false, ghost: true });

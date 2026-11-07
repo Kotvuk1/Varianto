@@ -14,6 +14,7 @@ import {
   isScopedKind,
   SWING_SIDE,
   TOOL_DEFS,
+  ZONE_KIND,
   type DrawKind,
   type MarkExtra,
   type ToolId,
@@ -22,6 +23,8 @@ import { ewDirection, ewLabels, EW_IMPULSE_SIZES, firstSideOf, isEwKind, sideAt,
 import { fibDirection, isFibKind } from '../fib/model';
 import { snapFibAnchor } from '../fib/snap';
 import { normalizeMark } from '../smc/normalize';
+import { isEntryLocked, isLimitMark, isZoneMark, limitSideOf, nearestEdge, withDerivedMeta } from '../zone/model';
+import { snapZoneEdge } from '../zone/snap';
 import {
   localExtremeIndex,
   resolveBreak,
@@ -41,7 +44,7 @@ export interface PointerInput {
 }
 
 /** Подсказки обучения: контроллер не знает текстов, UI сопоставляет коды со строками. */
-export type NoticeCode = 'bos-wick-only' | 'no-fvg' | 'fvg-unclosed' | 'before-swing' | 'no-sweep' | 'sweep-is-break' | 'fib-same-point' | 'ew-order';
+export type NoticeCode = 'bos-wick-only' | 'no-fvg' | 'fvg-unclosed' | 'before-swing' | 'no-sweep' | 'sweep-is-break' | 'fib-same-point' | 'ew-order' | 'zone-flat';
 
 export interface ControllerNotice {
   /** Сколько касаний уже сделано в текущей метке (0 - ничего не ожидается). */
@@ -66,6 +69,8 @@ export interface ControllerDeps {
   /** Шаг мастера и мягкие предупреждения (строка-инструкция). */
   notify?: (n: ControllerNotice) => void;
   fmt?: (price: number) => string;
+  /** Структура и ATR для подписи «запас стопа» (геометрия должна совпадать с рисуемой). */
+  slHint?: () => { structure: number; atr: number } | undefined;
   /** Текущий слой для BOS/CHoCH (null - не задан). */
   scope?: () => Scope | null;
   /** Метки алгоритма (только чтение): нужны для выбора уровня сетки Fibonacci. */
@@ -138,6 +143,12 @@ export class DrawingController {
     return Number.isFinite(r) ? r : 0;
   }
 
+  /** Последняя цена ряда: сторона лимитного ордера определяется относительно неё. */
+  private lastPrice(): number {
+    const c = this.d.candles();
+    return c[c.length - 1]?.close ?? 0;
+  }
+
   private lineAnchor(p: PointerInput, t: { i: number; price: number }): Anchor {
     const c = this.d.candles();
     if (!this.d.snap()) return { time: c[t.i]!.openTime, price: t.price };
@@ -147,7 +158,8 @@ export class DrawingController {
   private geometries() {
     const proj = this.d.proj();
     const fmt = this.d.fmt;
-    return this.d.marks().map((m) => buildGeometry(m, proj, fmt ? { fmt } : {}));
+    const slHint = this.d.slHint?.();
+    return this.d.marks().map((m) => buildGeometry(m, proj, { ...(fmt ? { fmt } : {}), ...(slHint ? { slHint } : {}) }));
   }
 
   private hit(p: PointerInput): Hit | null {
@@ -228,7 +240,22 @@ export class DrawingController {
         const direction = fibDirection(anchors[0]!.price, anchors[1]!.price);
         return { t: 'mark', anchors, extra: { direction } };
       }
+      case ZONE_KIND: {
+        const a = this.d.snap()
+          ? { time: c[t.i]!.openTime, price: snapZoneEdge(c, t.i, t.price, this.priceRadius(p)) }
+          : { time: c[t.i]!.openTime, price: t.price };
+        const prev = pending?.anchors ?? [];
+        // оба края на одной цене: зона вырождена
+        if (prev.length === 1 && prev[0]!.price === a.price) return { t: 'reject', code: 'zone-flat' };
+        const anchors = [...prev, a];
+        return anchors.length >= TOOL_DEFS[kind].taps ? { t: 'mark', anchors, extra: {} } : { t: 'pending', anchors };
+      }
       default: {
+        if (kind === 'hline' && this.d.tool() === 'limit') {
+          // лимитка: точная цена касания (без снапа), одна на график
+          const price = t.price;
+          return { t: 'mark', anchors: [{ time: c[t.i]!.openTime, price }], extra: { meta: { role: 'limit', side: limitSideOf(price, this.lastPrice()) } } };
+        }
         const a = kind === 'position' ? { time: c[t.i]!.openTime, price: t.price } : this.lineAnchor(p, t);
         const anchors = [...(pending?.anchors ?? []), a];
         const extra: MarkExtra = kind === 'hline' && this.d.tool() === 'ew-invalidation' ? { meta: { role: 'ew-invalidation' } } : {};
@@ -265,7 +292,10 @@ export class DrawingController {
     } else if (b.t === 'mark') {
       this.pending = null;
       this.clearPreview();
-      this.d.commit([...this.d.marks(), createMark(kind, b.anchors, this.d.newId(), b.extra)]);
+      const created = createMark(kind, b.anchors, this.d.newId(), b.extra);
+      // лимитный ордер один: новый заменяет прежний
+      const rest = isLimitMark(created) ? this.d.marks().filter((m) => !isLimitMark(m)) : this.d.marks();
+      this.d.commit([...rest, created]);
       this.emit(b.notice ?? null);
     } else if (b.t === 'reject') {
       this.showPreview(kind, b);
@@ -297,13 +327,39 @@ export class DrawingController {
       }
       const mark = this.d.marks().find((m) => m.id === hit.markId)!;
       this.d.select(hit.markId);
-      this.gesture =
-        hit.part === 'anchor'
-          ? { mode: 'anchor', original: mark, index: hit.anchorIndex, moved: false }
-          : { mode: 'move', original: mark, start: p, moved: false };
+      if (hit.part === 'anchor') {
+        this.gesture = { mode: 'anchor', original: mark, index: hit.anchorIndex, moved: false };
+        return true;
+      }
+      const axis = this.axisGrab(mark, p);
+      if (axis !== undefined) {
+        // null - захват запрещён (вход позиции зафиксирован), число - перетаскивание цены выбранной линии/края
+        this.gesture = axis === null ? null : { mode: 'anchor', original: mark, index: axis, moved: false };
+        return true;
+      }
+      this.gesture = { mode: 'move', original: mark, start: p, moved: false };
       return true;
     }
     return this.startPick(p);
+  }
+
+  /**
+   * Метки с ценовой осью: захват за линию двигает только цену. undefined - обычное перемещение метки;
+   * null - захват запрещён (вход позиции ступени 4); число - индекс якоря, чья цена двигается.
+   */
+  private axisGrab(mark: Mark, p: PointerInput): number | null | undefined {
+    const proj = this.d.proj();
+    const tol = toleranceFor(p.pointer).body;
+    if (isLimitMark(mark)) return 0;
+    if (isEntryLocked(mark)) {
+      const i = nearestEdge(mark.anchors.map((a) => proj.priceToY(a.price)), p.y, Number.POSITIVE_INFINITY);
+      return i === null || i === 0 ? null : i;
+    }
+    if (isZoneMark(mark)) {
+      const e = nearestEdge(mark.anchors.map((a) => proj.priceToY(a.price)), p.y, tol);
+      return e === null ? undefined : e;
+    }
+    return undefined;
   }
 
   /** Касание линии/подписи уровня сетки алгоритма: выбор уровня (если подписка задана), срабатывает на отпускание без сдвига. */
@@ -346,8 +402,14 @@ export class DrawingController {
       const t = this.touch(p);
       if (!t) return;
       const anchors = g.original.anchors.map((a) => ({ ...a }));
+      const priceOnly = isZoneMark(g.original) || isLimitMark(g.original) || isEntryLocked(g.original);
       const line = !(g.original.kind in SWING_SIDE) && ['level', 'hline', 'trendline', 'position'].includes(g.original.kind);
-      anchors[g.index] = isEwKind(g.original.kind)
+      anchors[g.index] = priceOnly
+        ? {
+            time: g.original.anchors[g.index]!.time,
+            price: isZoneMark(g.original) && this.d.snap() ? snapZoneEdge(candles, t.i, t.price, this.priceRadius(p)) : t.price,
+          }
+        : isEwKind(g.original.kind)
         ? this.d.snap()
           ? snapExtreme(candles, t.i, sideAt(firstSideOf(g.original.anchors[0]!, g.original.anchors[1] ?? g.original.anchors[0]!), g.index))
           : { time: candles[t.i]!.openTime, price: t.price }
@@ -373,7 +435,8 @@ export class DrawingController {
       g.moved = true;
     }
     // Правила формы действуют и при правке: недопустимое место - метка остаётся на прежнем.
-    this.override = normalizeMark(next, candles, idx) ?? g.original;
+    const normalized = normalizeMark(next, candles, idx);
+    this.override = normalized ? withDerivedMeta(normalized, this.lastPrice()) : g.original;
     this.d.invalidate?.();
   }
 

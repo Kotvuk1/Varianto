@@ -7,9 +7,11 @@ import { fibExtentPrices, fibParts } from '../fib/parts';
 import { isFibKind } from '../fib/model';
 import { ewParts } from '../ew/parts';
 import { isEwKind } from '../ew/model';
+import { ENTRY_LOCKED_SUFFIX, dec1, limitLabel, num1, zoneLabel } from '../zone/labels';
+import { isEntryLocked, isLimitMark, positionRisk, slBufferAtr } from '../zone/model';
 
 export type Dash = 'solid' | 'dashed' | 'dotted';
-export type GlyphKind = 'tri-up' | 'tri-down' | 'dot' | 'arrow-up' | 'arrow-down';
+export type GlyphKind = 'tri-up' | 'tri-down' | 'dot' | 'arrow-up' | 'arrow-down' | 'diamond' | 'cross';
 
 export type Part =
   /** w - толщина линии (по умолчанию из стиля метки); level - доля уровня сетки Fibonacci (хит-тест выбора уровня). */
@@ -67,6 +69,8 @@ export interface GeometryOptions {
   fmt?: (price: number) => string;
   /** Выбранный уровень сетки Fibonacci (подсветка). */
   level?: number | null;
+  /** Структура (фитиль/дальний край зоны) и ATR: на подписи SL показывается запас стопа в ATR (ступень 4). */
+  slHint?: { structure: number; atr: number };
 }
 
 export const textWidth = (text: string, state?: MarkState): number => text.length * CHAR_W + 12 + (state ? STATE_GLYPH_W : 0);
@@ -84,7 +88,7 @@ export function isMarkVisible(mark: Mark, proj: Projection, margin = 60): boolea
   const yOk = maxY >= -margin && minY <= proj.height + margin;
   if (!yOk) return false;
   if (mark.kind === 'level') return true;
-  if (mark.kind === 'hline' || mark.kind === 'position' || fibKind) return minX <= proj.width + margin;
+  if (mark.kind === 'hline' || mark.kind === 'position' || mark.kind === 'zone' || fibKind) return minX <= proj.width + margin;
   return maxX >= -margin && minX <= proj.width + margin;
 }
 
@@ -110,8 +114,8 @@ export function buildGeometry(mark: Mark, proj: Projection, opts: GeometryOption
   const kind = mark.kind;
   const pts = mark.anchors.map((a) => ({ x: proj.timeToX(a.time), y: proj.priceToY(a.price) }));
   // Зоны и sweep имеют вычисляемую форму: двигается только «опорный» якорь, остальное пересчитывается по правилам.
-  const editable = kind === 'fvg' || kind === 'order-block' ? [0] : kind === 'sweep' ? [1] : null;
-  const handles: Handle[] = pts.map((p, index) => ({ x: p.x, y: p.y, index })).filter((h) => !editable || editable.includes(h.index));
+  const editable = kind === 'fvg' || kind === 'order-block' ? [0] : kind === 'sweep' ? [1] : isEntryLocked(mark) ? [1, 2] : null;
+  let handles: Handle[] = pts.map((p, index) => ({ x: p.x, y: p.y, index })).filter((h) => !editable || editable.includes(h.index));
   const parts: Part[] = [];
   const p0 = pts[0];
   const p1 = pts[1];
@@ -199,11 +203,43 @@ export function buildGeometry(mark: Mark, proj: Projection, opts: GeometryOption
       parts.push({ t: 'text', text: label, x: Math.min(r.x1 + textWidth(label, opts.state) / 2, proj.width - textWidth(label, opts.state) / 2 - 2), y: algo ? r.y2 + PILL_H / 2 + 2 : r.y1 - PILL_H / 2 - 2 });
       break;
     }
+    case 'zone': {
+      if (!p1) break;
+      const r = norm(p0.x, p0.y, proj.width, p1.y);
+      parts.push({ t: 'rect', ...r, dash: algo ? 'dashed' : 'solid', hatch: algo });
+      const zl = zoneLabel(mark.meta);
+      const type = mark.meta?.['zoneType'];
+      const gl: GlyphKind | null = type === 'support' ? 'tri-up' : type === 'resistance' ? 'tri-down' : type === 'flip' ? 'diamond' : null;
+      const w = textWidth(zl, opts.state);
+      const left = Math.max(r.x1, 0) + (gl ? 20 : 0);
+      const lx = Math.min(left + w / 2 + 2, proj.width - w / 2 - 2);
+      // подпись над верхним краем (user) или под нижним (algo): метки эталона и пользователя не накладываются
+      const ly = algo ? r.y2 + PILL_H / 2 + 2 : r.y1 - PILL_H / 2 - 2;
+      parts.push({ t: 'text', text: zl, x: lx, y: ly });
+      if (gl) parts.push({ t: 'glyph', g: gl, x: lx - w / 2 - 10, y: ly });
+      // ручки краёв у левой границы, но всегда в видимой области (зона может начинаться за экраном)
+      const hx = Math.min(Math.max(p0.x, 24), proj.width - 24);
+      handles = [
+        { x: hx, y: p0.y, index: 0 },
+        { x: hx, y: p1.y, index: 1 },
+      ];
+      break;
+    }
     case 'level':
       parts.push({ t: 'seg', x1: 0, y1: p0.y, x2: proj.width, y2: p0.y, dash: 'solid' });
       parts.push({ t: 'text', text: fmt(mark.anchors[0]!.price), x: proj.width - textWidth(fmt(mark.anchors[0]!.price)) / 2 - 6, y: p0.y - 12 });
       break;
     case 'hline':
+      if (isLimitMark(mark)) {
+        const side = mark.meta?.['side'] === 'sell' ? 'sell' : 'buy';
+        const text = limitLabel(side, fmt(mark.anchors[0]!.price));
+        const tw = textWidth(text);
+        parts.push({ t: 'seg', x1: 0, y1: p0.y, x2: proj.width, y2: p0.y, dash: 'solid', w: 2 });
+        parts.push({ t: 'glyph', g: side === 'buy' ? 'arrow-up' : 'arrow-down', x: 14, y: p0.y });
+        parts.push({ t: 'text', text, x: proj.width - tw / 2 - 6, y: p0.y });
+        handles = [{ x: Math.max(24, proj.width - tw - 34), y: p0.y, index: 0 }];
+        break;
+      }
       parts.push({ t: 'seg', x1: p0.x, y1: p0.y, x2: proj.width, y2: p0.y, dash: 'solid' });
       parts.push({ t: 'glyph', g: 'dot', x: p0.x, y: p0.y });
       parts.push({ t: 'text', text: fmt(mark.anchors[0]!.price), x: p0.x + textWidth(fmt(mark.anchors[0]!.price)) / 2 + 8, y: p0.y - 12 });
@@ -212,10 +248,13 @@ export function buildGeometry(mark: Mark, proj: Projection, opts: GeometryOption
       if (p1) parts.push({ t: 'seg', x1: p0.x, y1: p0.y, x2: p1.x, y2: p1.y, dash: 'solid' });
       break;
     case 'position': {
+      const risk = pts.length >= 3 ? positionRisk(mark.anchors[0]!.price, mark.anchors[1]!.price, mark.anchors[2]!.price) : null;
+      const buffer = risk && opts.slHint ? slBufferAtr(risk.side, mark.anchors[1]!.price, opts.slHint.structure, opts.slHint.atr) : null;
+      const entryName = `Вход${isEntryLocked(mark) ? ` (${ENTRY_LOCKED_SUFFIX})` : ''}${risk ? ` · R:R 1:${dec1(risk.rr)}` : ''}`;
       const names: [string, Dash][] = [
-        ['Вход', 'dotted'],
-        ['SL', 'dashed'],
-        ['TP', 'solid'],
+        [entryName, 'dotted'],
+        [`SL${risk ? ' · −1R' : ''}${buffer !== null ? ` · запас ${num1(buffer)} ATR` : ''}`, 'dashed'],
+        [`TP${risk ? ` · +${dec1(risk.rewardR)}R` : ''}`, 'solid'],
       ];
       pts.forEach((p, i) => {
         const [name, dash] = names[i] ?? ['', 'solid'];

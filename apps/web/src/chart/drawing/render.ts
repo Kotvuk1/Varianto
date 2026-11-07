@@ -125,6 +125,23 @@ function drawPart(ctx: CanvasRenderingContext2D, p: Part, color: string, on: str
         ctx.moveTo(p.x - s, p.y - 2);
         ctx.lineTo(p.x + s, p.y - 2);
         ctx.lineTo(p.x, p.y + s + 2);
+      } else if (p.g === 'diamond') {
+        ctx.moveTo(p.x, p.y - s);
+        ctx.lineTo(p.x + s, p.y);
+        ctx.lineTo(p.x, p.y + s);
+        ctx.lineTo(p.x - s, p.y);
+      } else if (p.g === 'cross') {
+        // крест из двух штрихов: контуром, без заливки
+        ctx.save();
+        ctx.setLineDash([]);
+        ctx.lineWidth = 2.5;
+        ctx.moveTo(p.x - s * 0.8, p.y - s * 0.8);
+        ctx.lineTo(p.x + s * 0.8, p.y + s * 0.8);
+        ctx.moveTo(p.x + s * 0.8, p.y - s * 0.8);
+        ctx.lineTo(p.x - s * 0.8, p.y + s * 0.8);
+        ctx.stroke();
+        ctx.restore();
+        break;
       } else {
         ctx.arc(p.x, p.y, 4, 0, Math.PI * 2);
       }

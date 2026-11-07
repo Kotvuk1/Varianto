@@ -3,7 +3,7 @@ import type { Mark } from '@tl/core';
 
 const KINDS = [
   'swing-high', 'swing-low', 'hh', 'hl', 'lh', 'll', 'bos', 'choch', 'sweep',
-  'order-block', 'fvg', 'level', 'hline', 'trendline', 'pattern', 'position',
+  'order-block', 'fvg', 'level', 'zone', 'hline', 'trendline', 'pattern', 'position',
   'fib-retracement', 'fib-extension', 'ew-impulse', 'ew-zigzag', 'ew-flat',
 ] as const;
 

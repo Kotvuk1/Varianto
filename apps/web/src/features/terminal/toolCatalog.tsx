@@ -57,6 +57,21 @@ const EwInvalidationIcon = () => (
     <path d="M7 13V5l5 2-5 2" />
   </svg>
 );
+/** Зона уровня: полоса с пунктирными краями и ручкой (форма, не цвет). */
+const ZoneIcon = () => (
+  <svg {...svgProps}>
+    <path d="M3 8h18M3 16h18" strokeDasharray="3 2.5" />
+    <path d="M3 8v8M21 8v8" />
+    <path d="M7 12h10" strokeWidth={1} />
+  </svg>
+);
+/** Лимитный ордер: линия цены входа с плашкой справа. */
+const LimitIcon = () => (
+  <svg {...svgProps}>
+    <path d="M2 12h12" />
+    <rect x="14" y="8" width="8" height="8" rx="1.5" />
+  </svg>
+);
 const txt = (t: string): ReactNode => <span className="text-sm leading-6 font-semibold">{t}</span>;
 
 export const TOOL_ICON: Record<ToolId, ReactNode> = {
@@ -83,10 +98,12 @@ export const TOOL_ICON: Record<ToolId, ReactNode> = {
   'ew-zigzag': <EwZigzagIcon />,
   'ew-flat': <EwFlatIcon />,
   'ew-invalidation': <EwInvalidationIcon />,
+  zone: <ZoneIcon />,
+  limit: <LimitIcon />,
 };
 
 export type TerminalTool = keyof typeof TOOL_ICON;
-export type GroupId = 'select' | 'structure' | 'breaks' | 'zones' | 'lines' | 'fib' | 'ew' | 'position' | 'smc';
+export type GroupId = 'select' | 'structure' | 'breaks' | 'zones' | 'lines' | 'fib' | 'ew' | 'position' | 'smc' | 'levels';
 
 export interface ToolGroup {
   id: GroupId;
@@ -94,7 +111,7 @@ export interface ToolGroup {
   icon: ReactNode;
 }
 
-/** Семь групп рейки (ластик - отдельно внизу). Группы из одного инструмента не имеют flyout. */
+/** Группы рейки (ластик - отдельно внизу). Группы из одного инструмента не имеют flyout. */
 export const GROUPS: readonly ToolGroup[] = [
   { id: 'select', tools: ['select'], icon: TOOL_ICON.select },
   { id: 'structure', tools: ['swing-high', 'swing-low', 'hh', 'hl', 'lh', 'll'], icon: <TrendingUp {...ic} /> },
@@ -104,17 +121,18 @@ export const GROUPS: readonly ToolGroup[] = [
   { id: 'fib', tools: ['fib-retracement', 'fib-extension'], icon: <FibRetracementIcon /> },
   { id: 'ew', tools: ['ew-impulse', 'ew-zigzag', 'ew-flat', 'ew-invalidation'], icon: <EwImpulseIcon /> },
   { id: 'position', tools: ['position'], icon: TOOL_ICON.position },
+  { id: 'levels', tools: ['zone', 'limit'], icon: <ZoneIcon /> },
 ];
 
 /**
- * Мобильная панель: «Позиция» входит в веер «Линии», «Зоны» сливаются с «Пробои» в группу «SMC», чтобы 7 групп + Ластик + «Проверить»
+ * Мобильная панель: «Линии», «Зона», «Лимитка» и «Позиция» сливаются в веер «Уровни», «Зоны» сливаются с «Пробои» в группу «SMC», чтобы 7 групп + Ластик + «Проверить»
  * помещались в 360 px (8 кнопок не уже 44 px).
  */
 export const MOBILE_GROUPS: readonly ToolGroup[] = [
   GROUPS[0]!,
   GROUPS[1]!,
   { ...GROUPS[2]!, id: 'smc', tools: ['bos', 'choch', 'sweep', 'order-block', 'fvg'] },
-  { ...GROUPS[4]!, tools: ['level', 'hline', 'trendline', 'position'] },
+  { ...GROUPS[4]!, id: 'levels', tools: ['level', 'hline', 'trendline', 'zone', 'limit', 'position'] },
   GROUPS[5]!,
   GROUPS[6]!,
 ];
@@ -134,6 +152,7 @@ export const HOTKEYS: Readonly<Record<string, TerminalTool>> = {
   t: 'trendline',
   g: 'fib-retracement',
   w: 'ew-impulse',
+  z: 'zone',
 };
 
 export const HOTKEY_OF: Readonly<Partial<Record<TerminalTool, string>>> = Object.fromEntries(

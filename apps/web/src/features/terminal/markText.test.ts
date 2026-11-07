@@ -30,4 +30,10 @@ describe('describeMark', () => {
     const g = { id: 'x', kind: 'fib-retracement', anchors: [{ time: t, price: 80095.9 }, { time: t + 3_600_000, price: 87385.1 }], scope: null, direction: 'bull', author: 'user' } as unknown as Mark;
     expect(plain(describeMark(g, fmt))).toBe('Фибо: коррекция вверх · 29 октября, 08:00 · 80 095,9 → 87 385,1');
   });
+  it('Зона и лимитка: диапазон цен зоны; сторона и цена лимитки', () => {
+    const z = mk('zone', [{ time: t, price: 82000 }, { time: t, price: 81900 }]);
+    expect(plain(describeMark(z, fmt))).toBe('Зона · 29 октября, 08:00 · 82 000,0 – 81 900,0');
+    const l = { ...mk('hline', [{ time: t, price: 81500 }]), meta: { role: 'limit', side: 'buy' } };
+    expect(plain(describeMark(l, fmt))).toBe('Лимитка BUY · 29 октября, 08:00 · 81 500,0');
+  });
 });

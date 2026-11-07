@@ -97,7 +97,7 @@ describe('buildGeometry', () => {
     const segs = g.parts.filter((p) => p.t === 'seg');
     expect(segs.map((s) => (s.t === 'seg' ? s.dash : ''))).toEqual(['dotted', 'dashed', 'solid']);
     expect(g.parts.filter((p) => p.t === 'text').map((p) => (p.t === 'text' ? p.text : ''))).toEqual(
-      expect.arrayContaining(['SL', 'TP']),
+      ['Вход · R:R 1:2,0', 'SL · −1R', 'TP · +2,0R'],
     );
   });
 

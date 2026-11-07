@@ -18,6 +18,8 @@ import { CountdownBadge } from './CountdownBadge';
 import type { CandleCountdown } from './countdown';
 import { DrawingController, type ControllerNotice, type PointerInput } from './interaction/controller';
 import { DrawingPrimitive } from './drawing/DrawingPrimitive';
+import type { ReplayMarker } from './replay/markers';
+import { limitPrice } from './zone/model';
 import type { CandleHighlight, HighlightRange } from './drawing/highlight';
 import { lwcProjection } from './drawing/lwcProjection';
 import type { PointerKind } from './drawing/hit';
@@ -100,6 +102,20 @@ export interface TradingChartProps {
    * level - доля (0.618), markId - id сетки. Работает при инструменте «Выбор» или без инструмента.
    */
   onLevelPick?: (level: number, markId: string) => void;
+  /**
+   * Лимитный ордер (инструмент «Лимитка»): цена линии после создания/перетаскивания/удаления; null - ордера нет.
+   * Вызывается при каждом изменении цены лимитной метки в marks (в том числе при загрузке разметки).
+   */
+  onLimitChange?: (price: number | null) => void;
+  /** Зона цен «полный балл» лимитного входа: полоса на всю ширину (подсказка в обучении). */
+  guideBand?: { from: number; to: number } | null;
+  /** Маркеры проигрывания отложенного ордера: исполнение, «ордер снят», stop hunt (см. replayMarkers()). */
+  replayMarkers?: readonly ReplayMarker[];
+  /**
+   * Подсказка запаса стопа для позиции ступени 4: structure - фитиль/дальний край зоны, atr - ATR14 на момент входа.
+   * На подписи SL появляется «запас X ATR».
+   */
+  slHint?: { structure: number; atr: number } | null;
   /** Подсвеченный уровень сеток (доля): толще линия и маркер у начала. */
   highlightLevel?: number | null;
 }
@@ -205,6 +221,9 @@ export function TradingChart(props: TradingChartProps) {
       openBadge: p.openCandleLabel ?? 'Идёт',
       fmt: fmtRef.current,
       highlightLevel: p.highlightLevel ?? null,
+      guideBand: p.guideBand ?? null,
+      slHint: p.slHint ?? null,
+      ...(p.replayMarkers ? { replayMarkers: p.replayMarkers } : {}),
       ...(p.markStates ? { states: p.markStates } : {}),
       ...(p.highlightRange ? { highlightRange: p.highlightRange } : {}),
       ...(p.windowLabel ? { windowLabel: p.windowLabel } : {}),
@@ -286,6 +305,7 @@ export function TradingChart(props: TradingChartProps) {
       invalidate: () => pushStateRef.current(),
       notify: (n) => propsRef.current.onNotice?.(n),
       fmt: (v) => fmtRef.current(v),
+      slHint: () => propsRef.current.slHint ?? undefined,
       scope: () => propsRef.current.scope ?? null,
       readOnlyMarks: () => propsRef.current.readOnlyMarks ?? [],
       levelPickEnabled: () => !!propsRef.current.onLevelPick,
@@ -613,7 +633,19 @@ export function TradingChart(props: TradingChartProps) {
   // --- Метки, выбор, инструмент ---
   useEffect(() => {
     pushStateRef.current();
-  }, [props.marks, props.readOnlyMarks, props.markStates, props.highlightRange, props.highlightCandles, debugHl, flashId, props.selectedId, props.highlightLevel, props.openCandleLabel, tokens, ready]);
+  }, [props.marks, props.readOnlyMarks, props.markStates, props.highlightRange, props.highlightCandles, debugHl, flashId, props.selectedId, props.highlightLevel, props.openCandleLabel, props.guideBand, props.replayMarkers, props.slHint, tokens, ready]);
+
+  // Цена лимитного ордера наружу (создание, перетаскивание, удаление, загрузка разметки)
+  const lastLimit = useRef<number | null | undefined>(undefined);
+  useEffect(() => {
+    const price = limitPrice(props.marks);
+    if (lastLimit.current === price) return;
+    const first = lastLimit.current === undefined;
+    lastLimit.current = price;
+    // первое значение null - не событие: ордера не было и нет
+    if (first && price === null) return;
+    propsRef.current.onLimitChange?.(price);
+  }, [props.marks]);
 
   useEffect(() => {
     controllerRef.current?.reset();
