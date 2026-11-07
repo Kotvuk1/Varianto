@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import { expandResult, startSession, submitDecision, waitResult } from './challenge.helpers';
-import { checkAndSeeResult, openSession, selectTool, tapCandle } from './ms.helpers';
+import { markOneBos, checkAndSeeResult, openSession } from './ms.helpers';
 
 // F-11: 6 реальных заданий (4 MS + 2 Challenge WAIT), у каждого навыка < 5 попыток.
 // Запуск: SHOTS_DIR=/path E2E_PORT=3733 pnpm test:e2e progress.shots
@@ -24,8 +24,7 @@ test('6 заданий: вывод по модулям, «мало данных�
       await expect(page.getByTestId('task-counter')).not.toHaveText(before, { timeout: 90_000 });
       await expect(page.getByTestId('chart')).toHaveAttribute('data-ready', 'true', { timeout: 90_000 });
     }
-    await selectTool(page, 'Swing High', 'Свинги');
-    await tapCandle(page, 20);
+    await markOneBos(page);
     await checkAndSeeResult(page);
   }
   for (let i = 0; i < 2; i++) {

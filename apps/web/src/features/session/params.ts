@@ -33,7 +33,7 @@ export const parseCommonParams = common;
 export const parseMsParams = (get: Get): MsParams => ({ ...common(get), mode: pick(get('mode'), ['mark', 'question'] as const, 'mark') });
 export const parsePaParams = (get: Get): PaParams => ({
   ...common(get),
-  type: pick(get('type'), ['find-pattern', 'draw-level', 'context'] as const, 'find-pattern'),
+  type: pick(get('type'), ['find-pattern', 'context'] as const, 'find-pattern'),
 });
 
 function query(p: CommonParams, extra: Record<string, string>): string {

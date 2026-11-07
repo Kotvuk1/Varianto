@@ -15,7 +15,7 @@ export function PaSetup() {
       <SetupChoice<PaType>
         id="type"
         label={ss.setup.type}
-        options={(['find-pattern', 'draw-level', 'context'] as const).map((t) => ({ value: t, label: paTx.types[t], help: paTx.typeHelp[t] }))}
+        options={(['find-pattern', 'context'] as const).map((t) => ({ value: t, label: paTx.types[t], help: paTx.typeHelp[t] }))}
         value={p.type}
         onChange={(type) => setP({ ...p, type })}
       />

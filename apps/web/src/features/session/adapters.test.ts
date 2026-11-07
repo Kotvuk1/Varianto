@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { Mark } from '@tl/core';
-import { keepSingleLevel, msMarkAnswer, paContextAnswer, paFindAnswer, paLevelAnswer, statesFromGrade, toPatternMarks } from './adapters';
+import { keepSingleLevel, msMarkAnswer, paContextAnswer, paFindAnswer, lvStrongestAnswer, statesFromGrade, toPatternMarks } from './adapters';
 
 // SYNTHETIC: минимальные метки для проверки преобразований; рыночные данные не нужны
 const H = 3_600_000;
@@ -23,8 +23,8 @@ describe('адаптеры ответа', () => {
   });
 
   it('pa-level: цена последнего уровня; без уровня null', () => {
-    expect(paLevelAnswer([])).toBeNull();
-    expect(paLevelAnswer([mk('l1', 'level', 1, 10), mk('l2', 'level', 2, 20)])).toEqual({ kind: 'pa-level', price: 20 });
+    expect(lvStrongestAnswer([])).toBeNull();
+    expect(lvStrongestAnswer([mk('l1', 'level', 1, 10), mk('l2', 'level', 2, 20)])).toEqual({ kind: 'lv-strongest', price: 20 });
   });
 
   it('keepSingleLevel оставляет только последний уровень', () => {

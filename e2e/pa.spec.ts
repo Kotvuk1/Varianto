@@ -4,24 +4,12 @@ import { checkAndSeeResult, nextThenHomeShowsDone, openSession, shot, tapCandle 
 const PA = '/learn/price-action';
 test.describe.configure({ timeout: 180_000 });
 
-test('экран выбора: тип задания ведёт в сессию', async ({ page }) => {
+test('экран выбора: тип задания ведёт в сессию, «Проведи уровень» больше нет', async ({ page }) => {
   await page.goto(PA);
-  await page.getByRole('radio', { name: /Проведи уровень/ }).click();
+  await expect(page.getByRole('radio', { name: /Проведи уровень/ })).toHaveCount(0);
+  await page.getByRole('radio', { name: /Контекст/ }).click();
   await page.getByTestId('start-session').click();
-  await expect(page).toHaveURL(/type=draw-level/);
-});
-
-test('PA «Проведи уровень»: уровень, проверка, разбор', async ({ page }) => {
-  await openSession(page, `${PA}/session?type=draw-level&difficulty=easy&tf=1h&symbol=BTCUSDT`);
-  await expect(page.getByTestId('task-text')).toContainText('уровень');
-  await shot(page, 'pa-level-before');
-  await page.getByTestId('check-button').click();
-  await expect(page.getByText(/Проведите уровень/).first()).toBeVisible();
-  await tapCandle(page, 15);
-  await expect(page.getByTestId('chart')).toHaveAttribute('data-mark-count', '1');
-  await checkAndSeeResult(page);
-  await expect(page.getByTestId('level-detail')).toContainText('Эталон');
-  await shot(page, 'pa-level-after');
+  await expect(page).toHaveURL(/type=context/);
 });
 
 test('PA «Найди модель»: касание свечи, проверка, разбор', async ({ page }) => {

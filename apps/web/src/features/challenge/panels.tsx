@@ -350,7 +350,7 @@ export function ResultView({ grade, fmt }: { grade: ChallengeGradeResult; fmt: (
       <p className="mt-3 text-sm text-text-2" data-testid="result-reference">
         {grade.reference.length ? ch.result.reference : ch.result.noReference}
       </p>
-      <FeedbackView className="mt-2" feedback={revealFeedback(grade.feedback, grade.task.reveal.shiftMs)} fmtPrice={fmt} />
+      <FeedbackView className="mt-2" aiModule="challenge" feedback={revealFeedback(grade.feedback, grade.task.reveal.shiftMs)} fmtPrice={fmt} />
       <GradeLegend className="mt-2" />
     </div>
   );

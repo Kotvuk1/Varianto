@@ -55,3 +55,11 @@ export async function nextThenHomeShowsDone(page: Page, backHref: string) {
   await page.getByRole('link', { name: 'К выбору задания' }).click();
   await expect(page.getByText(/Сегодня: [1-9]\d* из/)).toBeVisible();
 }
+
+/** Одна метка BOS в MS «Разметка» easy (ступень 5: swing больше не оценивается): две свечи подряд. */
+export async function markOneBos(page: Page) {
+  await selectTool(page, 'BOS', 'Пробои');
+  await tapCandle(page, 30);
+  await tapCandle(page, 15);
+  await expect(page.getByTestId('chart')).toHaveAttribute('data-mark-count', '1');
+}

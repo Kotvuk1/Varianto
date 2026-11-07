@@ -4,6 +4,7 @@ import { TIMEFRAME_MS, type Candle, type CandleSeries, type Mark, type Scope, ty
 import type { ControllerNotice } from '@/chart/interaction/controller';
 import type { ToolId } from '@/chart/drawing/tools';
 import type { CandleHighlight, TimeWindow, TradingChartHandle } from '@/chart/TradingChart';
+import type { ReplayMarker } from '@/chart/replay/markers';
 import { TradingChart } from '@/chart/TradingChart';
 import { TF_LABEL } from '@/features/terminal/dataSource';
 import { tx } from '@/features/terminal/strings';
@@ -43,6 +44,11 @@ export interface TaskChartProps {
   onLevelPick?: (level: number, markId: string) => void;
   highlightLevel?: number | null;
   onVisibleRangeChange?: (w: TimeWindow) => void;
+  /** Ступени 3-4 и комбо: лимитка, полоса «полный балл», маркеры проигрывания, подсказка запаса стопа. */
+  onLimitChange?: (price: number | null) => void;
+  guideBand?: { from: number; to: number } | null;
+  replayMarkers?: readonly ReplayMarker[];
+  slHint?: { structure: number; atr: number } | null;
   /** centerOn / focusMark для разбора. */
   handleRef?: Ref<TradingChartHandle>;
 }
@@ -74,6 +80,10 @@ export function TaskChart(p: TaskChartProps) {
       {...(p.handleRef ? { handleRef: p.handleRef } : {})}
       {...(p.onLevelPick ? { onLevelPick: p.onLevelPick } : {})}
       {...(p.highlightLevel !== undefined ? { highlightLevel: p.highlightLevel } : {})}
+      {...(p.onLimitChange ? { onLimitChange: p.onLimitChange } : {})}
+      {...(p.guideBand ? { guideBand: p.guideBand } : {})}
+      {...(p.replayMarkers ? { replayMarkers: p.replayMarkers } : {})}
+      {...(p.slHint ? { slHint: p.slHint } : {})}
       {...(p.onVisibleRangeChange ? { onVisibleRangeChange: p.onVisibleRangeChange } : {})}
       openCandleLabel={tx.openCandle}
       ariaLabel={ss.chartLabel(p.symbol, TF_LABEL[p.tf])}

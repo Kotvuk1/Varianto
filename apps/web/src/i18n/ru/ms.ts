@@ -1,19 +1,14 @@
 // Тексты Market Structure (COPY.md §7, ALGORITHMS §13). Термины SMC на английском с расшифровкой.
-import type { SkillId } from '@tl/core';
+import { MS_FOCUS_SMC, msConceptsFor, msParamsFor, msWindowProfile, type Difficulty, type SkillId } from '@tl/core';
 import { formatDateTime, plural } from '@/i18n/format';
 
 export const msTx = {
   title: 'Market Structure',
-  subtitle: 'Структура рынка',
+  subtitle: 'Ступень 5. Структура рынка: BOS, CHoCH, sweep, Order Block, FVG.',
   modes: { mark: 'Разметка', question: 'Вопрос' },
   modeHelp: {
     mark: 'Размечайте структуру на графике, алгоритм сравнит с эталоном.',
     question: 'Быстрый вопрос по подсвеченному месту графика.',
-  },
-  difficultyHelp: {
-    easy: 'Явный тренд. Swing, HH/HL/LH/LL, BOS и CHoCH.',
-    medium: 'Добавляются внешняя и внутренняя структура, Liquidity sweep и FVG.',
-    hard: 'Ловушки с проколом фитилём, плюс Order Block.',
   },
   sessionTitle: { mark: 'Разметка', question: 'Вопрос' },
   referenceToggle: 'Справка по заданию',
@@ -88,9 +83,9 @@ export const msConceptTask: Partial<Record<SkillId, { name: string; task: string
 };
 
 const reference = {
-  easy: 'Лёгкий уровень: явный тренд. Отмечайте то, что видно по закрытию тела свечи, фитиль пробоем не считается.',
-  medium: 'Средний уровень: оцениваются внешняя и внутренняя структура. Проверьте, где прокол фитилём, а где закрытие тела.',
-  hard: 'Сложный уровень: в графике есть ложные пробои. Отличайте Liquidity sweep (фитиль) от BOS и CHoCH (закрытие тела).',
+  easy: 'Лёгкий уровень: только внешняя структура, BOS и CHoCH. Отмечайте то, что видно по закрытию тела свечи, фитиль пробоем не считается.',
+  medium: 'Средний уровень: к BOS и CHoCH добавляется одно понятие из Liquidity sweep, Order Block, FVG. Проверьте, где прокол фитилём, а где закрытие тела.',
+  hard: 'Сложный уровень: внешняя и внутренняя структура и несколько понятий SMC, в графике есть ложные пробои. Отличайте Liquidity sweep (фитиль) от BOS и CHoCH (закрытие тела).',
 } as const;
 
 export const msReference = (key: string): string => {
@@ -108,11 +103,11 @@ const fmtNum = (v: unknown) => (typeof v === 'number' ? String(v).replace(/\B(?=
 export function msQuestionText(key: string, params?: P): string {
   switch (key) {
     case 'ms.q.trend.prompt':
-      return 'Какой сейчас внешний тренд по структуре?';
+      return 'Какой сейчас внешний тренд по структуре (последний BOS/CHoCH)?';
     case 'ms.q.trend.up':
-      return 'Восходящий (HH и HL)';
+      return 'Восходящий';
     case 'ms.q.trend.down':
-      return 'Нисходящий (LH и LL)';
+      return 'Нисходящий';
     case 'ms.q.trend.range':
       return 'Боковик (диапазон)';
     case 'ms.q.breakType.prompt':
@@ -138,4 +133,23 @@ export function msQuestionText(key: string, params?: P): string {
     default:
       return key;
   }
+}
+
+/**
+ * Описание сложности ступени 5 строится из таблицы ядра (msConceptsFor / msParamsFor / msWindowProfile), а не хардкодится:
+ * изменение таблицы на сервере отражается в тексте без правки UI.
+ */
+export function msDifficultyHelp(d: Difficulty): string {
+  const concepts = msConceptsFor(d, [], 'smc');
+  const base = concepts.filter((c) => !MS_FOCUS_SMC.includes(c));
+  const focus = concepts.filter((c) => MS_FOCUS_SMC.includes(c));
+  const name = (c: SkillId) => msConceptShort[c] ?? c;
+  const list = (xs: readonly SkillId[]) => xs.map(name).join(', ');
+  const w = msWindowProfile(d, 'smc');
+  const p = msParamsFor(d, 'smc');
+  const parts = [list(base)];
+  if (d === 'medium') parts.push(`плюс одно понятие из: ${list(MS_FOCUS_SMC)}`);
+  else if (focus.length) parts.push(`плюс: ${list(MS_FOCUS_SMC)}`);
+  const windowText = w.windowMin === w.windowMax ? `${w.windowMax}` : `${w.windowMin}-${w.windowMax}`;
+  return `${parts.join(', ')}. Окно ${windowText} свечей, свинги N = ${p.nExt}${p.nInt ? ` и ${p.nInt}` : ''}.`;
 }

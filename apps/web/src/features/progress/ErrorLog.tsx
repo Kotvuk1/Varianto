@@ -85,7 +85,7 @@ function Review({ attempt }: { attempt: Attempt }) {
   if (!feedback) return <p className="text-sm text-text-2">{pr.reviewMissing}</p>;
   return (
     <div data-testid="error-review">
-      <FeedbackView feedback={feedback} />
+      <FeedbackView feedback={feedback} aiModule={attempt.module} />
     </div>
   );
 }

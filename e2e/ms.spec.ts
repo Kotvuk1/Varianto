@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { checkAndSeeResult, nextThenHomeShowsDone, openSession, selectTool, shot, tapCandle } from './ms.helpers';
+import { markOneBos, checkAndSeeResult, nextThenHomeShowsDone, openSession, selectTool, shot } from './ms.helpers';
 
 const MS = '/learn/market-structure';
 test.describe.configure({ timeout: 180_000 });
@@ -29,9 +29,7 @@ test('MS «Разметка»: метка, проверка, разбор, сл�
   }
   // набор инструментов ограничен понятиями задания (лёгкий: без Sweep, FVG, Order Block)
   await expect(page.getByRole('button', { name: 'Зоны', exact: true })).toHaveCount(0);
-  await selectTool(page, 'Swing High', 'Свинги');
-  await tapCandle(page, 20);
-  await expect(page.getByTestId('chart')).toHaveAttribute('data-mark-count', '1');
+  await markOneBos(page);
   await checkAndSeeResult(page);
   await expect(page.getByTestId('result-summary')).toContainText('Верно:');
   await shot(page, 'ms-mark-after');
@@ -116,8 +114,7 @@ test('404: страница на русском со ссылками «На г�
 test('мобильная шторка разбора: график занимает всё над ней на трёх высотах', async ({ page }) => {
   test.skip((page.viewportSize()?.width ?? 0) >= 1024, 'только мобильный');
   await openSession(page, `${MS}/session?mode=mark&difficulty=easy&tf=1h&symbol=BTCUSDT`);
-  await selectTool(page, 'Swing High', 'Свинги');
-  await tapCandle(page, 20);
+  await markOneBos(page);
   await checkAndSeeResult(page);
   const vh = page.viewportSize()!.height;
   const sheet = page.getByTestId('result-sheet');

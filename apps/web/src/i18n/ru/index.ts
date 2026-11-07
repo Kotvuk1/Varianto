@@ -28,7 +28,7 @@ export const ru = {
     priceAction: 'Price Action',
     challenge: 'Trading Challenge',
     marketStructureModes: 'Разметка · Вопрос',
-    priceActionModes: 'Найди модель · Проведи уровень · Контекст',
+    priceActionModes: 'Найди модель · Контекст',
     challengeModes: 'Решение по графику без будущего',
   },
   home: {

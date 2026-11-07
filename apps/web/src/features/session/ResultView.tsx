@@ -43,6 +43,7 @@ export function ResultBody({ result, fmtPrice, showRef, onToggleRef, onFocusMark
       </div>
       <FeedbackView
         feedback={result.feedback}
+        aiModule={result.module}
         fmtPrice={fmtPrice}
         onFocusMarks={onFocusMarks}
         verdictExtra={

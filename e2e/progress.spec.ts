@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { checkAndSeeResult, openSession, selectTool, tapCandle } from './ms.helpers';
+import { markOneBos, checkAndSeeResult, openSession } from './ms.helpers';
 
 const SESSION = '/learn/market-structure/session?mode=mark&difficulty=easy&tf=1h&symbol=BTCUSDT';
 test.describe.configure({ timeout: 420_000 });
@@ -12,9 +12,7 @@ async function shot(page: Page, name: string) {
 }
 
 async function solveOne(page: Page) {
-  await selectTool(page, 'Swing High', 'Свинги');
-  await tapCandle(page, 20);
-  await expect(page.getByTestId('chart')).toHaveAttribute('data-mark-count', '1');
+  await markOneBos(page);
   await checkAndSeeResult(page);
 }
 

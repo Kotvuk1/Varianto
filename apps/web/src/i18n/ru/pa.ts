@@ -2,10 +2,9 @@
 export const paTx = {
   title: 'Price Action',
   subtitle: 'Свечные модели и контекст',
-  types: { 'find-pattern': 'Найди модель', 'draw-level': 'Проведи уровень', context: 'Контекст' },
+  types: { 'find-pattern': 'Найди модель', context: 'Контекст' },
   typeHelp: {
     'find-pattern': 'Найдите на графике свечную модель, названную в задании.',
-    'draw-level': 'Проведите уровень поддержки или сопротивления с допуском около 0,3%.',
     context: 'Оцените, значима ли подсвеченная модель с учётом контекста.',
   },
   difficultyHelp: {

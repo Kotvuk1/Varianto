@@ -3,6 +3,7 @@ import { localDay } from '@/i18n/format';
 import type { Attempt, Repository } from '@/storage';
 import { storableElliott } from '../elliott/reveal';
 import { storableGrade } from '../fibonacci/reveal';
+import { storableCurGrade } from '../curriculum/reveal';
 import type { Answer, GradeResultDto, TaskEnvelope } from './types';
 
 export interface BuildAttemptInput {
@@ -28,7 +29,7 @@ export function buildAttempt({ envelope, answer, grade, startedAt, now, id }: Bu
       decisionTime: envelope.decisionTime,
     },
     answer,
-    grade: (envelope.module === 'fibonacci' ? storableGrade(grade) : envelope.module === 'elliott' ? storableElliott(grade) : grade) as unknown as Attempt['grade'],
+    grade: (envelope.module === 'fibonacci' ? storableGrade(grade) : envelope.module === 'elliott' ? storableElliott(grade) : envelope.timeline?.mode === 'relative' || grade.replay ? storableCurGrade(grade) : grade) as unknown as Attempt['grade'],
     algoVersion: grade.algoVersion,
     skills,
     correct: grade.verdict === 'correct',

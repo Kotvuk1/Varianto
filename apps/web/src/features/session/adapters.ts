@@ -24,9 +24,9 @@ export function levelPrice(marks: readonly Mark[]): number | null {
   return last ? last.anchors[0]!.price : null;
 }
 
-export function paLevelAnswer(marks: readonly Mark[]): Extract<Answer, { kind: 'pa-level' }> | null {
+export function lvStrongestAnswer(marks: readonly Mark[]): Extract<Answer, { kind: 'lv-strongest' }> | null {
   const price = levelPrice(marks);
-  return price === null ? null : { kind: 'pa-level', price };
+  return price === null ? null : { kind: 'lv-strongest', price };
 }
 
 /** Уровень в задании один: новый заменяет прежний. */
@@ -104,7 +104,7 @@ export type MarkState = 'match' | 'missed' | 'extra';
 /** id метки (пользователя или эталона) -> состояние для подписи на графике. */
 export function statesFromGrade(grade: Pick<GradeResultDto, 'detail'>): Record<string, MarkState> {
   const d = grade.detail;
-  if (d.kind !== 'ms-mark' && d.kind !== 'pa-find') return {};
+  if (d.kind !== 'ms-mark' && d.kind !== 'pa-find' && d.kind !== 'sw-mark') return {};
   const out: Record<string, MarkState> = {};
   for (const p of d.marks.matched) {
     out[p.userMarkId] = 'match';
@@ -117,6 +117,6 @@ export function statesFromGrade(grade: Pick<GradeResultDto, 'detail'>): Record<s
 
 export function countsFromGrade(grade: Pick<GradeResultDto, 'detail'>): { match: number; missed: number; extra: number } | null {
   const d = grade.detail;
-  if (d.kind !== 'ms-mark' && d.kind !== 'pa-find') return null;
+  if (d.kind !== 'ms-mark' && d.kind !== 'pa-find' && d.kind !== 'sw-mark') return null;
   return { match: d.marks.matched.length, missed: d.marks.missed.length, extra: d.marks.extra.length };
 }
