@@ -1,0 +1,327 @@
+{
+ "algoVersion": "1.0.0",
+ "author": "technical-analyst (ELLIOTT.md §15); перенесено backend-разработчиком, правила §19 применены",
+ "date": "2026-11-05",
+ "source": [
+  {
+   "file": "klines/BTCUSDT/1h/BTCUSDT-1h-2026-06.csv",
+   "sha256": "43b014f49ac5586b1f575791649ee5e88b629ace2a8f58d167eb379ae5a52112"
+  }
+ ],
+ "rationale": "EW-3: impulse вниз + zigzag; medium-кандидат; по §19 invalidation после ABC = точка C, поэтому касание C помечает подсчёт инвалидированным на той же свече, где закрытие за C даёт альтернативу.",
+ "cases": [
+  {
+   "function": "checkCount",
+   "name": "bear-impulse-zigzag",
+   "params": {
+    "series": "EW-3",
+    "tf": "1h",
+    "upTo": "2026-06-11T16:00",
+    "impulse": [
+     [
+      "2026-06-08T15:00",
+      "high"
+     ],
+     [
+      "2026-06-09T00:00",
+      "low"
+     ],
+     [
+      "2026-06-09T05:00",
+      "high"
+     ],
+     [
+      "2026-06-09T16:00",
+      "low"
+     ],
+     [
+      "2026-06-09T20:00",
+      "high"
+     ],
+     [
+      "2026-06-10T09:00",
+      "low"
+     ]
+    ],
+    "correction": {
+     "type": "zigzag",
+     "anchors": [
+      [
+       "2026-06-10T15:00",
+       "high"
+      ],
+      [
+       "2026-06-10T22:00",
+       "low"
+      ],
+      [
+       "2026-06-11T11:00",
+       "high"
+      ]
+     ]
+    }
+   },
+   "expected": {
+    "ratios": {
+     "r2": 0.6221,
+     "r3": 1.5264,
+     "r4": 0.5458,
+     "w5a": 0.8682,
+     "w5b": 0.4559,
+     "retrB": 0.8247,
+     "cBeyond": 0.1842,
+     "cLen": 1.0088,
+     "corrRetr": 0.7294
+    },
+    "size": 6.281,
+    "lengths": [
+     1798.3,
+     1118.7,
+     2744.9,
+     1498.2,
+     1561.3
+    ],
+    "validTypes": [
+     "zigzag"
+    ],
+    "failedGuides": [
+     "w4-depth",
+     "w5-ratio",
+     "alternation"
+    ],
+    "blockingErrors": []
+   }
+  },
+  {
+   "function": "checkCount",
+   "name": "as-flat",
+   "params": {
+    "series": "EW-3",
+    "tf": "1h",
+    "upTo": "2026-06-11T16:00",
+    "impulse": [
+     [
+      "2026-06-08T15:00",
+      "high"
+     ],
+     [
+      "2026-06-09T00:00",
+      "low"
+     ],
+     [
+      "2026-06-09T05:00",
+      "high"
+     ],
+     [
+      "2026-06-09T16:00",
+      "low"
+     ],
+     [
+      "2026-06-09T20:00",
+      "high"
+     ],
+     [
+      "2026-06-10T09:00",
+      "low"
+     ]
+    ],
+    "correction": {
+     "type": "flat",
+     "anchors": [
+      [
+       "2026-06-10T15:00",
+       "high"
+      ],
+      [
+       "2026-06-10T22:00",
+       "low"
+      ],
+      [
+       "2026-06-11T11:00",
+       "high"
+      ]
+     ]
+    }
+   },
+   "expected": {
+    "blockingErrors": [
+     "EW_FLAT_B_TOO_SHALLOW"
+    ]
+   }
+  },
+  {
+   "function": "findWaveCandidates",
+   "name": "medium-N5",
+   "params": {
+    "series": "EW-3",
+    "tf": "1h",
+    "upTo": "2026-06-11T16:00",
+    "nPivot": 5,
+    "withCorrection": true,
+    "minSizeAtr": 6,
+    "minWaveAtr": 1,
+    "minGuides": 0
+   },
+   "expected": {
+    "contains": {
+     "p0": "2026-06-08T15:00",
+     "last": "2026-06-11T11:00",
+     "size": 6.281,
+     "corrRetr": 0.7294,
+     "type": "zigzag"
+    }
+   }
+  },
+  {
+   "function": "resolveScenario",
+   "name": "alt-then-invalidation-C-rule",
+   "params": {
+    "series": "EW-3",
+    "tf": "1h",
+    "T": "2026-06-11T16:00",
+    "impulse": [
+     [
+      "2026-06-08T15:00",
+      "high"
+     ],
+     [
+      "2026-06-09T00:00",
+      "low"
+     ],
+     [
+      "2026-06-09T05:00",
+      "high"
+     ],
+     [
+      "2026-06-09T16:00",
+      "low"
+     ],
+     [
+      "2026-06-09T20:00",
+      "high"
+     ],
+     [
+      "2026-06-10T09:00",
+      "low"
+     ]
+    ],
+    "correction": {
+     "type": "zigzag",
+     "anchors": [
+      [
+       "2026-06-10T15:00",
+       "high"
+      ],
+      [
+       "2026-06-10T22:00",
+       "low"
+      ],
+      [
+       "2026-06-11T11:00",
+       "high"
+      ]
+     ]
+    },
+    "primary": "trend-next",
+    "alternative": "correction-extends",
+    "limit": 72
+   },
+   "expected": {
+    "kind": "invalidated",
+    "time": "2026-06-11T17:00",
+    "altAfterInvalidation": "2026-06-11T17:00",
+    "levels": {
+     "invalidation": 63235.9,
+     "confirm": 61068.6,
+     "altConfirm": 63235.9
+    }
+   }
+  },
+  {
+   "function": "gradeElliott",
+   "name": "medium-without-alternative",
+   "params": {
+    "series": "EW-3",
+    "tf": "1h",
+    "T": "2026-06-11T16:00",
+    "ref": {
+     "kind": "ew-impulse-correction",
+     "nPivot": 5,
+     "windowFrom": "2026-06-08T00:00",
+     "dir": "bear",
+     "corrType": "zigzag",
+     "refPoints": [
+      "2026-06-08T15:00",
+      "2026-06-09T00:00",
+      "2026-06-09T05:00",
+      "2026-06-09T16:00",
+      "2026-06-09T20:00",
+      "2026-06-10T09:00",
+      "2026-06-10T15:00",
+      "2026-06-10T22:00",
+      "2026-06-11T11:00"
+     ]
+    },
+    "answer": {
+     "impulse": [
+      [
+       "2026-06-08T15:00",
+       "high"
+      ],
+      [
+       "2026-06-09T00:00",
+       "low"
+      ],
+      [
+       "2026-06-09T05:00",
+       "high"
+      ],
+      [
+       "2026-06-09T16:00",
+       "low"
+      ],
+      [
+       "2026-06-09T20:00",
+       "high"
+      ],
+      [
+       "2026-06-10T09:00",
+       "low"
+      ]
+     ],
+     "correction": {
+      "type": "zigzag",
+      "anchors": [
+       [
+        "2026-06-10T15:00",
+        "high"
+       ],
+       [
+        "2026-06-10T22:00",
+        "low"
+       ],
+       [
+        "2026-06-11T11:00",
+        "high"
+       ]
+      ]
+     },
+     "primary": "trend-next",
+     "alternative": null,
+     "invalidation": 63235.9
+    }
+   },
+   "expected": {
+    "errors": [
+     "EW_ALT_MISSING",
+     "EW_GUIDE_MISS",
+     "EW_GUIDE_MISS",
+     "EW_GUIDE_MISS"
+    ],
+    "altStatus": "missing",
+    "invalidation": "ok",
+    "outcome": "invalidated"
+   }
+  }
+ ]
+}

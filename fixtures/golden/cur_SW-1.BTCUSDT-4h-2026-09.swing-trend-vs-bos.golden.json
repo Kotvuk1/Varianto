@@ -1,0 +1,80 @@
+{
+ "algoVersion": "1.0.0",
+ "author": "technical-analyst (значения docs/specs/CURRICULUM_STAGES.md §14.2; пересчитано backend с правилом исполнения §20)",
+ "date": "2026-11-07",
+ "source": [
+  {
+   "path": "klines/BTCUSDT/4h/BTCUSDT-4h-2026-09.csv",
+   "sha256": "83ab0cd5a285a747946fcc17684ecafe368a6d982f000f1890e76136e8b3b92a",
+   "role": "tf"
+  }
+ ],
+ "function": "swingTrend",
+ "params": {
+  "id": "SW-1",
+  "symbol": "BTCUSDT",
+  "tick": 0.1,
+  "kind": "sw-trend",
+  "tf": "4h",
+  "lastVisible": "2026-09-30T20:00:00Z",
+  "files": [
+   "klines/BTCUSDT/4h/BTCUSDT-4h-2026-09.csv"
+  ],
+  "nExt": [
+   5,
+   7
+  ]
+ },
+ "inputs": [],
+ "expected": {
+  "n5": {
+   "trend": "down",
+   "bosTrend": "up",
+   "lastHigh": {
+    "time": "2026-09-29T12:00:00Z",
+    "price": 84554.9,
+    "label": "LH"
+   },
+   "prevHigh": {
+    "time": "2026-09-27T12:00:00Z",
+    "price": 85146.4,
+    "label": "LH"
+   },
+   "lastLow": {
+    "time": "2026-09-28T12:00:00Z",
+    "price": 82500.1,
+    "label": "LL"
+   },
+   "prevLow": {
+    "time": "2026-09-25T12:00:00Z",
+    "price": 83130.1,
+    "label": "HL"
+   }
+  },
+  "n7": {
+   "trend": "down",
+   "bosTrend": "up",
+   "lastHigh": {
+    "time": "2026-09-27T12:00:00Z",
+    "price": 85146.4,
+    "label": "LH"
+   },
+   "prevHigh": {
+    "time": "2026-09-25T08:00:00Z",
+    "price": 85224,
+    "label": "LH"
+   },
+   "lastLow": {
+    "time": "2026-09-28T12:00:00Z",
+    "price": 82500.1,
+    "label": "LL"
+   },
+   "prevLow": {
+    "time": "2026-09-24T08:00:00Z",
+    "price": 82832,
+    "label": "HL"
+   }
+  }
+ },
+ "rationale": "Тренд по свингам (последние HH/HL/LH/LL) и тренд BOS расходятся: swingTrend = down (LH + LL) при тренде BOS up. Ряд GS-1/GS-2. Значения спецификации §14.2 SW-1 совпали с вычислением."
+}

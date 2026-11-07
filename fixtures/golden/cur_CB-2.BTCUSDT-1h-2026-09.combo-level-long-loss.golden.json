@@ -1,0 +1,137 @@
+{
+ "algoVersion": "1.0.0",
+ "author": "technical-analyst (значения docs/specs/CURRICULUM_STAGES.md §14.2; пересчитано backend с правилом исполнения §20)",
+ "date": "2026-11-07",
+ "source": [
+  {
+   "path": "klines/BTCUSDT/1h/BTCUSDT-1h-2026-08.csv",
+   "sha256": "08ed90afdac40e82c6e516587d5f1291b7970bac765704852996c5b5047f8a3f",
+   "role": "tf"
+  },
+  {
+   "path": "klines/BTCUSDT/1h/BTCUSDT-1h-2026-09.csv",
+   "sha256": "6c93df5ac755f8be4a976f56069b1f0dc274aeff99d598afc0dc1c300f996690",
+   "role": "tf"
+  },
+  {
+   "path": "klines/BTCUSDT/4h/BTCUSDT-4h-2026-07.csv",
+   "sha256": "3f315145e54edb7d5d0b30ddb68bc79b333171b5f6e66b303414436a8846e101",
+   "role": "htf"
+  },
+  {
+   "path": "klines/BTCUSDT/4h/BTCUSDT-4h-2026-08.csv",
+   "sha256": "e8a295e3633bb365db324a7d08b0e1512d2eb371d4d193a29d083a2837ed14d2",
+   "role": "htf"
+  },
+  {
+   "path": "klines/BTCUSDT/4h/BTCUSDT-4h-2026-09.csv",
+   "sha256": "83ab0cd5a285a747946fcc17684ecafe368a6d982f000f1890e76136e8b3b92a",
+   "role": "htf"
+  }
+ ],
+ "function": "gradeComboLevel / playCombo",
+ "params": {
+  "id": "CB-2",
+  "symbol": "BTCUSDT",
+  "tick": 0.1,
+  "kind": "combo-level-trade",
+  "tf": "1h",
+  "lastVisible": "2026-09-15T00:00:00Z",
+  "files": [
+   "klines/BTCUSDT/1h/BTCUSDT-1h-2026-08.csv",
+   "klines/BTCUSDT/1h/BTCUSDT-1h-2026-09.csv"
+  ],
+  "htfFiles": [
+   "klines/BTCUSDT/4h/BTCUSDT-4h-2026-07.csv",
+   "klines/BTCUSDT/4h/BTCUSDT-4h-2026-08.csv",
+   "klines/BTCUSDT/4h/BTCUSDT-4h-2026-09.csv"
+  ],
+  "htfTf": "4h",
+  "difficulty": "medium",
+  "side": "LONG",
+  "role": "support"
+ },
+ "inputs": [
+  {
+   "zone": [
+    77200,
+    77430
+   ],
+   "limit": {
+    "price": 77427.4,
+    "type": "near-edge",
+    "frontK": null
+   },
+   "sl": 77050,
+   "tp": 78343.8
+  }
+ ],
+ "expected": {
+  "A": 464.5071,
+  "P": 77928.5,
+  "reference": {
+   "bottom": 77208,
+   "top": 77427.4,
+   "touches": 9,
+   "reactions": 8,
+   "strength": 15,
+   "recency": 1,
+   "htf": 1,
+   "flip": true,
+   "dist": 1.0788,
+   "role": "support"
+  },
+  "cases": [
+   {
+    "parts": [
+     "zone:20",
+     "placement:25",
+     "type:5",
+     "sl:20",
+     "tp:18",
+     "rr:12"
+    ],
+    "quality": 100,
+    "verdict": "correct",
+    "rr": 2.4282,
+    "codes": [],
+    "targets": [
+     {
+      "price": 77441.6,
+      "source": "level",
+      "rrRef": 0.0423
+     },
+     {
+      "price": 77706.1,
+      "source": "level",
+      "rrRef": 0.8306
+     },
+     {
+      "price": 78020,
+      "source": "level",
+      "rrRef": 1.7662
+     },
+     {
+      "price": 78343.8,
+      "source": "level",
+      "rrRef": 2.7312
+     },
+     {
+      "price": 78618.1,
+      "source": "level",
+      "rrRef": 3.5487
+     }
+    ],
+    "outcome": {
+     "kind": "sl",
+     "fillTime": "2026-09-15T05:00:00Z",
+     "exitTime": "2026-09-15T07:00:00Z",
+     "r": -1,
+     "fillMethod": "candle"
+    },
+    "stopHunted": false
+   }
+  ]
+ },
+ "rationale": "quality 100, correct; исход: исполнение 09-15 05:00, SL 09-15 07:00, -1R (правильная сделка в убыток). Совпало со спецификацией."
+}

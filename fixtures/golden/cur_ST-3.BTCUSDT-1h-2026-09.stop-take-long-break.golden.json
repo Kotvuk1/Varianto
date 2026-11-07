@@ -1,0 +1,181 @@
+{
+ "algoVersion": "1.0.0",
+ "author": "technical-analyst (значения docs/specs/CURRICULUM_STAGES.md §14.2; пересчитано backend с правилом исполнения §20)",
+ "date": "2026-11-07",
+ "source": [
+  {
+   "path": "klines/BTCUSDT/1h/BTCUSDT-1h-2026-08.csv",
+   "sha256": "08ed90afdac40e82c6e516587d5f1291b7970bac765704852996c5b5047f8a3f",
+   "role": "tf"
+  },
+  {
+   "path": "klines/BTCUSDT/1h/BTCUSDT-1h-2026-09.csv",
+   "sha256": "6c93df5ac755f8be4a976f56069b1f0dc274aeff99d598afc0dc1c300f996690",
+   "role": "tf"
+  },
+  {
+   "path": "klines/BTCUSDT/4h/BTCUSDT-4h-2026-07.csv",
+   "sha256": "3f315145e54edb7d5d0b30ddb68bc79b333171b5f6e66b303414436a8846e101",
+   "role": "htf"
+  },
+  {
+   "path": "klines/BTCUSDT/4h/BTCUSDT-4h-2026-08.csv",
+   "sha256": "e8a295e3633bb365db324a7d08b0e1512d2eb371d4d193a29d083a2837ed14d2",
+   "role": "htf"
+  },
+  {
+   "path": "klines/BTCUSDT/4h/BTCUSDT-4h-2026-09.csv",
+   "sha256": "83ab0cd5a285a747946fcc17684ecafe368a6d982f000f1890e76136e8b3b92a",
+   "role": "htf"
+  }
+ ],
+ "function": "buildStopTakeRef / scoreStopTake / playStopTake",
+ "params": {
+  "id": "ST-3",
+  "symbol": "BTCUSDT",
+  "tick": 0.1,
+  "kind": "stop-take",
+  "tf": "1h",
+  "lastVisible": "2026-09-15T00:00:00Z",
+  "files": [
+   "klines/BTCUSDT/1h/BTCUSDT-1h-2026-08.csv",
+   "klines/BTCUSDT/1h/BTCUSDT-1h-2026-09.csv"
+  ],
+  "htfFiles": [
+   "klines/BTCUSDT/4h/BTCUSDT-4h-2026-07.csv",
+   "klines/BTCUSDT/4h/BTCUSDT-4h-2026-08.csv",
+   "klines/BTCUSDT/4h/BTCUSDT-4h-2026-09.csv"
+  ],
+  "htfTf": "4h",
+  "side": "LONG",
+  "zone": [
+   77208,
+   77427.4
+  ],
+  "entry": 77427.4
+ },
+ "inputs": [
+  {
+   "sl": 77050,
+   "tp": 78200
+  },
+  {
+   "sl": 77050,
+   "tp": 78230.5
+  }
+ ],
+ "expected": {
+  "A": 464.5071,
+  "P": 77928.5,
+  "zone": {
+   "bottom": 77208,
+   "top": 77427.4,
+   "touches": 9,
+   "reactions": 8,
+   "strength": 15,
+   "recency": 1,
+   "htf": 1,
+   "flip": true,
+   "dist": 1.0788,
+   "role": "support"
+  },
+  "fill": {
+   "time": "2026-09-15T05:00:00Z",
+   "candles": 5
+  },
+  "ref": {
+   "A": 373.8786,
+   "Pl": 77208,
+   "Estar": 77590.5,
+   "slRef": 77114.5304,
+   "kStar": 2,
+   "targets": [
+    {
+     "price": 77706.1,
+     "source": "level",
+     "rrRef": 0.8908,
+     "allowed": true
+    },
+    {
+     "price": 78020,
+     "source": "level",
+     "rrRef": 1.8941,
+     "allowed": true
+    },
+    {
+     "price": 78223.3,
+     "source": "fvg",
+     "rrRef": 2.5439,
+     "allowed": true
+    },
+    {
+     "price": 78543.9,
+     "source": "level",
+     "rrRef": 3.5686,
+     "allowed": true
+    },
+    {
+     "price": 78938.7,
+     "source": "level",
+     "rrRef": 4.8304,
+     "allowed": false
+    }
+   ]
+  },
+  "cases": [
+   {
+    "parts": [
+     "sl:40",
+     "tp:35",
+     "rr:25"
+    ],
+    "quality": 100,
+    "verdict": "correct",
+    "rr": 2.0472,
+    "codes": [],
+    "outcome": {
+     "result": "sl",
+     "exitTime": "2026-09-15T07:00:00Z",
+     "r": -1,
+     "method": "candle"
+    },
+    "referenceOutcome": {
+     "sl": 77114.5304,
+     "tp": 78223.3,
+     "result": "sl",
+     "exitTime": "2026-09-15T07:00:00Z"
+    },
+    "stopHunted": false,
+    "huntBlocks": []
+   },
+   {
+    "parts": [
+     "sl:40",
+     "tp:15",
+     "rr:25"
+    ],
+    "quality": 80,
+    "verdict": "partial",
+    "rr": 2.128,
+    "codes": [
+     "TP_NOT_AT_LEVEL"
+    ],
+    "outcome": {
+     "result": "sl",
+     "exitTime": "2026-09-15T07:00:00Z",
+     "r": -1,
+     "method": "candle"
+    },
+    "referenceOutcome": {
+     "sl": 77114.5304,
+     "tp": 78223.3,
+     "result": "sl",
+     "exitTime": "2026-09-15T07:00:00Z"
+    },
+    "stopHunted": false,
+    "huntBlocks": []
+   }
+  ]
+ },
+ "rationale": "ПЕРЕСЧИТАНО по §20 (цели включают встречные fresh OB / open FVG): между 78020.0 и 78543.9 появился open FVG 78223.3 (RRref 2.5439 = k*), tp 78230.5 из спецификации вне его полосы [78036.4; 78223.3] -> TP_NOT_AT_LEVEL (80); tp 78200 в полосе -> 100. Исход SL 09-15 07:00: закрытие 76895.3 за стопом - не stop hunt."
+}

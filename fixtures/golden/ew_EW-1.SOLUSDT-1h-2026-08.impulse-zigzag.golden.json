@@ -1,0 +1,648 @@
+{
+ "algoVersion": "1.0.0",
+ "author": "technical-analyst (ELLIOTT.md §15); перенесено backend-разработчиком, правила §19 применены",
+ "date": "2026-11-05",
+ "source": [
+  {
+   "file": "klines/SOLUSDT/1h/SOLUSDT-1h-2026-08.csv",
+   "sha256": "3513f142da378dafcd50365072d8c030749b4a46123135fef8bca64f6ca960c6"
+  }
+ ],
+ "rationale": "EW-1: учебный impulse вверх (5/5 рекомендаций, удлинённая 3-я) + zigzag; значения из ELLIOTT.md §15.2 (EW-1), вручную по OHLC. Исход trend-next: invalidation = точка C (§19).",
+ "cases": [
+  {
+   "function": "checkCount",
+   "name": "impulse-6",
+   "params": {
+    "series": "EW-1",
+    "tf": "1h",
+    "upTo": "2026-08-10T05:00",
+    "impulse": [
+     [
+      "2026-08-06T23:00",
+      "low"
+     ],
+     [
+      "2026-08-07T13:00",
+      "high"
+     ],
+     [
+      "2026-08-07T17:00",
+      "low"
+     ],
+     [
+      "2026-08-08T15:00",
+      "high"
+     ],
+     [
+      "2026-08-09T01:00",
+      "low"
+     ],
+     [
+      "2026-08-09T22:00",
+      "high"
+     ]
+    ]
+   },
+   "expected": {
+    "errors": [],
+    "ratios": {
+     "r2": 0.5784,
+     "r3": 1.799,
+     "r4": 0.3025,
+     "w5a": 1.0637
+    },
+    "size": 14.711,
+    "lengths": [
+     2.04,
+     1.18,
+     3.67,
+     1.11,
+     2.17
+    ],
+    "extended3": true,
+    "failedGuides": [],
+    "rulesOk": true
+   }
+  },
+  {
+   "function": "checkCount",
+   "name": "second-count-P0-0705",
+   "params": {
+    "series": "EW-1",
+    "tf": "1h",
+    "upTo": "2026-08-10T05:00",
+    "impulse": [
+     [
+      "2026-08-07T05:00",
+      "low"
+     ],
+     [
+      "2026-08-07T13:00",
+      "high"
+     ],
+     [
+      "2026-08-07T17:00",
+      "low"
+     ],
+     [
+      "2026-08-08T15:00",
+      "high"
+     ],
+     [
+      "2026-08-09T01:00",
+      "low"
+     ],
+     [
+      "2026-08-09T22:00",
+      "high"
+     ]
+    ]
+   },
+   "expected": {
+    "errors": [
+     "EW_GUIDE_MISS"
+    ],
+    "ratios": {
+     "r2": 0.6082,
+     "w5a": 1.1186
+    },
+    "failedGuides": [
+     "w5-ratio"
+    ],
+    "rulesOk": true
+   }
+  },
+  {
+   "function": "checkCount",
+   "name": "zigzag-after-impulse",
+   "params": {
+    "series": "EW-1",
+    "tf": "1h",
+    "upTo": "2026-08-11T20:00",
+    "impulse": [
+     [
+      "2026-08-06T23:00",
+      "low"
+     ],
+     [
+      "2026-08-07T13:00",
+      "high"
+     ],
+     [
+      "2026-08-07T17:00",
+      "low"
+     ],
+     [
+      "2026-08-08T15:00",
+      "high"
+     ],
+     [
+      "2026-08-09T01:00",
+      "low"
+     ],
+     [
+      "2026-08-09T22:00",
+      "high"
+     ]
+    ],
+    "correction": {
+     "type": "zigzag",
+     "anchors": [
+      [
+       "2026-08-11T07:00",
+       "low"
+      ],
+      [
+       "2026-08-11T11:00",
+       "high"
+      ],
+      [
+       "2026-08-11T15:00",
+       "low"
+      ]
+     ]
+    }
+   },
+   "expected": {
+    "ratios": {
+     "retrB": 0.3929,
+     "cBeyond": 0.3135,
+     "cLen": 0.7063,
+     "corrRetr": 0.5921
+    },
+    "validTypes": [
+     "zigzag"
+    ],
+    "failedGuides": [
+     "zigzag-c"
+    ],
+    "blockingErrors": []
+   }
+  },
+  {
+   "function": "checkCount",
+   "name": "flat-name-is-wrong",
+   "params": {
+    "series": "EW-1",
+    "tf": "1h",
+    "upTo": "2026-08-11T20:00",
+    "impulse": [
+     [
+      "2026-08-06T23:00",
+      "low"
+     ],
+     [
+      "2026-08-07T13:00",
+      "high"
+     ],
+     [
+      "2026-08-07T17:00",
+      "low"
+     ],
+     [
+      "2026-08-08T15:00",
+      "high"
+     ],
+     [
+      "2026-08-09T01:00",
+      "low"
+     ],
+     [
+      "2026-08-09T22:00",
+      "high"
+     ]
+    ],
+    "correction": {
+     "type": "flat",
+     "anchors": [
+      [
+       "2026-08-11T07:00",
+       "low"
+      ],
+      [
+       "2026-08-11T11:00",
+       "high"
+      ],
+      [
+       "2026-08-11T15:00",
+       "low"
+      ]
+     ]
+    }
+   },
+   "expected": {
+    "blockingErrors": [
+     "EW_FLAT_B_TOO_SHALLOW"
+    ],
+    "validTypes": [
+     "zigzag"
+    ]
+   }
+  },
+  {
+   "function": "checkCount",
+   "name": "A-not-extreme",
+   "params": {
+    "series": "EW-1",
+    "tf": "1h",
+    "upTo": "2026-08-11T20:00",
+    "impulse": [
+     [
+      "2026-08-06T23:00",
+      "low"
+     ],
+     [
+      "2026-08-07T13:00",
+      "high"
+     ],
+     [
+      "2026-08-07T17:00",
+      "low"
+     ],
+     [
+      "2026-08-08T15:00",
+      "high"
+     ],
+     [
+      "2026-08-09T01:00",
+      "low"
+     ],
+     [
+      "2026-08-09T22:00",
+      "high"
+     ]
+    ],
+    "correction": {
+     "type": "zigzag",
+     "anchors": [
+      [
+       "2026-08-10T16:00",
+       "low"
+      ],
+      [
+       "2026-08-11T11:00",
+       "high"
+      ],
+      [
+       "2026-08-11T15:00",
+       "low"
+      ]
+     ]
+    }
+   },
+   "expected": {
+    "notExtreme": {
+     "label": "A",
+     "extremeTime": "2026-08-11T07:00",
+     "extremePrice": 75.36
+    }
+   }
+  },
+  {
+   "function": "enumerateCounts",
+   "name": "N5-two-counts",
+   "params": {
+    "series": "EW-1",
+    "tf": "1h",
+    "nPoint": 5,
+    "fromIso": "2026-08-05T00:00",
+    "lastIso": "2026-08-09T22:00"
+   },
+   "expected": {
+    "byScenario": {
+     "abc-next": 2
+    },
+    "abcStarts": [
+     "2026-08-06T23:00",
+     "2026-08-07T05:00"
+    ],
+    "truncated": false
+   }
+  },
+  {
+   "function": "enumerateCounts",
+   "name": "N7-single-count",
+   "params": {
+    "series": "EW-1",
+    "tf": "1h",
+    "nPoint": 7,
+    "fromIso": "2026-08-05T00:00",
+    "lastIso": "2026-08-09T22:00"
+   },
+   "expected": {
+    "byScenario": {
+     "abc-next": 1
+    },
+    "abcStarts": [
+     "2026-08-06T23:00"
+    ],
+    "truncated": false
+   }
+  },
+  {
+   "function": "findWaveCandidates",
+   "name": "easy-N7",
+   "params": {
+    "series": "EW-1",
+    "tf": "1h",
+    "upTo": "2026-08-10T05:00",
+    "nPivot": 7,
+    "withCorrection": false,
+    "minSizeAtr": 6,
+    "minWaveAtr": 1,
+    "minGuides": 2
+   },
+   "expected": {
+    "count": 1,
+    "first": {
+     "p0": "2026-08-06T23:00",
+     "last": "2026-08-09T22:00",
+     "size": 14.711,
+     "guides": 5
+    }
+   }
+  },
+  {
+   "function": "resolveScenario",
+   "name": "abc-next-primary",
+   "params": {
+    "series": "EW-1",
+    "tf": "1h",
+    "T": "2026-08-10T05:00",
+    "impulse": [
+     [
+      "2026-08-06T23:00",
+      "low"
+     ],
+     [
+      "2026-08-07T13:00",
+      "high"
+     ],
+     [
+      "2026-08-07T17:00",
+      "low"
+     ],
+     [
+      "2026-08-08T15:00",
+      "high"
+     ],
+     [
+      "2026-08-09T01:00",
+      "low"
+     ],
+     [
+      "2026-08-09T22:00",
+      "high"
+     ]
+    ],
+    "primary": "abc-next",
+    "alternative": null,
+    "limit": 72
+   },
+   "expected": {
+    "kind": "primary",
+    "time": "2026-08-10T16:00",
+    "levels": {
+     "invalidation": 77.88,
+     "confirm": 75.71
+    },
+    "maxAfterT": 77.12
+   }
+  },
+  {
+   "function": "resolveScenario",
+   "name": "w5-next-primary",
+   "params": {
+    "series": "EW-1",
+    "tf": "1h",
+    "T": "2026-08-09T06:00",
+    "impulse": [
+     [
+      "2026-08-06T23:00",
+      "low"
+     ],
+     [
+      "2026-08-07T13:00",
+      "high"
+     ],
+     [
+      "2026-08-07T17:00",
+      "low"
+     ],
+     [
+      "2026-08-08T15:00",
+      "high"
+     ],
+     [
+      "2026-08-09T01:00",
+      "low"
+     ]
+    ],
+    "primary": "w5-next",
+    "alternative": null,
+    "limit": 72
+   },
+   "expected": {
+    "kind": "primary",
+    "time": "2026-08-09T14:00",
+    "levels": {
+     "invalidation": 74.33,
+     "confirm": 76.82
+    }
+   }
+  },
+  {
+   "function": "resolveScenario",
+   "name": "trend-next-primary",
+   "params": {
+    "series": "EW-1",
+    "tf": "1h",
+    "T": "2026-08-11T20:00",
+    "impulse": [
+     [
+      "2026-08-06T23:00",
+      "low"
+     ],
+     [
+      "2026-08-07T13:00",
+      "high"
+     ],
+     [
+      "2026-08-07T17:00",
+      "low"
+     ],
+     [
+      "2026-08-08T15:00",
+      "high"
+     ],
+     [
+      "2026-08-09T01:00",
+      "low"
+     ],
+     [
+      "2026-08-09T22:00",
+      "high"
+     ]
+    ],
+    "correction": {
+     "type": "zigzag",
+     "anchors": [
+      [
+       "2026-08-11T07:00",
+       "low"
+      ],
+      [
+       "2026-08-11T11:00",
+       "high"
+      ],
+      [
+       "2026-08-11T15:00",
+       "low"
+      ]
+     ]
+    },
+    "primary": "trend-next",
+    "alternative": "correction-extends",
+    "limit": 72
+   },
+   "expected": {
+    "kind": "primary",
+    "time": "2026-08-11T21:00",
+    "levels": {
+     "invalidation": 74.57,
+     "confirm": 76.35,
+     "altConfirm": 74.57
+    }
+   }
+  },
+  {
+   "function": "gradeElliott",
+   "name": "easy-100",
+   "params": {
+    "series": "EW-1",
+    "tf": "1h",
+    "T": "2026-08-10T05:00",
+    "ref": {
+     "kind": "ew-impulse",
+     "nPivot": 7,
+     "windowFrom": "2026-08-06T10:00",
+     "dir": "bull",
+     "corrType": null,
+     "refPoints": [
+      "2026-08-06T23:00",
+      "2026-08-07T13:00",
+      "2026-08-07T17:00",
+      "2026-08-08T15:00",
+      "2026-08-09T01:00",
+      "2026-08-09T22:00"
+     ]
+    },
+    "answer": {
+     "impulse": [
+      [
+       "2026-08-06T23:00",
+       "low"
+      ],
+      [
+       "2026-08-07T13:00",
+       "high"
+      ],
+      [
+       "2026-08-07T17:00",
+       "low"
+      ],
+      [
+       "2026-08-08T15:00",
+       "high"
+      ],
+      [
+       "2026-08-09T01:00",
+       "low"
+      ],
+      [
+       "2026-08-09T22:00",
+       "high"
+      ]
+     ],
+     "correction": null,
+     "primary": "abc-next",
+     "alternative": null,
+     "invalidation": 77.88
+    }
+   },
+   "expected": {
+    "verdict": "correct",
+    "quality": 100,
+    "invTol": 0.128,
+    "invalidation": "ok",
+    "altStatus": "optional-empty",
+    "errors": [],
+    "outcome": "primary"
+   }
+  },
+  {
+   "function": "gradeElliott",
+   "name": "easy-97",
+   "params": {
+    "series": "EW-1",
+    "tf": "1h",
+    "T": "2026-08-10T05:00",
+    "ref": {
+     "kind": "ew-impulse",
+     "nPivot": 7,
+     "windowFrom": "2026-08-06T10:00",
+     "dir": "bull",
+     "corrType": null,
+     "refPoints": [
+      "2026-08-06T23:00",
+      "2026-08-07T13:00",
+      "2026-08-07T17:00",
+      "2026-08-08T15:00",
+      "2026-08-09T01:00",
+      "2026-08-09T22:00"
+     ]
+    },
+    "answer": {
+     "impulse": [
+      [
+       "2026-08-07T05:00",
+       "low"
+      ],
+      [
+       "2026-08-07T13:00",
+       "high"
+      ],
+      [
+       "2026-08-07T17:00",
+       "low"
+      ],
+      [
+       "2026-08-08T15:00",
+       "high"
+      ],
+      [
+       "2026-08-09T01:00",
+       "low"
+      ],
+      [
+       "2026-08-09T22:00",
+       "high"
+      ]
+     ],
+     "correction": null,
+     "primary": "abc-next",
+     "alternative": null,
+     "invalidation": 77.88
+    }
+   },
+   "expected": {
+    "verdict": "correct",
+    "quality": 97,
+    "errors": [
+     "EW_GUIDE_MISS"
+    ]
+   }
+  }
+ ]
+}

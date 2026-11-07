@@ -1,0 +1,150 @@
+{
+ "algoVersion": "1.0.0",
+ "author": "technical-analyst (значения docs/specs/CURRICULUM_STAGES.md §14.2; пересчитано backend с правилом исполнения §20)",
+ "date": "2026-11-07",
+ "source": [
+  {
+   "path": "klines/BTCUSDT/1h/BTCUSDT-1h-2026-08.csv",
+   "sha256": "08ed90afdac40e82c6e516587d5f1291b7970bac765704852996c5b5047f8a3f",
+   "role": "tf"
+  },
+  {
+   "path": "klines/BTCUSDT/1h/BTCUSDT-1h-2026-09.csv",
+   "sha256": "6c93df5ac755f8be4a976f56069b1f0dc274aeff99d598afc0dc1c300f996690",
+   "role": "tf"
+  },
+  {
+   "path": "klines/BTCUSDT/4h/BTCUSDT-4h-2026-07.csv",
+   "sha256": "3f315145e54edb7d5d0b30ddb68bc79b333171b5f6e66b303414436a8846e101",
+   "role": "htf"
+  },
+  {
+   "path": "klines/BTCUSDT/4h/BTCUSDT-4h-2026-08.csv",
+   "sha256": "e8a295e3633bb365db324a7d08b0e1512d2eb371d4d193a29d083a2837ed14d2",
+   "role": "htf"
+  },
+  {
+   "path": "klines/BTCUSDT/4h/BTCUSDT-4h-2026-09.csv",
+   "sha256": "83ab0cd5a285a747946fcc17684ecafe368a6d982f000f1890e76136e8b3b92a",
+   "role": "htf"
+  }
+ ],
+ "function": "resolveZoneChain / gradeLvReaction",
+ "params": {
+  "id": "LV-4",
+  "symbol": "BTCUSDT",
+  "tick": 0.1,
+  "kind": "lv-reaction",
+  "tf": "1h",
+  "lastVisible": "2026-09-09T12:00:00Z",
+  "files": [
+   "klines/BTCUSDT/1h/BTCUSDT-1h-2026-08.csv",
+   "klines/BTCUSDT/1h/BTCUSDT-1h-2026-09.csv"
+  ],
+  "htfFiles": [
+   "klines/BTCUSDT/4h/BTCUSDT-4h-2026-07.csv",
+   "klines/BTCUSDT/4h/BTCUSDT-4h-2026-08.csv",
+   "klines/BTCUSDT/4h/BTCUSDT-4h-2026-09.csv"
+  ],
+  "htfTf": "4h",
+  "difficulty": "hard",
+  "side": "LONG"
+ },
+ "inputs": [
+  {
+   "optionId": "z1"
+  },
+  {
+   "optionId": "z2"
+  },
+  {
+   "optionId": "z3"
+  },
+  {
+   "optionId": "none"
+  }
+ ],
+ "expected": {
+  "A": 409.9143,
+  "P": 79566.3,
+  "options": [
+   {
+    "id": "z1",
+    "bottom": 78938.7,
+    "top": 79125.3,
+    "touches": 5,
+    "reactions": 2,
+    "strength": 8,
+    "recency": 1,
+    "htf": 1,
+    "flip": true,
+    "dist": 1.0758,
+    "role": "support"
+   },
+   {
+    "id": "z2",
+    "bottom": 78133,
+    "top": 78314.9,
+    "touches": 8,
+    "reactions": 3,
+    "strength": 11.5,
+    "recency": 1,
+    "htf": 1,
+    "flip": true,
+    "dist": 3.0528,
+    "role": "support"
+   },
+   {
+    "id": "z3",
+    "bottom": 77422.8,
+    "top": 77604.3,
+    "touches": 5,
+    "reactions": 4,
+    "strength": 9,
+    "recency": 1,
+    "htf": 1,
+    "flip": true,
+    "dist": 4.7864,
+    "role": "support"
+   }
+  ],
+  "chain": {
+   "kind": "reaction",
+   "correct": "z2",
+   "eventTime": "2026-09-09T16:00:00Z",
+   "extreme": 78020,
+   "extremeTime": "2026-09-09T15:00:00Z",
+   "broken": [
+    {
+     "zone": "z1",
+     "time": "2026-09-09T14:00:00Z"
+    }
+   ]
+  },
+  "cases": [
+   {
+    "verdict": "incorrect",
+    "codes": [
+     "LEVEL_REACTION_BROKEN"
+    ]
+   },
+   {
+    "verdict": "correct",
+    "codes": []
+   },
+   {
+    "verdict": "incorrect",
+    "codes": [
+     "LEVEL_REACTION_EARLIER"
+    ]
+   },
+   {
+    "verdict": "incorrect",
+    "codes": [
+     "LEVEL_REACTION_FALSE_NONE"
+    ]
+   }
+  ]
+ },
+ "rationale": "z1 пробита 09-09 14:00 (закрытие на 6.5 USDT за дальним краем); фитиль 09-09 15:00 за дальний край z2 без закрытия - не пробой; реакция 09-09 16:00 -> z2."
+}

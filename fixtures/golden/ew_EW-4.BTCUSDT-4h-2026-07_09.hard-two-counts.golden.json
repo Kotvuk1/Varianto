@@ -1,0 +1,696 @@
+{
+ "algoVersion": "1.0.0",
+ "author": "technical-analyst (ELLIOTT.md §15); перенесено backend-разработчиком, правила §19 применены",
+ "date": "2026-11-05",
+ "source": [
+  {
+   "file": "klines/BTCUSDT/4h/BTCUSDT-4h-2026-07.csv",
+   "sha256": "3f315145e54edb7d5d0b30ddb68bc79b333171b5f6e66b303414436a8846e101"
+  },
+  {
+   "file": "klines/BTCUSDT/4h/BTCUSDT-4h-2026-08.csv",
+   "sha256": "e8a295e3633bb365db324a7d08b0e1512d2eb371d4d193a29d083a2837ed14d2"
+  },
+  {
+   "file": "klines/BTCUSDT/4h/BTCUSDT-4h-2026-09.csv",
+   "sha256": "83ab0cd5a285a747946fcc17684ecafe368a6d982f000f1890e76136e8b3b92a"
+  }
+ ],
+ "rationale": "EW-4: hard: две допустимые разметки на одной точке, три соблазнительные ошибки, фитиль за 3 без закрытия (ELLIOTT.md §15.2 EW-4).",
+ "cases": [
+  {
+   "function": "enumerateCounts",
+   "name": "hard-two-scenarios",
+   "params": {
+    "series": "EW-4",
+    "tf": "4h",
+    "nPoint": 5,
+    "fromIndex": 180,
+    "lastIso": "2026-08-26T12:00",
+    "upTo": "2026-08-27T08:00"
+   },
+   "expected": {
+    "byScenario": {
+     "w3-next": 5,
+     "w5-next": 2,
+     "bc-next": 2
+    },
+    "truncated": false
+   }
+  },
+  {
+   "function": "checkCount",
+   "name": "X-w5-next",
+   "params": {
+    "series": "EW-4",
+    "tf": "4h",
+    "upTo": "2026-08-27T08:00",
+    "impulse": [
+     [
+      "2026-08-01T16:00",
+      "low"
+     ],
+     [
+      "2026-08-09T20:00",
+      "high"
+     ],
+     [
+      "2026-08-14T12:00",
+      "low"
+     ],
+     [
+      "2026-08-25T00:00",
+      "high"
+     ],
+     [
+      "2026-08-26T12:00",
+      "low"
+     ]
+    ]
+   },
+   "expected": {
+    "ratios": {
+     "r2": 0.9215,
+     "r3": 5.7735,
+     "r4": 0.1954
+    },
+    "lengths": [
+     3253.9,
+     2998.5,
+     18786.3,
+     3670.5
+    ],
+    "failedGuides": [
+     "w2-depth",
+     "w4-depth"
+    ],
+    "blockingErrors": []
+   }
+  },
+  {
+   "function": "checkCount",
+   "name": "Y-impulse-6",
+   "params": {
+    "series": "EW-4",
+    "tf": "4h",
+    "upTo": "2026-08-27T08:00",
+    "impulse": [
+     [
+      "2026-08-01T16:00",
+      "low"
+     ],
+     [
+      "2026-08-09T20:00",
+      "high"
+     ],
+     [
+      "2026-08-14T12:00",
+      "low"
+     ],
+     [
+      "2026-08-21T08:00",
+      "high"
+     ],
+     [
+      "2026-08-23T04:00",
+      "low"
+     ],
+     [
+      "2026-08-25T00:00",
+      "high"
+     ]
+    ]
+   },
+   "expected": {
+    "ratios": {
+     "r3": 5.2464,
+     "r4": 0.2324,
+     "w5a": 1.7464,
+     "w5b": 0.328
+    },
+    "size": 36.641,
+    "lengths": [
+     3253.9,
+     2998.5,
+     17071.3,
+     3967.5,
+     5682.5
+    ],
+    "failedGuides": [
+     "w2-depth",
+     "w5-ratio"
+    ],
+    "extended3": true,
+    "blockingErrors": []
+   }
+  },
+  {
+   "function": "checkCount",
+   "name": "w4-overlap",
+   "params": {
+    "series": "EW-4",
+    "tf": "4h",
+    "upTo": "2026-08-27T08:00",
+    "impulse": [
+     [
+      "2026-08-14T12:00",
+      "low"
+     ],
+     [
+      "2026-08-21T08:00",
+      "high"
+     ],
+     [
+      "2026-08-23T04:00",
+      "low"
+     ],
+     [
+      "2026-08-25T00:00",
+      "high"
+     ],
+     [
+      "2026-08-26T12:00",
+      "low"
+     ]
+    ]
+   },
+   "expected": {
+    "blockingErrors": [
+     "EW_RULE_W4_OVERLAP"
+    ]
+   }
+  },
+  {
+   "function": "checkCount",
+   "name": "w2-beyond-w1",
+   "params": {
+    "series": "EW-4",
+    "tf": "4h",
+    "upTo": "2026-08-27T08:00",
+    "impulse": [
+     [
+      "2026-08-11T16:00",
+      "low"
+     ],
+     [
+      "2026-08-12T12:00",
+      "high"
+     ],
+     [
+      "2026-08-14T12:00",
+      "low"
+     ],
+     [
+      "2026-08-25T00:00",
+      "high"
+     ],
+     [
+      "2026-08-26T12:00",
+      "low"
+     ]
+    ]
+   },
+   "expected": {
+    "blockingErrors": [
+     "EW_RULE_W2_BEYOND_W1"
+    ]
+   }
+  },
+  {
+   "function": "checkCount",
+   "name": "point-3-extreme-moved",
+   "params": {
+    "series": "EW-4",
+    "tf": "4h",
+    "upTo": "2026-08-27T08:00",
+    "tol": 0,
+    "impulse": [
+     [
+      "2026-08-01T16:00",
+      "low"
+     ],
+     [
+      "2026-08-09T20:00",
+      "high"
+     ],
+     [
+      "2026-08-14T12:00",
+      "low"
+     ],
+     [
+      "2026-08-21T08:00",
+      "high"
+     ],
+     [
+      "2026-08-26T12:00",
+      "low"
+     ]
+    ]
+   },
+   "expected": {
+    "notExtreme": {
+     "label": "3",
+     "extremeTime": "2026-08-25T00:00",
+     "extremePrice": 81270.5
+    }
+   }
+  },
+  {
+   "function": "checkCount",
+   "name": "snap-pm2",
+   "params": {
+    "series": "EW-4",
+    "tf": "4h",
+    "upTo": "2026-08-27T08:00",
+    "impulse": [
+     [
+      "2026-08-01T16:00",
+      "low"
+     ],
+     [
+      "2026-08-09T20:00",
+      "high"
+     ],
+     [
+      "2026-08-14T12:00",
+      "low"
+     ],
+     [
+      "2026-08-25T00:00",
+      "high"
+     ],
+     [
+      "2026-08-26T08:00",
+      "low"
+     ]
+    ]
+   },
+   "expected": {
+    "snapped": {
+     "label": "4",
+     "time": "2026-08-26T12:00",
+     "price": 77600.0,
+     "offset": 1
+    },
+    "blockingErrors": []
+   }
+  },
+  {
+   "function": "gradeElliott",
+   "name": "invalidation-ok",
+   "params": {
+    "series": "EW-4",
+    "tf": "4h",
+    "T": "2026-08-27T08:00",
+    "ref": {
+     "kind": "ew-scenario",
+     "nPivot": 5,
+     "windowFrom": null,
+     "windowFromIndex": 180,
+     "dir": "bull",
+     "corrType": null,
+     "refPoints": [
+      "2026-08-01T16:00",
+      "2026-08-09T20:00",
+      "2026-08-14T12:00",
+      "2026-08-25T00:00",
+      "2026-08-26T12:00"
+     ]
+    },
+    "answer": {
+     "impulse": [
+      [
+       "2026-08-01T16:00",
+       "low"
+      ],
+      [
+       "2026-08-09T20:00",
+       "high"
+      ],
+      [
+       "2026-08-14T12:00",
+       "low"
+      ],
+      [
+       "2026-08-25T00:00",
+       "high"
+      ],
+      [
+       "2026-08-26T12:00",
+       "low"
+      ]
+     ],
+     "correction": null,
+     "primary": "w5-next",
+     "alternative": "bc-next",
+     "invalidation": 65400.0
+    }
+   },
+   "expected": {
+    "invalidation": "ok",
+    "altStatus": "ok",
+    "errorsExclude": [
+     "EW_INVALIDATION_WRONG",
+     "EW_INVALIDATION_TOO_TIGHT"
+    ],
+    "invTol": 254.1625
+   }
+  },
+  {
+   "function": "gradeElliott",
+   "name": "invalidation-tight",
+   "params": {
+    "series": "EW-4",
+    "tf": "4h",
+    "T": "2026-08-27T08:00",
+    "ref": {
+     "kind": "ew-scenario",
+     "nPivot": 5,
+     "windowFrom": null,
+     "windowFromIndex": 180,
+     "dir": "bull",
+     "corrType": null,
+     "refPoints": [
+      "2026-08-01T16:00",
+      "2026-08-09T20:00",
+      "2026-08-14T12:00",
+      "2026-08-25T00:00",
+      "2026-08-26T12:00"
+     ]
+    },
+    "answer": {
+     "impulse": [
+      [
+       "2026-08-01T16:00",
+       "low"
+      ],
+      [
+       "2026-08-09T20:00",
+       "high"
+      ],
+      [
+       "2026-08-14T12:00",
+       "low"
+      ],
+      [
+       "2026-08-25T00:00",
+       "high"
+      ],
+      [
+       "2026-08-26T12:00",
+       "low"
+      ]
+     ],
+     "correction": null,
+     "primary": "w5-next",
+     "alternative": "bc-next",
+     "invalidation": 77600.0
+    }
+   },
+   "expected": {
+    "invalidation": "tight",
+    "errorsInclude": [
+     "EW_INVALIDATION_TOO_TIGHT"
+    ]
+   }
+  },
+  {
+   "function": "gradeElliott",
+   "name": "invalidation-too-wide",
+   "params": {
+    "series": "EW-4",
+    "tf": "4h",
+    "T": "2026-08-27T08:00",
+    "ref": {
+     "kind": "ew-scenario",
+     "nPivot": 5,
+     "windowFrom": null,
+     "windowFromIndex": 180,
+     "dir": "bull",
+     "corrType": null,
+     "refPoints": [
+      "2026-08-01T16:00",
+      "2026-08-09T20:00",
+      "2026-08-14T12:00",
+      "2026-08-25T00:00",
+      "2026-08-26T12:00"
+     ]
+    },
+    "answer": {
+     "impulse": [
+      [
+       "2026-08-01T16:00",
+       "low"
+      ],
+      [
+       "2026-08-09T20:00",
+       "high"
+      ],
+      [
+       "2026-08-14T12:00",
+       "low"
+      ],
+      [
+       "2026-08-25T00:00",
+       "high"
+      ],
+      [
+       "2026-08-26T12:00",
+       "low"
+      ]
+     ],
+     "correction": null,
+     "primary": "w5-next",
+     "alternative": "bc-next",
+     "invalidation": 62228.8
+    }
+   },
+   "expected": {
+    "invalidation": "wrong",
+    "reason": "too-wide"
+   }
+  },
+  {
+   "function": "gradeElliott",
+   "name": "invalidation-wrong-side",
+   "params": {
+    "series": "EW-4",
+    "tf": "4h",
+    "T": "2026-08-27T08:00",
+    "ref": {
+     "kind": "ew-scenario",
+     "nPivot": 5,
+     "windowFrom": null,
+     "windowFromIndex": 180,
+     "dir": "bull",
+     "corrType": null,
+     "refPoints": [
+      "2026-08-01T16:00",
+      "2026-08-09T20:00",
+      "2026-08-14T12:00",
+      "2026-08-25T00:00",
+      "2026-08-26T12:00"
+     ]
+    },
+    "answer": {
+     "impulse": [
+      [
+       "2026-08-01T16:00",
+       "low"
+      ],
+      [
+       "2026-08-09T20:00",
+       "high"
+      ],
+      [
+       "2026-08-14T12:00",
+       "low"
+      ],
+      [
+       "2026-08-25T00:00",
+       "high"
+      ],
+      [
+       "2026-08-26T12:00",
+       "low"
+      ]
+     ],
+     "correction": null,
+     "primary": "w5-next",
+     "alternative": "bc-next",
+     "invalidation": 80000.0
+    }
+   },
+   "expected": {
+    "invalidation": "wrong",
+    "reason": "wrong-side"
+   }
+  },
+  {
+   "function": "gradeElliott",
+   "name": "Y-6-points-not-current",
+   "params": {
+    "series": "EW-4",
+    "tf": "4h",
+    "T": "2026-08-27T08:00",
+    "ref": {
+     "kind": "ew-scenario",
+     "nPivot": 5,
+     "windowFrom": null,
+     "windowFromIndex": 180,
+     "dir": "bull",
+     "corrType": null,
+     "refPoints": [
+      "2026-08-01T16:00",
+      "2026-08-09T20:00",
+      "2026-08-14T12:00",
+      "2026-08-25T00:00",
+      "2026-08-26T12:00"
+     ]
+    },
+    "answer": {
+     "impulse": [
+      [
+       "2026-08-01T16:00",
+       "low"
+      ],
+      [
+       "2026-08-09T20:00",
+       "high"
+      ],
+      [
+       "2026-08-14T12:00",
+       "low"
+      ],
+      [
+       "2026-08-21T08:00",
+       "high"
+      ],
+      [
+       "2026-08-23T04:00",
+       "low"
+      ],
+      [
+       "2026-08-25T00:00",
+       "high"
+      ]
+     ],
+     "correction": null,
+     "primary": "abc-next",
+     "alternative": "impulse-extends",
+     "invalidation": 81270.5
+    }
+   },
+   "expected": {
+    "verdict": "incorrect",
+    "scoreMax": 0.4,
+    "errorsInclude": [
+     "EW_COUNT_NOT_CURRENT"
+    ]
+   }
+  },
+  {
+   "function": "gradeElliott",
+   "name": "W4-overlap-blocked",
+   "params": {
+    "series": "EW-4",
+    "tf": "4h",
+    "T": "2026-08-27T08:00",
+    "ref": {
+     "kind": "ew-scenario",
+     "nPivot": 5,
+     "windowFrom": null,
+     "windowFromIndex": 180,
+     "dir": "bull",
+     "corrType": null,
+     "refPoints": [
+      "2026-08-01T16:00",
+      "2026-08-09T20:00",
+      "2026-08-14T12:00",
+      "2026-08-25T00:00",
+      "2026-08-26T12:00"
+     ]
+    },
+    "answer": {
+     "impulse": [
+      [
+       "2026-08-14T12:00",
+       "low"
+      ],
+      [
+       "2026-08-21T08:00",
+       "high"
+      ],
+      [
+       "2026-08-23T04:00",
+       "low"
+      ],
+      [
+       "2026-08-25T00:00",
+       "high"
+      ],
+      [
+       "2026-08-26T12:00",
+       "low"
+      ]
+     ],
+     "correction": null,
+     "primary": "w5-next",
+     "alternative": "correction-extends",
+     "invalidation": 79555.5
+    }
+   },
+   "expected": {
+    "verdict": "incorrect",
+    "scoreMax": 0.4,
+    "errorsInclude": [
+     "EW_RULE_W4_OVERLAP"
+    ]
+   }
+  },
+  {
+   "function": "resolveScenario",
+   "name": "X-wick-without-close-then-alternative",
+   "params": {
+    "series": "EW-4",
+    "tf": "4h",
+    "T": "2026-08-27T08:00",
+    "impulse": [
+     [
+      "2026-08-01T16:00",
+      "low"
+     ],
+     [
+      "2026-08-09T20:00",
+      "high"
+     ],
+     [
+      "2026-08-14T12:00",
+      "low"
+     ],
+     [
+      "2026-08-25T00:00",
+      "high"
+     ],
+     [
+      "2026-08-26T12:00",
+      "low"
+     ]
+    ],
+    "primary": "w5-next",
+    "alternative": "bc-next",
+    "limit": 60
+   },
+   "expected": {
+    "kind": "alternative",
+    "time": "2026-08-28T16:00",
+    "levels": {
+     "invalidation": 65482.7,
+     "confirm": 81270.5,
+     "altConfirm": 77600.0
+    },
+    "wickNotConfirm": "2026-08-28T00:00"
+   }
+  }
+ ]
+}

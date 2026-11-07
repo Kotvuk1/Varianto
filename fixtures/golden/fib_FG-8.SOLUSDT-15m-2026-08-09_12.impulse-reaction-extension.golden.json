@@ -1,0 +1,83 @@
+{
+ "algoVersion": "1.0.0",
+ "author": "technical-analyst (значения из docs/specs/FIBONACCI.md §12.2)",
+ "date": "2026-11-04",
+ "source": [
+  {
+   "path": "klines/SOLUSDT/15m/SOLUSDT-15m-2026-08-09.csv",
+   "sha256": "b8910898cd24ec8b4c21c905db4fef6ca410dccd5fd6368a20fa4d99ee7ec98f"
+  },
+  {
+   "path": "klines/SOLUSDT/15m/SOLUSDT-15m-2026-08-10.csv",
+   "sha256": "2c81134720cdc45036404c031fcb2bd0c264cc47804a77f0a1cd8a6a26685080"
+  },
+  {
+   "path": "klines/SOLUSDT/15m/SOLUSDT-15m-2026-08-11.csv",
+   "sha256": "a6d5f4ab27b4df65636df27a5246bb5b8ef8d533b0aa7b32b7d9cbc86329eaa5"
+  },
+  {
+   "path": "klines/SOLUSDT/15m/SOLUSDT-15m-2026-08-12.csv",
+   "sha256": "ee09034aa5ff140e412f112fc9d574979d0e1f1e6eeb80c1f2fb68e1a7cedb04"
+  }
+ ],
+ "function": "findImpulses / resolveReaction / resolveExtension",
+ "params": {
+  "nExt": 5,
+  "tf": "15m",
+  "limitCandles": 96,
+  "note": "ряд обрезан перед первым пропуском (в октябрьских месячных архивах BTC/ETH нет суток 2026-10-28); T = индекс B + nExt"
+ },
+ "expected": {
+  "impulses": [
+   {
+    "eventKind": "bos",
+    "direction": "bear",
+    "breakTime": "2026-08-11T07:15:00Z",
+    "a": {
+     "time": "2026-08-10T20:30:00Z",
+     "price": 76.47
+    },
+    "b": {
+     "time": "2026-08-11T07:15:00Z",
+     "price": 75.36
+    },
+    "candles": 43,
+    "rangeAtr": 6.816
+   }
+  ],
+  "rejected": [],
+  "reaction": [
+   {
+    "direction": "bear",
+    "a": "2026-08-10T20:30:00Z",
+    "b": "2026-08-11T07:15:00Z",
+    "T": "b+5",
+    "kind": "reaction",
+    "index": "2026-08-11T12:15:00Z",
+    "correctOptions": [
+     "deep"
+    ],
+    "cls": "deep",
+    "extremeTime": "2026-08-11T11:00:00Z",
+    "extremePrice": 76.35,
+    "depth": 0.8919,
+    "threshold": 0.3118
+   }
+  ],
+  "extension": [
+   {
+    "direction": "bear",
+    "a": "2026-08-10T20:30:00Z",
+    "b": "2026-08-11T07:15:00Z",
+    "c": "2026-08-11T11:00:00Z",
+    "Te": "2026-08-11T12:15:00Z",
+    "reached": "1.272",
+    "xMax": 1.6036,
+    "extremePrice": 74.57,
+    "extremeTime": "2026-08-11T15:30:00Z",
+    "invalidationTime": "2026-08-11T21:45:00Z"
+   }
+  ]
+ },
+ "rationale": "Значения перенесены из спецификации (получены вручную по OHLC); изменение без смены FIB_ALGO_VERSION запрещено."
+}

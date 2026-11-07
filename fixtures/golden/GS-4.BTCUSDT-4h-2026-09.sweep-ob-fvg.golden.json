@@ -1,0 +1,178 @@
+{
+ "id": "GS-4",
+ "function": "analyzeStructure",
+ "source": {
+  "csv": "klines/BTCUSDT/4h/BTCUSDT-4h-2026-09.csv",
+  "sha256": "83ab0cd5a285a747946fcc17684ecafe368a6d982f000f1890e76136e8b3b92a"
+ },
+ "params": {
+  "nExt": 5,
+  "nInt": null,
+  "sweepHoldK": 3,
+  "fvgMinAtr": 0.5,
+  "obDisplacementAtr": 1.2
+ },
+ "expected": {
+  "sweeps": [
+   {
+    "side": "high",
+    "direction": "bear",
+    "time": "2026-09-11T12:00:00Z",
+    "level": 79737.3,
+    "sweptSwingTime": "2026-09-09T08:00:00Z"
+   },
+   {
+    "side": "low",
+    "direction": "bull",
+    "time": "2026-09-11T12:00:00Z",
+    "level": 76151.9,
+    "sweptSwingTime": "2026-09-02T08:00:00Z"
+   },
+   {
+    "side": "low",
+    "direction": "bull",
+    "time": "2026-09-28T04:00:00Z",
+    "level": 82832.0,
+    "sweptSwingTime": "2026-09-24T08:00:00Z"
+   }
+  ],
+  "orderBlocks": [
+   {
+    "direction": "bull",
+    "eventKind": "bos",
+    "eventTime": "2026-09-06T20:00:00Z",
+    "time": "2026-09-06T12:00:00Z",
+    "bottom": 79125.3,
+    "top": 79973.6,
+    "valid": false,
+    "status": null,
+    "statusTime": null
+   },
+   {
+    "direction": "bear",
+    "eventKind": "choch",
+    "eventTime": "2026-09-08T04:00:00Z",
+    "time": "2026-09-06T20:00:00Z",
+    "bottom": 79600.0,
+    "top": 80536.1,
+    "valid": true,
+    "status": "invalidated",
+    "statusTime": "2026-09-18T12:00:00Z"
+   },
+   {
+    "direction": "bear",
+    "eventKind": "bos",
+    "eventTime": "2026-09-10T12:00:00Z",
+    "time": "2026-09-09T08:00:00Z",
+    "bottom": 78690.3,
+    "top": 79737.3,
+    "valid": false,
+    "status": null,
+    "statusTime": null
+   },
+   {
+    "direction": "bear",
+    "eventKind": "bos",
+    "eventTime": "2026-09-15T20:00:00Z",
+    "time": "2026-09-14T16:00:00Z",
+    "bottom": 78379.6,
+    "top": 79298.3,
+    "valid": true,
+    "status": "invalidated",
+    "statusTime": "2026-09-18T12:00:00Z"
+   },
+   {
+    "direction": "bull",
+    "eventKind": "choch",
+    "eventTime": "2026-09-18T12:00:00Z",
+    "time": "2026-09-17T20:00:00Z",
+    "bottom": 76210.0,
+    "top": 76711.0,
+    "valid": true,
+    "status": "fresh",
+    "statusTime": null
+   },
+   {
+    "direction": "bull",
+    "eventKind": "bos",
+    "eventTime": "2026-09-21T08:00:00Z",
+    "time": "2026-09-20T00:00:00Z",
+    "bottom": 80095.9,
+    "top": 81295.0,
+    "valid": true,
+    "status": "fresh",
+    "statusTime": null
+   }
+  ],
+  "fvgs": [
+   {
+    "direction": "bull",
+    "middleTime": "2026-09-03T12:00:00Z",
+    "bottom": 78032.0,
+    "top": 80588.0,
+    "status": "filled",
+    "fillTime": "2026-09-08T12:00:00Z"
+   },
+   {
+    "direction": "bear",
+    "middleTime": "2026-09-04T12:00:00Z",
+    "bottom": 79838.1,
+    "top": 80458.0,
+    "status": "filled",
+    "fillTime": "2026-09-06T20:00:00Z"
+   },
+   {
+    "direction": "bear",
+    "middleTime": "2026-09-15T04:00:00Z",
+    "bottom": 77188.0,
+    "top": 77622.0,
+    "status": "filled",
+    "fillTime": "2026-09-18T04:00:00Z"
+   },
+   {
+    "direction": "bull",
+    "middleTime": "2026-09-18T00:00:00Z",
+    "bottom": 76711.0,
+    "top": 77188.0,
+    "status": "open",
+    "fillTime": null
+   },
+   {
+    "direction": "bull",
+    "middleTime": "2026-09-18T12:00:00Z",
+    "bottom": 78443.0,
+    "top": 80532.3,
+    "status": "partial",
+    "fillTime": null
+   },
+   {
+    "direction": "bull",
+    "middleTime": "2026-09-21T08:00:00Z",
+    "bottom": 81857.1,
+    "top": 84724.9,
+    "status": "partial",
+    "fillTime": null
+   },
+   {
+    "direction": "bear",
+    "middleTime": "2026-09-23T12:00:00Z",
+    "bottom": 84524.0,
+    "top": 85381.4,
+    "status": "filled",
+    "fillTime": "2026-09-30T12:00:00Z"
+   },
+   {
+    "direction": "bear",
+    "middleTime": "2026-09-28T00:00:00Z",
+    "bottom": 83498.6,
+    "top": 84074.3,
+    "status": "filled",
+    "fillTime": "2026-09-28T16:00:00Z"
+   }
+  ]
+ },
+ "rationale": "ALGORITHMS §18.2 GS-4, §6, §7, §8. OB валидность/статус на 09-30 20:00; кейс «o-1» — OB 09-14 16:00 для BOS bear 09-15 20:00.",
+ "algoVersion": "1.0.0",
+ "author": "technical-analyst (значения из docs/specs/ALGORITHMS.md §18, перенесены Backend)",
+ "date": "2026-11-03"
+}

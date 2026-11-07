@@ -1,0 +1,132 @@
+{
+ "algoVersion": "1.0.0",
+ "author": "technical-analyst (значения docs/specs/CURRICULUM_STAGES.md §14.2; пересчитано backend с правилом исполнения §20)",
+ "date": "2026-11-07",
+ "source": [
+  {
+   "path": "klines/BTCUSDT/1h/BTCUSDT-1h-2026-08.csv",
+   "sha256": "08ed90afdac40e82c6e516587d5f1291b7970bac765704852996c5b5047f8a3f",
+   "role": "tf"
+  },
+  {
+   "path": "klines/BTCUSDT/1h/BTCUSDT-1h-2026-09.csv",
+   "sha256": "6c93df5ac755f8be4a976f56069b1f0dc274aeff99d598afc0dc1c300f996690",
+   "role": "tf"
+  },
+  {
+   "path": "klines/BTCUSDT/4h/BTCUSDT-4h-2026-07.csv",
+   "sha256": "3f315145e54edb7d5d0b30ddb68bc79b333171b5f6e66b303414436a8846e101",
+   "role": "htf"
+  },
+  {
+   "path": "klines/BTCUSDT/4h/BTCUSDT-4h-2026-08.csv",
+   "sha256": "e8a295e3633bb365db324a7d08b0e1512d2eb371d4d193a29d083a2837ed14d2",
+   "role": "htf"
+  },
+  {
+   "path": "klines/BTCUSDT/4h/BTCUSDT-4h-2026-09.csv",
+   "sha256": "83ab0cd5a285a747946fcc17684ecafe368a6d982f000f1890e76136e8b3b92a",
+   "role": "htf"
+  }
+ ],
+ "function": "computeZones / gradeLvStrongest",
+ "params": {
+  "id": "LV-1",
+  "symbol": "BTCUSDT",
+  "tick": 0.1,
+  "kind": "lv-strongest",
+  "tf": "1h",
+  "lastVisible": "2026-09-12T00:00:00Z",
+  "files": [
+   "klines/BTCUSDT/1h/BTCUSDT-1h-2026-08.csv",
+   "klines/BTCUSDT/1h/BTCUSDT-1h-2026-09.csv"
+  ],
+  "htfFiles": [
+   "klines/BTCUSDT/4h/BTCUSDT-4h-2026-07.csv",
+   "klines/BTCUSDT/4h/BTCUSDT-4h-2026-08.csv",
+   "klines/BTCUSDT/4h/BTCUSDT-4h-2026-09.csv"
+  ],
+  "htfTf": "4h",
+  "difficulty": "medium",
+  "role": "resistance"
+ },
+ "inputs": [
+  {
+   "price": 79500
+  },
+  {
+   "price": 78600
+  },
+  {
+   "price": 81000
+  },
+  {
+   "price": 76000
+  }
+ ],
+ "expected": {
+  "A": 777.7429,
+  "P": 77251.8,
+  "reference": {
+   "bottom": 79384.4,
+   "top": 79737.3,
+   "touches": 12,
+   "reactions": 10,
+   "strength": 18.5,
+   "recency": 0.5,
+   "htf": 1,
+   "flip": true,
+   "dist": 2.742,
+   "role": "resistance"
+  },
+  "second": {
+   "bottom": 77422.8,
+   "top": 77767.8,
+   "touches": 9,
+   "reactions": 7,
+   "strength": 14.5,
+   "recency": 1,
+   "htf": 1,
+   "flip": true,
+   "dist": 0.2199,
+   "role": "resistance"
+  },
+  "cases": [
+   {
+    "verdict": "correct",
+    "score": 1,
+    "codes": [],
+    "deviationPct": 0.0686,
+    "hitStrength": 18.5
+   },
+   {
+    "verdict": "partial",
+    "score": 0.5,
+    "codes": [
+     "LEVEL_NOT_STRONGEST"
+    ],
+    "deviationPct": 1.1999,
+    "hitStrength": 12
+   },
+   {
+    "verdict": "incorrect",
+    "score": 0,
+    "codes": [
+     "LEVEL_OFF_TOLERANCE"
+    ],
+    "deviationPct": 1.8169,
+    "hitStrength": null
+   },
+   {
+    "verdict": "incorrect",
+    "score": 0,
+    "codes": [
+     "LEVEL_WRONG_TYPE"
+    ],
+    "deviationPct": 4.4681,
+    "hitStrength": 6.5
+   }
+  ]
+ },
+ "rationale": "Сильнейшее сопротивление [79384.4-79737.3]: 12 касаний, 10 реакций, recency 0.5, htf 1, strength 18.5, флип; второй 77588 (14.5). 79500 - correct; 78600 - partial LEVEL_NOT_STRONGEST; 81000 - LEVEL_OFF_TOLERANCE (1.8169%); 76000 - LEVEL_WRONG_TYPE."
+}

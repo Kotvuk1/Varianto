@@ -1,0 +1,65 @@
+{
+ "id": "CH-1",
+ "algoVersion": "1.0.0",
+ "author": "backend-developer (M2-B)",
+ "date": "2026-11-03",
+ "function": "computeChallengeFacts",
+ "source": {
+  "csv": "klines/BTCUSDT/4h/BTCUSDT-4h-2026-09.csv",
+  "sha256": "83ab0cd5a285a747946fcc17684ecafe368a6d982f000f1890e76136e8b3b92a"
+ },
+ "rationale": "LONG 09-07 20:00 и 09-08 00:00, SHORT 09-14 16:00, WAIT 09-11 00:00 вручную сверены по OHLC (защищённый low 78618.1 / high 79737.3, SL = уровень -/+ 0.1 ATR, RR >= 2). Старший ряд = сам 4h-ряд.",
+ "params": {
+  "structure": {
+   "nExt": 5,
+   "nInt": 2
+  },
+  "htf": "self"
+ },
+ "expected": [
+  {
+   "decisionTime": "2026-09-08T00:00:00Z",
+   "entry": 79075.9,
+   "trendTf": "up",
+   "trendHtf": "up",
+   "refSide": "LONG",
+   "ref": {
+    "sl": 78557.96714285715,
+    "tp": 80536.1,
+    "rr": 2.819284352908471
+   }
+  },
+  {
+   "decisionTime": "2026-09-08T04:00:00Z",
+   "entry": 78880,
+   "trendTf": "up",
+   "trendHtf": "up",
+   "refSide": "LONG",
+   "ref": {
+    "sl": 78555.87357142857,
+    "tp": 80536.1,
+    "rr": 5.109425995588171
+   }
+  },
+  {
+   "decisionTime": "2026-09-14T20:00:00Z",
+   "entry": 78952.1,
+   "trendTf": "down",
+   "trendHtf": "down",
+   "refSide": "SHORT",
+   "ref": {
+    "sl": 79800.19642857143,
+    "tp": 76000.3,
+    "rr": 3.48050044848337
+   }
+  },
+  {
+   "decisionTime": "2026-09-11T04:00:00Z",
+   "entry": 76860.8,
+   "trendTf": "down",
+   "trendHtf": "down",
+   "refSide": "WAIT",
+   "ref": null
+  }
+ ]
+}

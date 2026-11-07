@@ -1,0 +1,57 @@
+import { expect, test } from '@playwright/test';
+import { checkAndSeeResult, nextThenHomeShowsDone, openSession, shot, tapCandle } from './ms.helpers';
+
+const PA = '/learn/price-action';
+test.describe.configure({ timeout: 180_000 });
+
+test('экран выбора: тип задания ведёт в сессию, «Проведи уровень» больше нет', async ({ page }) => {
+  await page.goto(PA);
+  await expect(page.getByRole('radio', { name: /Проведи уровень/ })).toHaveCount(0);
+  await page.getByRole('radio', { name: /Контекст/ }).click();
+  await page.getByTestId('start-session').click();
+  await expect(page).toHaveURL(/type=context/);
+});
+
+test('PA «Найди модель»: касание свечи, проверка, разбор', async ({ page }) => {
+  await openSession(page, `${PA}/session?type=find-pattern&difficulty=easy&tf=1h&symbol=BTCUSDT`);
+  await shot(page, 'pa-find-before');
+  // F-01: подсказка про инструмент «Модель», а не про Swing High
+  await expect(page.getByTestId('instruction-text')).toContainText('Модель');
+  await expect(page.getByTestId('instruction-text')).not.toContainText('Swing');
+  await tapCandle(page, 10);
+  await expect(page.getByTestId('chart')).toHaveAttribute('data-mark-count', '1');
+  await checkAndSeeResult(page);
+  await expect(page.getByTestId('result-summary')).toBeVisible();
+  await shot(page, 'pa-find-after');
+});
+
+test('PA «Контекст»: ответы, проверка, разбор, следующее, главная', async ({ page }) => {
+  await openSession(page, `${PA}/session?type=context&difficulty=easy&tf=1h&symbol=BTCUSDT`);
+  await shot(page, 'pa-context-before');
+  const mobile = (page.viewportSize()?.width ?? 0) < 1024;
+  if (mobile) {
+    // пошагово: один вопрос на шаг, график не меньше 55% высоты, «Далее/Ответить» всегда видна
+    const chartBox = await page.getByTestId('chart').boundingBox();
+    expect(chartBox!.height).toBeGreaterThanOrEqual(844 * 0.55);
+    await expect(page.getByTestId('step-counter')).toHaveText('1/5');
+    for (const id of ['sweep', 'ob', 'level']) {
+      await page.getByTestId(`ctx-${id}`).getByRole('radio', { name: 'Нет' }).click();
+      await page.getByTestId('step-next').click();
+    }
+    await page.getByTestId('ctx-trend').getByRole('radio', { name: 'Вверх' }).click();
+    await page.getByTestId('step-next').click();
+    await expect(page.getByTestId('step-counter')).toHaveText('5/5');
+    await page.getByTestId('ctx-significant').getByRole('radio', { name: 'Нет' }).click();
+  } else {
+    await page.getByTestId('check-button').click();
+    await expect(page.getByText('Ответьте на все вопросы и выберите, значима ли модель.').first()).toBeVisible();
+    for (const id of ['sweep', 'ob', 'level', 'significant']) await page.getByTestId(`ctx-${id}`).getByRole('radio', { name: 'Нет' }).click();
+    await page.getByTestId('ctx-trend').getByRole('radio', { name: 'Вверх' }).click();
+  }
+  await page.getByRole('radio', { name: /Старший ТФ/ }).click();
+  await expect(page.getByTestId('chart')).toHaveAttribute('data-ready', 'true');
+  await checkAndSeeResult(page);
+  await expect(page.getByTestId('context-detail')).toContainText('Эталон');
+  await shot(page, 'pa-context-after');
+  await nextThenHomeShowsDone(page, PA);
+});

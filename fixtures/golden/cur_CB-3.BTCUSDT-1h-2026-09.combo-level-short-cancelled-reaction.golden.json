@@ -1,0 +1,130 @@
+{
+ "algoVersion": "1.0.0",
+ "author": "technical-analyst (значения docs/specs/CURRICULUM_STAGES.md §14.2; пересчитано backend с правилом исполнения §20)",
+ "date": "2026-11-07",
+ "source": [
+  {
+   "path": "klines/BTCUSDT/1h/BTCUSDT-1h-2026-08.csv",
+   "sha256": "08ed90afdac40e82c6e516587d5f1291b7970bac765704852996c5b5047f8a3f",
+   "role": "tf"
+  },
+  {
+   "path": "klines/BTCUSDT/1h/BTCUSDT-1h-2026-09.csv",
+   "sha256": "6c93df5ac755f8be4a976f56069b1f0dc274aeff99d598afc0dc1c300f996690",
+   "role": "tf"
+  },
+  {
+   "path": "klines/BTCUSDT/4h/BTCUSDT-4h-2026-07.csv",
+   "sha256": "3f315145e54edb7d5d0b30ddb68bc79b333171b5f6e66b303414436a8846e101",
+   "role": "htf"
+  },
+  {
+   "path": "klines/BTCUSDT/4h/BTCUSDT-4h-2026-08.csv",
+   "sha256": "e8a295e3633bb365db324a7d08b0e1512d2eb371d4d193a29d083a2837ed14d2",
+   "role": "htf"
+  },
+  {
+   "path": "klines/BTCUSDT/4h/BTCUSDT-4h-2026-09.csv",
+   "sha256": "83ab0cd5a285a747946fcc17684ecafe368a6d982f000f1890e76136e8b3b92a",
+   "role": "htf"
+  }
+ ],
+ "function": "gradeComboLevel / playCombo",
+ "params": {
+  "id": "CB-3",
+  "symbol": "BTCUSDT",
+  "tick": 0.1,
+  "kind": "combo-level-trade",
+  "tf": "1h",
+  "lastVisible": "2026-09-16T12:00:00Z",
+  "files": [
+   "klines/BTCUSDT/1h/BTCUSDT-1h-2026-08.csv",
+   "klines/BTCUSDT/1h/BTCUSDT-1h-2026-09.csv"
+  ],
+  "htfFiles": [
+   "klines/BTCUSDT/4h/BTCUSDT-4h-2026-07.csv",
+   "klines/BTCUSDT/4h/BTCUSDT-4h-2026-08.csv",
+   "klines/BTCUSDT/4h/BTCUSDT-4h-2026-09.csv"
+  ],
+  "htfTf": "4h",
+  "difficulty": "medium",
+  "side": "SHORT",
+  "role": "resistance"
+ },
+ "inputs": [
+  {
+   "zone": [
+    77290,
+    77470
+   ],
+   "limit": {
+    "price": 77291.2,
+    "type": "near-edge",
+    "frontK": null
+   },
+   "sl": 77600,
+   "tp": 76458.9
+  }
+ ],
+ "expected": {
+  "A": 370.2071,
+  "P": 75933.5,
+  "reference": {
+   "bottom": 77291.2,
+   "top": 77469.3,
+   "touches": 10,
+   "reactions": 9,
+   "strength": 16.5,
+   "recency": 1,
+   "htf": 1,
+   "flip": true,
+   "dist": 3.6674,
+   "role": "resistance"
+  },
+  "cases": [
+   {
+    "parts": [
+     "zone:20",
+     "placement:25",
+     "type:5",
+     "sl:20",
+     "tp:18",
+     "rr:12"
+    ],
+    "quality": 100,
+    "verdict": "correct",
+    "rr": 2.6953,
+    "codes": [],
+    "targets": [
+     {
+      "price": 77208,
+      "source": "level",
+      "rrRef": 0.3074
+     },
+     {
+      "price": 76942.7,
+      "source": "level",
+      "rrRef": 1.2876
+     },
+     {
+      "price": 76687.8207,
+      "source": "level",
+      "rrRef": 2.2294
+     },
+     {
+      "price": 76458.9,
+      "source": "level",
+      "rrRef": 3.0752
+     }
+    ],
+    "outcome": {
+     "kind": "cancelled-reaction",
+     "time": "2026-09-17T14:00:00Z",
+     "r": 0
+    },
+    "stopHunted": false
+   }
+  ]
+ },
+ "rationale": "quality 100, correct; ордер снят по реакции (cancelled-reaction 09-17 14:00: реакция от 77149.8 без исполнения), 0R."
+}

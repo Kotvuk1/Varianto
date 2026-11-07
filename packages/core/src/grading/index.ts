@@ -1,0 +1,1 @@
+export { gradeMarks } from './grade';

@@ -1,0 +1,208 @@
+{
+ "algoVersion": "1.0.0",
+ "author": "technical-analyst (значения docs/specs/CURRICULUM_STAGES.md §14.2; пересчитано backend с правилом исполнения §20)",
+ "date": "2026-11-07",
+ "source": [
+  {
+   "path": "klines/BTCUSDT/1h/BTCUSDT-1h-2026-08.csv",
+   "sha256": "08ed90afdac40e82c6e516587d5f1291b7970bac765704852996c5b5047f8a3f",
+   "role": "tf"
+  },
+  {
+   "path": "klines/BTCUSDT/1h/BTCUSDT-1h-2026-09.csv",
+   "sha256": "6c93df5ac755f8be4a976f56069b1f0dc274aeff99d598afc0dc1c300f996690",
+   "role": "tf"
+  },
+  {
+   "path": "klines/BTCUSDT/4h/BTCUSDT-4h-2026-07.csv",
+   "sha256": "3f315145e54edb7d5d0b30ddb68bc79b333171b5f6e66b303414436a8846e101",
+   "role": "htf"
+  },
+  {
+   "path": "klines/BTCUSDT/4h/BTCUSDT-4h-2026-08.csv",
+   "sha256": "e8a295e3633bb365db324a7d08b0e1512d2eb371d4d193a29d083a2837ed14d2",
+   "role": "htf"
+  },
+  {
+   "path": "klines/BTCUSDT/4h/BTCUSDT-4h-2026-09.csv",
+   "sha256": "83ab0cd5a285a747946fcc17684ecafe368a6d982f000f1890e76136e8b3b92a",
+   "role": "htf"
+  }
+ ],
+ "function": "buildStopTakeRef / scoreStopTake / playStopTake",
+ "params": {
+  "id": "ST-2",
+  "symbol": "BTCUSDT",
+  "tick": 0.1,
+  "kind": "stop-take",
+  "tf": "1h",
+  "lastVisible": "2026-09-26T00:00:00Z",
+  "files": [
+   "klines/BTCUSDT/1h/BTCUSDT-1h-2026-08.csv",
+   "klines/BTCUSDT/1h/BTCUSDT-1h-2026-09.csv"
+  ],
+  "htfFiles": [
+   "klines/BTCUSDT/4h/BTCUSDT-4h-2026-07.csv",
+   "klines/BTCUSDT/4h/BTCUSDT-4h-2026-08.csv",
+   "klines/BTCUSDT/4h/BTCUSDT-4h-2026-09.csv"
+  ],
+  "htfTf": "4h",
+  "side": "SHORT",
+  "zone": [
+   84855,
+   85080
+  ],
+  "entry": 84855
+ },
+ "inputs": [
+  {
+   "sl": 85142,
+   "tp": 84160
+  },
+  {
+   "sl": 85100,
+   "tp": 84160
+  },
+  {
+   "sl": 85300,
+   "tp": 84160
+  }
+ ],
+ "expected": {
+  "A": 496.8286,
+  "P": 83869,
+  "zone": {
+   "bottom": 84855,
+   "top": 85080,
+   "touches": 3,
+   "reactions": 2,
+   "strength": 6,
+   "recency": 1,
+   "htf": 1,
+   "flip": true,
+   "dist": 1.9846,
+   "role": "resistance"
+  },
+  "fill": {
+   "time": "2026-09-27T09:00:00Z",
+   "candles": 33
+  },
+  "ref": {
+   "A": 242.5143,
+   "Pl": 85080,
+   "Estar": 84855,
+   "slRef": 85140.6286,
+   "kStar": 1,
+   "targets": [
+    {
+     "price": 84638.5,
+     "source": "level",
+     "rrRef": 0.758,
+     "allowed": true
+    },
+    {
+     "price": 84155.1014,
+     "source": "level",
+     "rrRef": 2.4504,
+     "allowed": true
+    },
+    {
+     "price": 83794.2,
+     "source": "level",
+     "rrRef": 3.7139,
+     "allowed": true
+    },
+    {
+     "price": 83587,
+     "source": "level",
+     "rrRef": 4.4393,
+     "allowed": false
+    }
+   ]
+  },
+  "cases": [
+   {
+    "parts": [
+     "sl:40",
+     "tp:35",
+     "rr:25"
+    ],
+    "quality": 100,
+    "verdict": "correct",
+    "rr": 2.4216,
+    "codes": [],
+    "outcome": {
+     "result": "sl",
+     "exitTime": "2026-09-27T13:00:00Z",
+     "r": -1,
+     "method": "candle"
+    },
+    "referenceOutcome": {
+     "sl": 85140.6286,
+     "tp": 84155.1014,
+     "result": "sl",
+     "exitTime": "2026-09-27T13:00:00Z"
+    },
+    "stopHunted": true,
+    "huntBlocks": [
+     "OK_STOP_HUNT_RULES"
+    ]
+   },
+   {
+    "parts": [
+     "sl:20",
+     "tp:35",
+     "rr:25"
+    ],
+    "quality": 80,
+    "verdict": "partial",
+    "rr": 2.8367,
+    "codes": [
+     "SL_NO_BUFFER"
+    ],
+    "outcome": {
+     "result": "sl",
+     "exitTime": "2026-09-27T13:00:00Z",
+     "r": -1,
+     "method": "candle"
+    },
+    "referenceOutcome": {
+     "sl": 85140.6286,
+     "tp": 84155.1014,
+     "result": "sl",
+     "exitTime": "2026-09-27T13:00:00Z"
+    },
+    "stopHunted": true,
+    "huntBlocks": [
+     "STOP_HUNTED"
+    ]
+   },
+   {
+    "parts": [
+     "sl:40",
+     "tp:35",
+     "rr:12"
+    ],
+    "quality": 87,
+    "verdict": "correct",
+    "rr": 1.5618,
+    "codes": [],
+    "outcome": {
+     "result": "tp",
+     "exitTime": "2026-09-27T22:00:00Z",
+     "r": 1.5618,
+     "method": "candle"
+    },
+    "referenceOutcome": {
+     "sl": 85140.6286,
+     "tp": 84155.1014,
+     "result": "sl",
+     "exitTime": "2026-09-27T13:00:00Z"
+    },
+    "stopHunted": false,
+    "huntBlocks": []
+   }
+  ]
+ },
+ "rationale": "ПЕРЕСЧИТАНО по §20: свеча 09-27 08:00 касается 84855.0 ровно (high = E) - исполнения нет; исполнение 09-27 09:00 (+33), A = 242.5143 (в спецификации 222.5214), полоса SL [85140.63; 85443.8]. Ответы пересчитаны: sl 85142 (запас 0.2556 ATR, вынос 13:00 - OK_STOP_HUNT_RULES), sl 85100 (SL_NO_BUFFER, STOP_HUNTED), sl 85300 (TP 09-27 22:00)."
+}

@@ -1,0 +1,77 @@
+{
+ "algoVersion": "1.0.0",
+ "author": "technical-analyst (ELLIOTT.md §15); перенесено backend-разработчиком, правила §19 применены",
+ "date": "2026-11-05",
+ "source": [
+  {
+   "file": "klines/BTCUSDT/1h/BTCUSDT-1h-2026-07.csv",
+   "sha256": "fb49ce88123549ab9156d4f7afb0fd1bd32880ec4cf52066277d0008e187c2d1"
+  }
+ ],
+ "rationale": "EW-6: соблазнительный impulse с самой короткой 3-й (ELLIOTT.md §15.2 EW-6).",
+ "cases": [
+  {
+   "function": "checkCount",
+   "name": "w3-shortest",
+   "params": {
+    "series": "EW-6",
+    "tf": "1h",
+    "upTo": "2026-07-27T12:00",
+    "tol": 0,
+    "impulse": [
+     [
+      "2026-07-25T08:00",
+      "low"
+     ],
+     [
+      "2026-07-26T04:00",
+      "high"
+     ],
+     [
+      "2026-07-26T06:00",
+      "low"
+     ],
+     [
+      "2026-07-26T16:00",
+      "high"
+     ],
+     [
+      "2026-07-26T20:00",
+      "low"
+     ],
+     [
+      "2026-07-27T06:00",
+      "high"
+     ]
+    ]
+   },
+   "expected": {
+    "lengths": [
+     805.5,
+     null,
+     652.6,
+     null,
+     1116.2
+    ],
+    "blockingErrors": [
+     "EW_RULE_W3_SHORTEST"
+    ]
+   }
+  },
+  {
+   "function": "enumerateCounts",
+   "name": "no-count-ends-0727-0600",
+   "params": {
+    "series": "EW-6",
+    "nPoint": 5,
+    "fromIndex": 570,
+    "lastIso": "2026-07-27T06:00",
+    "upTo": "2026-07-27T11:00"
+   },
+   "expected": {
+    "byScenario": {},
+    "truncated": false
+   }
+  }
+ ]
+}

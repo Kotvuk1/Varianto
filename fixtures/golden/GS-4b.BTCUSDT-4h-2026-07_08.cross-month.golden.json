@@ -1,0 +1,56 @@
+{
+ "id": "GS-4b",
+ "function": "analyzeStructure",
+ "source": {
+  "csv": [
+   "klines/BTCUSDT/4h/BTCUSDT-4h-2026-07.csv",
+   "klines/BTCUSDT/4h/BTCUSDT-4h-2026-08.csv"
+  ],
+  "sha256": [
+   "3f315145e54edb7d5d0b30ddb68bc79b333171b5f6e66b303414436a8846e101",
+   "e8a295e3633bb365db324a7d08b0e1512d2eb371d4d193a29d083a2837ed14d2"
+  ]
+ },
+ "params": {
+  "nExt": 5,
+  "nInt": null,
+  "sweepHoldK": 3,
+  "fvgMinAtr": 0.5,
+  "obDisplacementAtr": 1.2
+ },
+ "expected": {
+  "events": [
+   {
+    "kind": "choch",
+    "direction": "bear",
+    "breakTime": "2026-08-01T16:00:00Z",
+    "level": 62505.1,
+    "brokenSwingTime": "2026-07-17T12:00:00Z",
+    "close": 62502.1
+   },
+   {
+    "kind": "choch",
+    "direction": "bull",
+    "breakTime": "2026-08-19T12:00:00Z",
+    "level": 66924.1,
+    "brokenSwingTime": "2026-07-21T12:00:00Z"
+   }
+  ],
+  "sweep": {
+   "side": "low",
+   "time": "2026-08-01T16:00:00Z",
+   "level": 62410.5,
+   "low": 62228.8,
+   "close": 62502.1
+  },
+  "orderBlock": {
+   "eventTime": "2026-08-19T12:00:00Z",
+   "time": "2026-08-19T04:00:00Z",
+   "direction": "bull"
+  }
+ },
+ "rationale": "ALGORITHMS §5.5 (пробой на 3.0 USDT, закрытие 62502.1 < защищённый low 62505.1), §6.3 (CHoCH и sweep на одной свече), §7.1 (OB 08-19 04:00 для CHoCH 08-19 12:00). Месячные архивы 2026-07 + 2026-08.",
+ "algoVersion": "1.0.0",
+ "author": "technical-analyst (значения из docs/specs/ALGORITHMS.md §18, перенесены Backend)",
+ "date": "2026-11-03"
+}

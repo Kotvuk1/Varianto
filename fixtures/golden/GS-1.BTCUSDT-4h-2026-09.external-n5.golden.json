@@ -1,0 +1,221 @@
+{
+ "id": "GS-1",
+ "function": "analyzeStructure",
+ "source": {
+  "csv": "klines/BTCUSDT/4h/BTCUSDT-4h-2026-09.csv",
+  "sha256": "83ab0cd5a285a747946fcc17684ecafe368a6d982f000f1890e76136e8b3b92a"
+ },
+ "params": {
+  "nExt": 5,
+  "nInt": null,
+  "sweepHoldK": 3,
+  "fvgMinAtr": 0.5,
+  "obDisplacementAtr": 1.2
+ },
+ "expected": {
+  "externalSwings": [
+   {
+    "time": "2026-09-02T08:00:00Z",
+    "type": "low",
+    "price": 76151.9,
+    "label": null
+   },
+   {
+    "time": "2026-09-03T20:00:00Z",
+    "type": "high",
+    "price": 82282.8,
+    "label": null
+   },
+   {
+    "time": "2026-09-04T12:00:00Z",
+    "type": "low",
+    "price": 78618.1,
+    "label": "HL"
+   },
+   {
+    "time": "2026-09-05T16:00:00Z",
+    "type": "high",
+    "price": 80167.0,
+    "label": "LH"
+   },
+   {
+    "time": "2026-09-06T20:00:00Z",
+    "type": "high",
+    "price": 80536.1,
+    "label": "HH"
+   },
+   {
+    "time": "2026-09-08T12:00:00Z",
+    "type": "low",
+    "price": 77600.1,
+    "label": "LL"
+   },
+   {
+    "time": "2026-09-09T08:00:00Z",
+    "type": "high",
+    "price": 79737.3,
+    "label": "LH"
+   },
+   {
+    "time": "2026-09-11T12:00:00Z",
+    "type": "high",
+    "price": 79859.8,
+    "label": "HH"
+   },
+   {
+    "time": "2026-09-11T12:00:00Z",
+    "type": "low",
+    "price": 76000.3,
+    "label": "LL"
+   },
+   {
+    "time": "2026-09-14T00:00:00Z",
+    "type": "low",
+    "price": 76350.1,
+    "label": "HL"
+   },
+   {
+    "time": "2026-09-14T20:00:00Z",
+    "type": "high",
+    "price": 79570.9,
+    "label": "LH"
+   },
+   {
+    "time": "2026-09-15T16:00:00Z",
+    "type": "low",
+    "price": 74909.4,
+    "label": "LL"
+   },
+   {
+    "time": "2026-09-16T16:00:00Z",
+    "type": "low",
+    "price": 75025.0,
+    "label": "HL"
+   },
+   {
+    "time": "2026-09-19T12:00:00Z",
+    "type": "high",
+    "price": 81933.9,
+    "label": "HH"
+   },
+   {
+    "time": "2026-09-20T00:00:00Z",
+    "type": "low",
+    "price": 80095.9,
+    "label": "HL"
+   },
+   {
+    "time": "2026-09-21T20:00:00Z",
+    "type": "high",
+    "price": 87385.1,
+    "label": "HH"
+   },
+   {
+    "time": "2026-09-23T04:00:00Z",
+    "type": "high",
+    "price": 87247.3,
+    "label": "LH"
+   },
+   {
+    "time": "2026-09-24T08:00:00Z",
+    "type": "low",
+    "price": 82832.0,
+    "label": "HL"
+   },
+   {
+    "time": "2026-09-25T08:00:00Z",
+    "type": "high",
+    "price": 85224.0,
+    "label": "LH"
+   },
+   {
+    "time": "2026-09-25T12:00:00Z",
+    "type": "low",
+    "price": 83130.1,
+    "label": "HL"
+   },
+   {
+    "time": "2026-09-27T12:00:00Z",
+    "type": "high",
+    "price": 85146.4,
+    "label": "LH"
+   },
+   {
+    "time": "2026-09-28T12:00:00Z",
+    "type": "low",
+    "price": 82500.1,
+    "label": "LL"
+   },
+   {
+    "time": "2026-09-29T12:00:00Z",
+    "type": "high",
+    "price": 84554.9,
+    "label": "LH"
+   }
+  ],
+  "externalEvents": [
+   {
+    "kind": "bos",
+    "direction": "bull",
+    "breakTime": "2026-09-06T20:00:00Z",
+    "level": 80167.0,
+    "brokenSwingTime": "2026-09-05T16:00:00Z"
+   },
+   {
+    "kind": "choch",
+    "direction": "bear",
+    "breakTime": "2026-09-08T04:00:00Z",
+    "level": 78618.1,
+    "brokenSwingTime": "2026-09-04T12:00:00Z"
+   },
+   {
+    "kind": "bos",
+    "direction": "bear",
+    "breakTime": "2026-09-10T12:00:00Z",
+    "level": 77600.1,
+    "brokenSwingTime": "2026-09-08T12:00:00Z"
+   },
+   {
+    "kind": "bos",
+    "direction": "bear",
+    "breakTime": "2026-09-15T20:00:00Z",
+    "level": 76000.3,
+    "brokenSwingTime": "2026-09-11T12:00:00Z"
+   },
+   {
+    "kind": "choch",
+    "direction": "bull",
+    "breakTime": "2026-09-18T12:00:00Z",
+    "level": 79570.9,
+    "brokenSwingTime": "2026-09-14T20:00:00Z"
+   },
+   {
+    "kind": "bos",
+    "direction": "bull",
+    "breakTime": "2026-09-21T08:00:00Z",
+    "level": 81933.9,
+    "brokenSwingTime": "2026-09-19T12:00:00Z"
+   }
+  ],
+  "finalState": {
+   "trend": "up",
+   "refHigh": {
+    "time": "2026-09-21T20:00:00Z",
+    "price": 87385.1
+   },
+   "refLow": {
+    "time": "2026-09-20T00:00:00Z",
+    "price": 80095.9
+   }
+  },
+  "ac06": {
+   "candle": "2026-09-11T12:00:00Z",
+   "noChochOn": "2026-09-11T12:00:00Z",
+   "chochOn": "2026-09-18T12:00:00Z"
+  }
+ },
+ "rationale": "ALGORITHMS §18.2 GS-1, §5.5, §12.8. AC-06: на 09-11 12:00 high 79859.8 выше защищённого high 79737.3, close 77682.9 ниже -> CHoCH нет.",
+ "algoVersion": "1.0.0",
+ "author": "technical-analyst (значения из docs/specs/ALGORITHMS.md §18, перенесены Backend)",
+ "date": "2026-11-03"
+}

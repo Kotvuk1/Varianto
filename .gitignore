@@ -1,4 +1,15 @@
-graphify-out/cache/
 node_modules/
+.next/
+out/
+coverage/
+playwright-report/
+test-results/
+*.tsbuildinfo
+next-env.d.ts
+.vercel/
 .env
 .env.*
+!.env.example
+graphify-out/cache/
+apps/web-m5/
+apps/web-*/
