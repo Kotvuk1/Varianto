@@ -268,6 +268,7 @@ test('focusMark: метка подсвечивается на 1.2 с (data-flash
   await tapAt(page, bos.swingPt);
   await tapAt(page, bos.breakPt);
   await expect(chart).toHaveAttribute('data-mark-count', '1');
+  await expect.poll(async () => (await markPoints(page)).length).toBeGreaterThan(0);
   const id = (await markPoints(page))[0]!.id;
   const t0 = Date.now();
   expect(await page.evaluate((i) => (window as unknown as { __tlFocusMark: (i: string) => boolean }).__tlFocusMark(i), id)).toBe(true);
