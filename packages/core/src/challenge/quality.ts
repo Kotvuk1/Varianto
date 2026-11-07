@@ -58,15 +58,18 @@ function lastInternal(side: Side, f: ChallengeFacts, entry: number): Swing | nul
   return cands.reduce<Swing | null>((best, s) => (best === null || s.index > best.index ? s : best), null);
 }
 
-function slScore(side: Side, f: ChallengeFacts, entry: number, sl: number): { score: number; code: 'SL_TOO_WIDE' | 'SL_INSIDE_STRUCTURE' | null; level: number | null } {
+function slScore(side: Side, f: ChallengeFacts, entry: number, sl: number): { score: number; code: 'SL_TOO_WIDE' | 'SL_NO_BUFFER' | 'SL_INSIDE_STRUCTURE' | null; level: number | null } {
   const P = protectedLevel(side, f, entry);
   if (!P) return { score: 8, code: null, level: null }; // эталонного уровня нет — частичный балл без ошибки
   const A = f.atr;
   const bull = side === 'LONG';
   const beyond = bull ? sl < P.price : sl > P.price;
   if (beyond) {
+    // §20: запас стопа за защищённым уровнем 0.25-1.5 ATR (как в ступени 4)
     const wide = bull ? sl < P.price - 1.5 * A : sl > P.price + 1.5 * A;
-    return wide ? { score: 8, code: 'SL_TOO_WIDE', level: P.price } : { score: 15, code: null, level: P.price };
+    if (wide) return { score: 8, code: 'SL_TOO_WIDE', level: P.price };
+    const noBuffer = bull ? sl > P.price - 0.25 * A : sl < P.price + 0.25 * A;
+    return noBuffer ? { score: 8, code: 'SL_NO_BUFFER', level: P.price } : { score: 15, code: null, level: P.price };
   }
   const inner = lastInternal(side, f, entry);
   if (inner && (bull ? sl < inner.price : sl > inner.price)) return { score: 8, code: null, level: P.price };
@@ -176,6 +179,9 @@ export function gradeChallenge(
   parts.push({ key: 'sl', score: s.score, max: 15 });
   if (s.code === 'SL_INSIDE_STRUCTURE') err('SL_INSIDE_STRUCTURE', 'challenge-risk', { sl, level: s.level as number });
   else if (s.code === 'SL_TOO_WIDE') err('SL_TOO_WIDE', 'challenge-risk', { sl, level: s.level as number });
+  else if (s.code === 'SL_NO_BUFFER') {
+    err('SL_NO_BUFFER', 'challenge-risk', { sl, level: s.level as number, bufferAtr: Math.abs((s.level as number) - sl) / f.atr });
+  }
   else if (s.score === 15) ok.push({ code: 'OK_SL_PLACEMENT', params: { level: s.level as number } });
 
   // rr

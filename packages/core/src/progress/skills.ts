@@ -101,8 +101,14 @@ export function shouldSuggestHarder(s: SkillStat): boolean {
 
 export type SkillGenerator =
   | { module: 'market-structure'; kind: 'ms' }
+  /** Ступень 1 (CURRICULUM_STAGES.md §10.4). */
+  | { module: 'stage-swings'; taskType: 'sw-mark' | 'sw-trend' }
+  /** Ступень 2: pa-level переехал из price-action. */
+  | { module: 'levels'; taskType: 'lv-strongest' | 'lv-zone' | 'lv-reaction' }
+  | { module: 'limit-entry' }
+  | { module: 'stop-take' }
   | { module: 'price-action'; taskType: 'find-pattern'; targets: PatternType[] }
-  | { module: 'price-action'; taskType: 'draw-level' | 'context' }
+  | { module: 'price-action'; taskType: 'context' }
   | { module: 'challenge'; waitShare?: number }
   | { module: 'fibonacci'; taskType: 'grid' | 'reaction' | 'extension' }
   /** Elliott: тип задания определяется сложностью (kind), `focus` генератор не меняет (ELLIOTT.md §13, §19). */
@@ -133,8 +139,24 @@ export function generatorForSkill(skill: SkillId, seed = 0): SkillGenerator {
       return { module: 'price-action', taskType: 'find-pattern', targets: ['doji'] };
     case 'pa-star':
       return { module: 'price-action', taskType: 'find-pattern', targets: ['morning-star', 'evening-star'] };
+    case 'swing':
+    case 'structure-labels':
+      return { module: 'stage-swings', taskType: 'sw-mark' };
+    case 'swing-trend':
+      return { module: 'stage-swings', taskType: 'sw-trend' };
     case 'pa-level':
-      return { module: 'price-action', taskType: 'draw-level' };
+      return { module: 'levels', taskType: 'lv-strongest' };
+    case 'level-zone':
+      return { module: 'levels', taskType: 'lv-zone' };
+    case 'level-reaction':
+      return { module: 'levels', taskType: 'lv-reaction' };
+    case 'limit-placement':
+    case 'limit-fill':
+      return { module: 'limit-entry' };
+    case 'stop-placement':
+    case 'take-profit':
+    case 'risk-reward':
+      return { module: 'stop-take' };
     case 'pa-context':
       return { module: 'price-action', taskType: 'context' };
     case 'challenge-wait':

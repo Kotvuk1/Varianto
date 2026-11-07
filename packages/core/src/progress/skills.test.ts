@@ -115,11 +115,19 @@ describe('слабые места и подборка', () => {
 
 describe('навык -> генератор', () => {
   it('сопоставление по §16.3', () => {
-    expect(generatorForSkill('swing')).toEqual({ module: 'market-structure', kind: 'ms' });
+    expect(generatorForSkill('bos')).toEqual({ module: 'market-structure', kind: 'ms' });
+    expect(generatorForSkill('swing')).toEqual({ module: 'stage-swings', taskType: 'sw-mark' });
+    expect(generatorForSkill('structure-labels')).toEqual({ module: 'stage-swings', taskType: 'sw-mark' });
+    expect(generatorForSkill('swing-trend')).toEqual({ module: 'stage-swings', taskType: 'sw-trend' });
     expect(generatorForSkill('internal-external')).toEqual({ module: 'market-structure', kind: 'ms' });
     expect(generatorForSkill('pa-star')).toEqual({ module: 'price-action', taskType: 'find-pattern', targets: ['morning-star', 'evening-star'] });
     expect(generatorForSkill('pa-engulfing')).toEqual({ module: 'price-action', taskType: 'find-pattern', targets: ['engulfing'] });
-    expect(generatorForSkill('pa-level')).toEqual({ module: 'price-action', taskType: 'draw-level' });
+    expect(generatorForSkill('pa-level')).toEqual({ module: 'levels', taskType: 'lv-strongest' });
+    expect(generatorForSkill('level-zone')).toEqual({ module: 'levels', taskType: 'lv-zone' });
+    expect(generatorForSkill('level-reaction')).toEqual({ module: 'levels', taskType: 'lv-reaction' });
+    expect(generatorForSkill('limit-placement')).toEqual({ module: 'limit-entry' });
+    expect(generatorForSkill('limit-fill')).toEqual({ module: 'limit-entry' });
+    for (const k of ['stop-placement', 'take-profit', 'risk-reward'] as const) expect(generatorForSkill(k)).toEqual({ module: 'stop-take' });
     expect(generatorForSkill('pa-context')).toEqual({ module: 'price-action', taskType: 'context' });
     expect(generatorForSkill('challenge-wait')).toEqual({ module: 'challenge', waitShare: 0.6 });
     expect(generatorForSkill('challenge-entry')).toEqual({ module: 'challenge' });

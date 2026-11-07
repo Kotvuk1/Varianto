@@ -13,10 +13,12 @@ const facts = (i: number): ChallengeFacts => {
 const L41 = facts(41); // LONG: вход 79075.9, SL(ref) 78557.97, TP(ref) 80536.1, RR 2.82
 const S82 = facts(82); // SHORT: вход 78952.1, SL(ref) 79800.20, TP(ref) 76000.3, RR 3.48
 const W60 = facts(60); // WAIT: нисходящий тренд без POI
+// §20: запас стопа за защищённым уровнем 0.25-1.5 ATR; защищённый low L41 = 78618.1
+const GOOD_SL = 78618.1 - 0.26 * L41.atr;
 
 const win = (r: number): ResolvedTrade => ({ side: 'LONG', entry: 0, sl: 0, tp: 0, result: r > 0 ? 'tp' : 'sl', exitTime: 0, exitPrice: 0, rMultiple: r, method: 'candle', triggerTime: 0, triggerTf: '4h' });
 const long = (over: Partial<ChallengeAnswerInput> = {}): ChallengeAnswerInput => ({
-  side: 'LONG', tf: '4h', entry: L41.entry, sl: 78500, tp: 80536.1, reasons: ['htf-alignment', 'trend-continuation', 'fvg-fill'], ...over,
+  side: 'LONG', tf: '4h', entry: L41.entry, sl: GOOD_SL, tp: 80536.1, reasons: ['htf-alignment', 'trend-continuation', 'fvg-fill'], ...over,
 });
 const part = (g: ReturnType<typeof gradeChallenge>, key: string) => g.quality!.parts.find((p) => p.key === key)!.score;
 
@@ -46,9 +48,27 @@ describe('refSide (14.2) — вручную проверено по OHLC', () =>
   });
 });
 
+describe('gradeChallenge: запас стопа 0.25-1.5 ATR (§20)', () => {
+  it('стоп сразу за защищённым low без запаса: 8 баллов и SL_NO_BUFFER (minor, challenge-risk)', () => {
+    const g = gradeChallenge(long({ sl: 78618.1 - 0.1 * L41.atr }), L41, win(1));
+    expect(part(g, 'sl')).toBe(8);
+    const e = g.errors.find((x) => x.code === 'SL_NO_BUFFER')!;
+    expect(e).toMatchObject({ skill: 'challenge-risk', severity: 'minor' });
+    expect(e.params!['bufferAtr']).toBeCloseTo(0.1, 9);
+    expect(g.skillOutcomes.find((o) => o.skill === 'challenge-risk')!.correct).toBe(0);
+  });
+  it('границы полосы: ровно 0.25 ATR и ровно 1.5 ATR - полный балл; чуть шире 1.5 - SL_TOO_WIDE', () => {
+    expect(part(gradeChallenge(long({ sl: 78618.1 - 0.25 * L41.atr }), L41, win(1)), 'sl')).toBe(15);
+    expect(part(gradeChallenge(long({ sl: 78618.1 - 1.5 * L41.atr }), L41, win(1)), 'sl')).toBe(15);
+    const wide = gradeChallenge(long({ sl: 78618.1 - 1.5 * L41.atr - 1 }), L41, win(1));
+    expect(part(wide, 'sl')).toBe(8);
+    expect(wide.errors.map((x) => x.code)).toContain('SL_TOO_WIDE');
+  });
+});
+
 describe('gradeChallenge: позиции (14.3)', () => {
   it('идеальная сделка по эталону: 100 баллов (SL за защищённым low, RR>=2, причины верны), correct', () => {
-    const g = gradeChallenge(long({ sl: 78500 }), L41, win(2.8));
+    const g = gradeChallenge(long({ sl: GOOD_SL }), L41, win(2.8));
     expect(part(g, 'htf')).toBe(25);
     expect(part(g, 'structure')).toBe(25);
     expect(part(g, 'location')).toBe(15);
@@ -143,7 +163,7 @@ describe('gradeChallenge: позиции (14.3)', () => {
     expect(g.skillOutcomes).toContainEqual({ skill: 'challenge-wait', correct: 0, total: 1 });
   });
   it('позиция без entry в ответе использует entry факта', () => {
-    const g = gradeChallenge({ side: 'LONG', tf: '4h', sl: 78500, tp: 80536.1, reasons: [] }, L41, win(1));
+    const g = gradeChallenge({ side: 'LONG', tf: '4h', sl: GOOD_SL, tp: 80536.1, reasons: [] }, L41, win(1));
     expect(part(g, 'rr')).toBe(10);
   });
 });
