@@ -8,7 +8,7 @@ import { formatDateTimeRu, msConceptShort, msConceptTask } from '@/i18n/ru/ms';
 import { cuSession as cs } from '@/i18n/ru/curriculum';
 import { ss } from '@/i18n/ru/session';
 import { makePriceFormatter, tickSizeFor } from '@/chart/priceFormat';
-import { keepSingleLevel, lvStrongestAnswer, msMarkAnswer } from '../session/adapters';
+import { keepSingleLevel, lvStrongestAnswer, swMarkAnswer } from '../session/adapters';
 import { AnswerList } from '../session/AnswerParts';
 import type { SessionBase } from '../session/TaskSession';
 import type { FlowState } from '../session/taskFlow';
@@ -66,7 +66,7 @@ export function SwMarkBody({ envelope, flow, base }: P<SwMarkPayload>) {
       details={details}
       bars={windowBars + LEAD_IN}
       highlightRange={p.window}
-      buildAnswer={() => (ci.marks.length === 0 ? ss.input.noMarks : msMarkAnswer(ci.marks))}
+      buildAnswer={() => (ci.marks.length === 0 ? ss.input.noMarks : swMarkAnswer(ci.marks))}
     />
   );
 }

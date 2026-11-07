@@ -40,7 +40,7 @@ test('задания MS отражаются на главной и в /progress
   await noHScroll(page);
 
   await page.goto('/progress');
-  await expect(page.getByText(/Мало данных: 1 из 5/)).toBeVisible();
+  await expect(page.getByText(/Мало данных: 1 из 5/).first()).toBeVisible();
   const group = page.getByTestId('error-group').first();
   await expect(group).toBeVisible();
   await group.getByRole('button').first().click();

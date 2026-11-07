@@ -10,7 +10,7 @@ const SECTION = 'border-b border-border py-4 lg:border-b-0';
 /** Главная: раздел «Обучение» (LAYOUTS §1). Данные только из Repository, без выдуманных значений. */
 export function LearnScreen() {
   return (
-    <div className="mx-auto w-full max-w-[1040px] px-4 pb-6 lg:grid lg:grid-cols-3 lg:gap-x-8 lg:pt-4">
+    <div className="mx-auto flex w-full max-w-[1040px] flex-col px-4 pb-6 lg:grid lg:grid-cols-3 lg:gap-x-8 lg:pt-4">
       <h1 className="sr-only">{ru.nav.learn}</h1>
 
       <ContinueBlock />

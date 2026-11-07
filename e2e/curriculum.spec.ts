@@ -131,7 +131,7 @@ test.describe('ступень 2 «Уровни»', () => {
 
   test('lv-zone: две точки зоны, проверка, разбор', async ({ page }) => {
     await openSession(page, S('levels', 'type=lv-zone&difficulty=easy&tf=1h'));
-    await selectTool(page, 'Зона');
+    // инструмент «Зона» выбран по умолчанию
     const side = await sideFromTask(page);
     await tapPrice(page, side, [0.004, 0.007, 0.011]);
     await tapPrice(page, side, [0.012, 0.016, 0.02]);

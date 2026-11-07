@@ -8,6 +8,10 @@ export function msMarkAnswer(marks: readonly Mark[]): Extract<Answer, { kind: 'm
   return { kind: 'ms-mark', marks: userOnly(marks) as never };
 }
 
+export function swMarkAnswer(marks: readonly Mark[]): Extract<Answer, { kind: 'sw-mark' }> {
+  return { kind: 'sw-mark', marks: userOnly(marks) as never };
+}
+
 export function msQuestionAnswer(questionId: string, optionId: string): Extract<Answer, { kind: 'ms-question' }> {
   return { kind: 'ms-question', questionId, optionId };
 }

@@ -8,7 +8,7 @@ export type Side = 'LONG' | 'SHORT';
 /** Сторона сделки из текста задания (покупка / продажа). */
 export async function sideFromTask(page: Page): Promise<Side> {
   const txt = (await page.getByTestId('task-text').first().innerText()).toLowerCase();
-  return /продаж|сопротивлен|вниз/.test(txt) && !/покупк/.test(txt) ? 'SHORT' : 'LONG';
+  return /продаж|сопротивлен|нисходящ/.test(txt) ? 'SHORT' : 'LONG';
 }
 
 /** Точка графика на цене `close * (1 ± frac)`, видимая в области графика; ищет первую подходящую долю. */

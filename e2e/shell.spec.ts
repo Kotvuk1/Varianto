@@ -6,9 +6,11 @@ test.describe('главная', () => {
     await expect(page.getByRole('heading', { name: 'Начать с Market Structure' })).toBeVisible();
     await expect(page.getByText('Сегодня: 0 из 10 заданий')).toBeVisible();
     await expect(page.getByText('Пока нет данных')).toBeVisible();
-    for (const name of ['Market Structure', 'Price Action', 'Trading Challenge']) {
-      await expect(page.getByRole('link', { name: new RegExp(`^${name}`) })).toBeVisible();
+    // курс: 8 ступеней-ссылок; комбо и Challenge закрыты (не ссылки)
+    for (const name of ['Свинги', 'Уровни', 'Лимитный вход', 'Стоп и тейк', 'Smart Money Concepts', 'Свечные модели', 'Фибоначчи', 'Волны Эллиотта']) {
+      await expect(page.getByRole('link', { name: new RegExp(`${name}`) }).first()).toBeVisible();
     }
+    await expect(page.getByTestId('combo-challenge')).toHaveAttribute('data-locked', 'true');
     await expect(page.getByRole('link', { name: 'Начать Market Structure' })).toBeVisible();
   });
 });
