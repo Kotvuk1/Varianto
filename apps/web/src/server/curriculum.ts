@@ -339,6 +339,9 @@ export async function buildLevels(req: Req<'levels'>, symbol: TaskSymbol, seed: 
 // ------------------------------------------------------------------ next: ступени 3, 4 и комбо
 
 const FRONT_K = { min: 0.05, max: 0.5 } as const;
+/** Сегментов архива на один запрос next: ситуации комбо редки (SMC-вход - около трети сегментов), поиск ограничен временем. */
+const TRADE_SEGMENTS = 14;
+const TRADE_BUDGET_MS = 6_000;
 
 /** Подсказки easy ступени 3: горизонтали ближнего края, середины и опережения 0.2*A (времена привязаны к последней свече). */
 function limitHints(zone: { bottom: number; top: number }, side: Side, A: number, time: UtcMs): Mark[] {
@@ -353,7 +356,23 @@ function limitHints(zone: { bottom: number; top: number }, side: Side, A: number
 
 const zoneForPayload = (z: ZoneInfo, shiftMs: number): ZoneInfo => ({ ...z, lastTouchTime: z.lastTouchTime - shiftMs });
 
-export async function buildTradeTask(
+type TradeReq = Req<'limit-entry'> | Req<'stop-take'> | Req<'combo-level-trade'> | Req<'combo-smc-entry'>;
+
+/** Перебирает сегменты архива (разные сегменты по seed), пока не найдётся ситуация; грейд и правила отбора не меняются. */
+export async function buildTradeTask(req: TradeReq, symbol: TaskSymbol, seed: number, deps: ServerDeps, isExcludedId: (T: UtcMs) => boolean): Promise<Draft | null> {
+  const tf = pickTf(req, CUR_TFS.trade[req.difficulty], seed);
+  const fixed = { ...req, tf } as TradeReq;
+  const budget = Math.min(deps.nextBudgetMs ?? TRADE_BUDGET_MS, TRADE_BUDGET_MS);
+  const started = Date.now();
+  for (let k = 0; k < TRADE_SEGMENTS; k++) {
+    if (k > 0 && Date.now() - started > budget) break;
+    const d = await buildTradeOnce(fixed, symbol, (seed + k * 0x9e3779b1) >>> 0, deps, isExcludedId);
+    if (d) return d;
+  }
+  return null;
+}
+
+async function buildTradeOnce(
   req: Req<'limit-entry'> | Req<'stop-take'> | Req<'combo-level-trade'> | Req<'combo-smc-entry'>,
   symbol: TaskSymbol,
   seed: number,
