@@ -249,7 +249,7 @@ function comboCase(gr: { parts: { key: string; score: number }[]; quality: numbe
     outcome:
       o.kind === 'tp' || o.kind === 'sl' || o.kind === 'timeout'
         ? { kind: o.kind, fillTime: iso(o.fillTime), exitTime: iso(o.exitTime), r: o.rMultiple, fillMethod: o.fillMethod }
-        : { kind: o.kind, time: iso(o.time), r: 0 },
+        : { kind: o.kind, time: iso((o as { time: number }).time), r: 0 },
     stopHunted: play.hunt.hunted,
   };
 }

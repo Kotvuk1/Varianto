@@ -1,0 +1,155 @@
+{
+ "algoVersion": "1.0.0",
+ "author": "technical-analyst (значения docs/specs/CURRICULUM_STAGES.md §14.2; пересчитано backend с правилом исполнения §20)",
+ "date": "2026-11-07",
+ "source": [
+  {
+   "path": "klines/BTCUSDT/1h/BTCUSDT-1h-2026-08.csv",
+   "sha256": "08ed90afdac40e82c6e516587d5f1291b7970bac765704852996c5b5047f8a3f",
+   "role": "tf"
+  },
+  {
+   "path": "klines/BTCUSDT/1h/BTCUSDT-1h-2026-09.csv",
+   "sha256": "6c93df5ac755f8be4a976f56069b1f0dc274aeff99d598afc0dc1c300f996690",
+   "role": "tf"
+  },
+  {
+   "path": "klines/BTCUSDT/4h/BTCUSDT-4h-2026-07.csv",
+   "sha256": "3f315145e54edb7d5d0b30ddb68bc79b333171b5f6e66b303414436a8846e101",
+   "role": "htf"
+  },
+  {
+   "path": "klines/BTCUSDT/4h/BTCUSDT-4h-2026-08.csv",
+   "sha256": "e8a295e3633bb365db324a7d08b0e1512d2eb371d4d193a29d083a2837ed14d2",
+   "role": "htf"
+  },
+  {
+   "path": "klines/BTCUSDT/4h/BTCUSDT-4h-2026-09.csv",
+   "sha256": "83ab0cd5a285a747946fcc17684ecafe368a6d982f000f1890e76136e8b3b92a",
+   "role": "htf"
+  }
+ ],
+ "function": "gradeLimitEntry",
+ "params": {
+  "id": "LE-3",
+  "symbol": "BTCUSDT",
+  "tick": 0.1,
+  "kind": "limit-entry",
+  "tf": "1h",
+  "lastVisible": "2026-09-09T12:00:00Z",
+  "files": [
+   "klines/BTCUSDT/1h/BTCUSDT-1h-2026-08.csv",
+   "klines/BTCUSDT/1h/BTCUSDT-1h-2026-09.csv"
+  ],
+  "htfFiles": [
+   "klines/BTCUSDT/4h/BTCUSDT-4h-2026-07.csv",
+   "klines/BTCUSDT/4h/BTCUSDT-4h-2026-08.csv",
+   "klines/BTCUSDT/4h/BTCUSDT-4h-2026-09.csv"
+  ],
+  "htfTf": "4h",
+  "side": "LONG",
+  "zone": [
+   78133,
+   78314.9
+  ]
+ },
+ "inputs": [
+  {
+   "price": 78314.9,
+   "type": "near-edge",
+   "frontK": null
+  },
+  {
+   "price": 78133,
+   "type": "far-edge",
+   "frontK": null
+  },
+  {
+   "price": 78400,
+   "type": "front-run",
+   "frontK": 0.2
+  }
+ ],
+ "expected": {
+  "A": 409.9143,
+  "P": 79566.3,
+  "zone": {
+   "bottom": 78133,
+   "top": 78314.9,
+   "touches": 8,
+   "reactions": 3,
+   "strength": 11.5,
+   "recency": 1,
+   "htf": 1,
+   "flip": true,
+   "dist": 3.0528,
+   "role": "support"
+  },
+  "reaction": {
+   "kind": "reaction",
+   "t0": "2026-09-09T15:00:00Z",
+   "extreme": 78020,
+   "extremeTime": "2026-09-09T15:00:00Z",
+   "confirmTime": "2026-09-09T16:00:00Z"
+  },
+  "cases": [
+   {
+    "parts": [
+     "placement:40",
+     "type:10",
+     "fill:25",
+     "price:10.2508"
+    ],
+    "quality": 85.2508,
+    "verdict": "correct",
+    "codes": [],
+    "fill": {
+     "time": "2026-09-09T15:00:00Z",
+     "candles": 3
+    },
+    "maeAtr": 0.7194,
+    "mfeAtr": 2.5588,
+    "gapAtr": null
+   },
+   {
+    "parts": [
+     "placement:10",
+     "type:10",
+     "fill:25",
+     "price:19.3484"
+    ],
+    "quality": 64.3484,
+    "verdict": "partial",
+    "codes": [
+     "LIMIT_AT_FAR_EDGE"
+    ],
+    "fill": {
+     "time": "2026-09-09T15:00:00Z",
+     "candles": 3
+    },
+    "maeAtr": 0.2757,
+    "mfeAtr": 3.0026,
+    "gapAtr": null
+   },
+   {
+    "parts": [
+     "placement:40",
+     "type:10",
+     "fill:25",
+     "price:5.9946"
+    ],
+    "quality": 80.9946,
+    "verdict": "correct",
+    "codes": [],
+    "fill": {
+     "time": "2026-09-09T15:00:00Z",
+     "candles": 3
+    },
+    "maeAtr": 0.927,
+    "mfeAtr": 2.3512,
+    "gapAtr": null
+   }
+  ]
+ },
+ "rationale": "Фитиль 78020 за дальний край зоны без закрытия за ним (не пробой); quality 85.25 / 64.35 / 80.99 совпали со спецификацией."
+}

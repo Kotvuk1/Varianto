@@ -1,0 +1,132 @@
+{
+ "algoVersion": "1.0.0",
+ "author": "technical-analyst (значения docs/specs/CURRICULUM_STAGES.md §14.2; пересчитано backend с правилом исполнения §20)",
+ "date": "2026-11-07",
+ "source": [
+  {
+   "path": "klines/BTCUSDT/1h/BTCUSDT-1h-2026-08.csv",
+   "sha256": "08ed90afdac40e82c6e516587d5f1291b7970bac765704852996c5b5047f8a3f",
+   "role": "tf"
+  },
+  {
+   "path": "klines/BTCUSDT/1h/BTCUSDT-1h-2026-09.csv",
+   "sha256": "6c93df5ac755f8be4a976f56069b1f0dc274aeff99d598afc0dc1c300f996690",
+   "role": "tf"
+  },
+  {
+   "path": "klines/BTCUSDT/4h/BTCUSDT-4h-2026-07.csv",
+   "sha256": "3f315145e54edb7d5d0b30ddb68bc79b333171b5f6e66b303414436a8846e101",
+   "role": "htf"
+  },
+  {
+   "path": "klines/BTCUSDT/4h/BTCUSDT-4h-2026-08.csv",
+   "sha256": "e8a295e3633bb365db324a7d08b0e1512d2eb371d4d193a29d083a2837ed14d2",
+   "role": "htf"
+  },
+  {
+   "path": "klines/BTCUSDT/4h/BTCUSDT-4h-2026-09.csv",
+   "sha256": "83ab0cd5a285a747946fcc17684ecafe368a6d982f000f1890e76136e8b3b92a",
+   "role": "htf"
+  }
+ ],
+ "function": "gradeComboLevel / playCombo",
+ "params": {
+  "id": "CB-1",
+  "symbol": "BTCUSDT",
+  "tick": 0.1,
+  "kind": "combo-level-trade",
+  "tf": "1h",
+  "lastVisible": "2026-09-12T00:00:00Z",
+  "files": [
+   "klines/BTCUSDT/1h/BTCUSDT-1h-2026-08.csv",
+   "klines/BTCUSDT/1h/BTCUSDT-1h-2026-09.csv"
+  ],
+  "htfFiles": [
+   "klines/BTCUSDT/4h/BTCUSDT-4h-2026-07.csv",
+   "klines/BTCUSDT/4h/BTCUSDT-4h-2026-08.csv",
+   "klines/BTCUSDT/4h/BTCUSDT-4h-2026-09.csv"
+  ],
+  "htfTf": "4h",
+  "difficulty": "medium",
+  "side": "SHORT",
+  "role": "resistance"
+ },
+ "inputs": [
+  {
+   "zone": [
+    79380,
+    79740
+   ],
+   "limit": {
+    "price": 79384.4,
+    "type": "near-edge",
+    "frontK": null
+   },
+   "sl": 80000,
+   "tp": 78230.5
+  }
+ ],
+ "expected": {
+  "A": 777.7429,
+  "P": 77251.8,
+  "reference": {
+   "bottom": 79384.4,
+   "top": 79737.3,
+   "touches": 12,
+   "reactions": 10,
+   "strength": 18.5,
+   "recency": 0.5,
+   "htf": 1,
+   "flip": true,
+   "dist": 2.742,
+   "role": "resistance"
+  },
+  "cases": [
+   {
+    "parts": [
+     "zone:20",
+     "placement:25",
+     "type:5",
+     "sl:20",
+     "tp:18",
+     "rr:6"
+    ],
+    "quality": 94,
+    "verdict": "correct",
+    "rr": 1.8744,
+    "codes": [],
+    "targets": [
+     {
+      "price": 79228.5,
+      "source": "level",
+      "rrRef": 0.2848
+     },
+     {
+      "price": 78774,
+      "source": "level",
+      "rrRef": 1.1152
+     },
+     {
+      "price": 78230.5,
+      "source": "level",
+      "rrRef": 2.1082
+     },
+     {
+      "price": 77767.8,
+      "source": "level",
+      "rrRef": 2.9536
+     }
+    ],
+    "outcome": {
+     "kind": "tp",
+     "fillTime": "2026-09-14T20:00:00Z",
+     "exitTime": "2026-09-14T23:00:00Z",
+     "r": 1.8744,
+     "fillMethod": "candle"
+    },
+    "stopHunted": false
+   }
+  ]
+ },
+ "rationale": "quality 94: zone 20, placement 25, type 5, sl 20, tp 18 (k* = 78230.5, 2.1082), RR 1.8744 -> rr 6; correct. Исход: исполнение 09-14 20:00, TP 09-14 23:00, +1.8744R. Совпало со спецификацией."
+}

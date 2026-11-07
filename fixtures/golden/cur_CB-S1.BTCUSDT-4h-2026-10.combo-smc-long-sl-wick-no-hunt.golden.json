@@ -1,0 +1,137 @@
+{
+ "algoVersion": "1.0.0",
+ "author": "technical-analyst (значения docs/specs/CURRICULUM_STAGES.md §14.2; пересчитано backend с правилом исполнения §20)",
+ "date": "2026-11-07",
+ "source": [
+  {
+   "path": "klines/BTCUSDT/4h/BTCUSDT-4h-2026-07.csv",
+   "sha256": "3f315145e54edb7d5d0b30ddb68bc79b333171b5f6e66b303414436a8846e101",
+   "role": "tf"
+  },
+  {
+   "path": "klines/BTCUSDT/4h/BTCUSDT-4h-2026-08.csv",
+   "sha256": "e8a295e3633bb365db324a7d08b0e1512d2eb371d4d193a29d083a2837ed14d2",
+   "role": "tf"
+  },
+  {
+   "path": "klines/BTCUSDT/4h/BTCUSDT-4h-2026-09.csv",
+   "sha256": "83ab0cd5a285a747946fcc17684ecafe368a6d982f000f1890e76136e8b3b92a",
+   "role": "tf"
+  },
+  {
+   "path": "klines/BTCUSDT/4h/BTCUSDT-4h-2026-10.csv",
+   "sha256": "ee01e880f96134d085c4b669abf4796467e5bd54356ff568fdab36dd084a695e",
+   "role": "tf"
+  }
+ ],
+ "function": "gradeComboSmc / playCombo",
+ "params": {
+  "id": "CB-S1",
+  "symbol": "BTCUSDT",
+  "tick": 0.1,
+  "kind": "combo-smc-entry",
+  "tf": "4h",
+  "lastVisible": "2026-10-06T00:00:00Z",
+  "files": [
+   "klines/BTCUSDT/4h/BTCUSDT-4h-2026-07.csv",
+   "klines/BTCUSDT/4h/BTCUSDT-4h-2026-08.csv",
+   "klines/BTCUSDT/4h/BTCUSDT-4h-2026-09.csv",
+   "klines/BTCUSDT/4h/BTCUSDT-4h-2026-10.csv"
+  ],
+  "difficulty": "medium",
+  "side": "LONG"
+ },
+ "inputs": [
+  {
+   "zone": [
+    80095.9,
+    81295
+   ],
+   "limit": {
+    "price": 81295,
+    "type": "near-edge",
+    "frontK": null
+   },
+   "sl": 79850,
+   "tp": 84350
+  }
+ ],
+ "expected": {
+  "A": 717.5143,
+  "P": 85475,
+  "trend": "up",
+  "poi": [
+   {
+    "kind": "order-block",
+    "bottom": 80095.9,
+    "top": 81295,
+    "status": "fresh",
+    "dist": 5.8257
+   },
+   {
+    "kind": "fvg",
+    "bottom": 76711,
+    "top": 77188,
+    "status": "open",
+    "dist": 11.5496
+   }
+  ],
+  "cases": [
+   {
+    "parts": [
+     "zone:20",
+     "placement:25",
+     "type:5",
+     "sl:20",
+     "tp:18",
+     "rr:12"
+    ],
+    "quality": 100,
+    "verdict": "correct",
+    "rr": 2.1142,
+    "codes": [],
+    "targets": [
+     {
+      "price": 81933.9,
+      "source": "level",
+      "rrRef": 0.4635
+     },
+     {
+      "price": 82500.1,
+      "source": "level",
+      "rrRef": 0.8742
+     },
+     {
+      "price": 83130.1,
+      "source": "level",
+      "rrRef": 1.3313
+     },
+     {
+      "price": 83738.3986,
+      "source": "level",
+      "rrRef": 1.7725
+     },
+     {
+      "price": 84350,
+      "source": "level",
+      "rrRef": 2.2162
+     },
+     {
+      "price": 84901.6,
+      "source": "level",
+      "rrRef": 2.6164
+     }
+    ],
+    "outcome": {
+     "kind": "sl",
+     "fillTime": "2026-10-08T12:00:00Z",
+     "exitTime": "2026-10-15T12:00:00Z",
+     "r": -1,
+     "fillMethod": "candle"
+    },
+    "stopHunted": false
+   }
+  ]
+ },
+ "rationale": "POI: bull OB 09-20 00:00 [80095.9-81295] fresh (dist 5.8257); quality 100. Исполнение 10-08 12:00, SL 10-15 12:00 фитилём (закрытие 82374.0 по эту сторону), но TP в остатке окна не достигнут - не stop hunt. Совпало со спецификацией."
+}

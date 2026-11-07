@@ -1,0 +1,130 @@
+{
+ "algoVersion": "1.0.0",
+ "author": "technical-analyst (значения docs/specs/CURRICULUM_STAGES.md §14.2; пересчитано backend с правилом исполнения §20)",
+ "date": "2026-11-07",
+ "source": [
+  {
+   "path": "klines/BTCUSDT/4h/BTCUSDT-4h-2026-07.csv",
+   "sha256": "3f315145e54edb7d5d0b30ddb68bc79b333171b5f6e66b303414436a8846e101",
+   "role": "tf"
+  },
+  {
+   "path": "klines/BTCUSDT/4h/BTCUSDT-4h-2026-08.csv",
+   "sha256": "e8a295e3633bb365db324a7d08b0e1512d2eb371d4d193a29d083a2837ed14d2",
+   "role": "tf"
+  },
+  {
+   "path": "klines/BTCUSDT/4h/BTCUSDT-4h-2026-09.csv",
+   "sha256": "83ab0cd5a285a747946fcc17684ecafe368a6d982f000f1890e76136e8b3b92a",
+   "role": "tf"
+  },
+  {
+   "path": "klines/BTCUSDT/4h/BTCUSDT-4h-2026-10.csv",
+   "sha256": "ee01e880f96134d085c4b669abf4796467e5bd54356ff568fdab36dd084a695e",
+   "role": "tf"
+  }
+ ],
+ "function": "gradeComboSmc / playCombo",
+ "params": {
+  "id": "CB-S2",
+  "symbol": "BTCUSDT",
+  "tick": 0.1,
+  "kind": "combo-smc-entry",
+  "tf": "4h",
+  "lastVisible": "2026-09-30T20:00:00Z",
+  "files": [
+   "klines/BTCUSDT/4h/BTCUSDT-4h-2026-07.csv",
+   "klines/BTCUSDT/4h/BTCUSDT-4h-2026-08.csv",
+   "klines/BTCUSDT/4h/BTCUSDT-4h-2026-09.csv",
+   "klines/BTCUSDT/4h/BTCUSDT-4h-2026-10.csv"
+  ],
+  "difficulty": "medium",
+  "side": "LONG"
+ },
+ "inputs": [
+  {
+   "zone": [
+    80095.9,
+    81295
+   ],
+   "limit": {
+    "price": 81295,
+    "type": "near-edge",
+    "frontK": null
+   },
+   "sl": 79800,
+   "tp": 84901.6
+  }
+ ],
+ "expected": {
+  "A": 961.7286,
+  "P": 83576.9,
+  "trend": "up",
+  "poi": [
+   {
+    "kind": "order-block",
+    "bottom": 80095.9,
+    "top": 81295,
+    "status": "fresh",
+    "dist": 2.3727
+   },
+   {
+    "kind": "fvg",
+    "bottom": 76711,
+    "top": 77188,
+    "status": "open",
+    "dist": 6.6431
+   }
+  ],
+  "cases": [
+   {
+    "parts": [
+     "zone:20",
+     "placement:25",
+     "type:5",
+     "sl:20",
+     "tp:18",
+     "rr:12"
+    ],
+    "quality": 100,
+    "verdict": "correct",
+    "rr": 2.4124,
+    "codes": [],
+    "targets": [
+     {
+      "price": 81933.9,
+      "source": "level",
+      "rrRef": 0.4438
+     },
+     {
+      "price": 82500.1,
+      "source": "level",
+      "rrRef": 0.8371
+     },
+     {
+      "price": 83130.1,
+      "source": "level",
+      "rrRef": 1.2748
+     },
+     {
+      "price": 84350,
+      "source": "level",
+      "rrRef": 2.1222
+     },
+     {
+      "price": 84901.6,
+      "source": "level",
+      "rrRef": 2.5054
+     }
+    ],
+    "outcome": {
+     "kind": "cancelled-target",
+     "time": "2026-10-01T16:00:00Z",
+     "r": 0
+    },
+    "stopHunted": false
+   }
+  ]
+ },
+ "rationale": "quality 100; ордер снят по цели (cancelled-target 10-01 16:00: high 85265.3 >= 84901.6 до исполнения), 0R. Совпало со спецификацией."
+}
