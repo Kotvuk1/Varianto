@@ -28,7 +28,7 @@ test('/learn/elliott: сложности, ТФ по сложности, «Нач
   await expect(page.getByTestId('start-session')).toHaveAttribute('href', /difficulty=hard&tf=4h/);
   await noOverflow(page);
   await page.goto('/');
-  await expect(page.getByRole('link', { name: /^Elliott Wave Lab/ })).toHaveAttribute('href', '/learn/elliott');
+  await expect(page.getByTestId('stage-8').getByRole('link')).toHaveAttribute('href', '/learn/elliott');
 });
 
 for (const [status, kind] of [[404, 'no-situation'], [429, 'rate-limited'], [502, 'archive']] as const) {

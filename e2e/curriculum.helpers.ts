@@ -17,7 +17,9 @@ export async function pricePoint(page: Page, side: Side, fracs: number[] = [0.00
   const cs = (await chartCandles(page)).filter((c) => c.closed);
   const last = cs[cs.length - 1]!;
   const ref = cs[cs.length - 1 - fromEnd]!;
-  for (const f of fracs) {
+  // если заданные доли выходят за видимую область (мобильный график ниже), пробуем те же доли, уменьшенные в 0,6 / 0,35 / 0,2 раза
+  const tries = [1, 0.6, 0.35, 0.2].flatMap((k) => fracs.map((f) => f * k));
+  for (const f of tries) {
     const price = last.close * (side === 'LONG' ? 1 - f : 1 + f);
     const p = await project(page, ref.openTime, price);
     if (p && p.x > box.x + 12 && p.x < box.x + box.width - 80 && p.y > box.y + 24 && p.y < box.y + box.height - 60) return { ...p, price };

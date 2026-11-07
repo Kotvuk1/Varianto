@@ -19,6 +19,8 @@ export async function selectTool(page: Page, tool: string, group?: string) {
   // на мобильной панели «Пробои» и «Зоны» объединены в группу «SMC»: 9 кнопок по 44 px не помещаются в 390 px
   // (в экранах заданий такой группы нет - там остаются «Пробои»)
   if ((group === 'Зоны' || group === 'Пробои') && isMobile(page) && (await page.getByRole('button', { name: 'SMC', exact: true }).count()) > 0) group = 'SMC';
+  // на мобильной панели «Линии» слиты с зоной, лимиткой и позицией в веер «Уровни» (MOBILE_GROUPS)
+  if (group === 'Линии' && isMobile(page)) group = 'Уровни';
   if (group) {
     await page.getByRole('button', { name: group, exact: true }).click();
     await page.getByRole('toolbar', { name: group }).getByRole('button', { name: tool, exact: true }).click();

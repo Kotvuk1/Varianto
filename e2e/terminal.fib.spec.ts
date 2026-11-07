@@ -42,13 +42,22 @@ const pivot = (cs: RealCandle[], p: number, side: 'high' | 'low') => {
 
 /** Видимые реальные экстремумы: low-pivot A, затем high-pivot B (выше A), затем low-pivot C между A и B по цене. */
 async function findFib(page: Page, box: { x: number; y: number; width: number; height: number }, withC: boolean): Promise<Fib> {
+  // реальные данные меняются со временем: если импульса с запасом нет, ослабляем минимальные расстояния между точками
+  for (const k of [1, 0.6, 0.4]) {
+    const f = await findFibScaled(page, box, withC, k);
+    if (f) return f;
+  }
+  throw new Error('нет видимого импульса из реальных swing-экстремумов');
+}
+
+async function findFibScaled(page: Page, box: { x: number; y: number; width: number; height: number }, withC: boolean, scale: number): Promise<Fib | null> {
   const cs = (await chartCandles(page)).filter((c) => c.closed);
   const vis = async (c: RealCandle, side: 'high' | 'low') => {
     const pt = await project(page, c.openTime, c[side]);
     return pt && pt.x > box.x + 16 && pt.x < box.x + box.width - 90 && pt.y > box.y + 30 && pt.y < box.y + box.height - 70 ? { ...c, pt } : null;
   };
-  const gx = box.width < 600 ? 20 : 60; // на узком экране импульсы плотнее
-  const gy = box.width < 600 ? 50 : 120;
+  const gx = (box.width < 600 ? 20 : 60) * scale; // на узком экране импульсы плотнее
+  const gy = (box.width < 600 ? 50 : 120) * scale;
   let best: Fib | null = null;
   let bestSize = 0;
   for (let i = cs.length - 1; i >= 3; i--) {
@@ -70,7 +79,6 @@ async function findFib(page: Page, box: { x: number; y: number; width: number; h
       }
     }
   }
-  if (!best) throw new Error('нет видимого импульса из реальных swing-экстремумов');
   return best;
 }
 

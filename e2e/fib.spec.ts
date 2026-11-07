@@ -27,7 +27,7 @@ test('/learn/fibonacci: выбор типа, сложности, ТФ; «Нач�
 
 test('главная: карточка модуля Fibonacci', async ({ page }) => {
   await page.goto('/');
-  await expect(page.getByRole('link', { name: /^Fibonacci/ })).toHaveAttribute('href', '/learn/fibonacci');
+  await expect(page.getByTestId('stage-7').getByRole('link')).toHaveAttribute('href', '/learn/fibonacci');
 });
 
 test('«Построй сетку»: сетка по импульсу -> проверка -> эталон поверх и разбор', async ({ page }) => {

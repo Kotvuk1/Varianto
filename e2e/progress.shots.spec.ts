@@ -42,7 +42,7 @@ test('6 заданий: вывод по модулям, «мало данных�
   await expect(acc).toContainText('Market Structure');
   await expect(acc).toContainText('Trading Challenge');
   await expect(acc).toContainText('по навыкам — мало данных');
-  await expect(page.getByTestId('error-group').first()).toContainText(/Пропущенный Swing|Лишний Swing/);
+  await expect(page.getByTestId('error-group').first()).toContainText(/Пропущенный (Swing|BOS|CHoCH)|Лишний (Swing|BOS|CHoCH)/);
   await shot(page, 'progress-weak');
   await page.getByRole('radio', { name: 'Навыки' }).click();
   await expect(page.getByTestId('module-accuracy')).toBeVisible();
