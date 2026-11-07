@@ -88,7 +88,7 @@ describe('next: только прошлое, формат ответа', () => {
     expect(json.series['4h']).toHaveLength(500);
     onlyPast(json);
     expect(json.payload).toMatchObject({ kind: 'ms-mark', tf: '4h' });
-    expect(json.payload.concepts).toContain('swing');
+    expect(json.payload.concepts).toEqual(expect.arrayContaining(['bos', 'choch'])); // ступень 5: swing - в ступени 1 (CURRICULUM_STAGES.md §9.1)
     expect(json.payload.tools.length).toBeGreaterThan(0);
     expect(json.payload.window.toTime).toBe(json.series['4h'].at(-1).openTime);
   });
@@ -102,7 +102,7 @@ describe('next: только прошлое, формат ответа', () => {
     expect(JSON.stringify(json)).not.toMatch(/correctOptionId|explain/);
   });
 
-  it('price-action: find-pattern, draw-level, context (ряды tf и htf)', async () => {
+  it('price-action: find-pattern, context (ряды tf и htf); draw-level переехал в levels', async () => {
     const find = await next('price-action', PA('find-pattern'));
     expect(find.res.status).toBe(200);
     check(find.json, 'price-action');
@@ -110,11 +110,7 @@ describe('next: только прошлое, формат ответа', () => {
     expect(find.json.payload).toMatchObject({ kind: 'pa-find', tf: '4h' });
     expect(find.json.payload.window.fromTime).toBeLessThan(find.json.payload.window.toTime);
 
-    const level = await next('price-action', PA('draw-level'));
-    expect(level.res.status).toBe(200);
-    onlyPast(level.json);
-    expect(level.json.payload).toMatchObject({ kind: 'pa-level', tolerancePct: 0.3 });
-    expect(['support', 'resistance']).toContain(level.json.payload.levelType);
+    expect((await next('price-action', PA('draw-level'))).res.status).toBe(400); // «Проведи уровень» -> levels/lv-strongest
 
     const ctx = await next('price-action', PA('context'));
     expect(ctx.res.status).toBe(200);
@@ -197,8 +193,8 @@ describe('grade: круг next -> grade на эталоне из ответа AP
     const bad = await grade('market-structure', { taskToken: t.taskToken, answer: { kind: 'ms-mark', marks: [] } });
     expect(bad.res.status).toBe(200);
     expect(bad.json.verdict).toBe('incorrect');
-    expect(bad.json.errors.map((e: Json) => e.code)).toContain('SWING_MISSED');
-    expect(bad.json.reference.length).toBeGreaterThan(5);
+    expect(bad.json.errors.map((e: Json) => e.code)).toContain('CHOCH_MISSING');
+    expect(bad.json.reference.length).toBeGreaterThan(2);
     expect(Object.keys(bad.json.feedback).sort()).toEqual(['howTo', 'mistakes', 'principle', 'understood', 'verdict', 'why']);
     expect(bad.json.feedback.mistakes.length).toBe(bad.json.errors.length);
     // F-02: в params разбора нет «сырых» float (цены по tickSize символа)
@@ -243,20 +239,6 @@ describe('grade: круг next -> grade на эталоне из ответа AP
     expect(bad.json.errors.map((e: Json) => e.code)).toContain('PATTERN_MISSED');
     const good = await grade('price-action', { taskToken: t.taskToken, answer: { kind: 'pa-find', marks: bad.json.reference.map(asUser) } });
     expect(good.json).toMatchObject({ score: 1, verdict: 'correct', errors: [] });
-  });
-
-  it('price-action / draw-level', async () => {
-    const t = (await next('price-action', PA('draw-level'))).json;
-    const lastClose = t.series['4h'].at(-1).close as number;
-    const far = await grade('price-action', { taskToken: t.taskToken, answer: { kind: 'pa-level', price: lastClose * 3 } });
-    expect(far.res.status).toBe(200);
-    expect(far.json.verdict).toBe('incorrect');
-    expect(far.json.errors[0].code).toBe('LEVEL_OFF_TOLERANCE');
-    const price = far.json.reference[0].anchors[0].price as number;
-    const good = await grade('price-action', { taskToken: t.taskToken, answer: { kind: 'pa-level', price } });
-    expect(good.json).toMatchObject({ verdict: 'correct', score: 1 });
-    expect(good.json.detail).toMatchObject({ kind: 'pa-level', tolerancePct: 0.3 });
-    expect(good.json.feedback.understood[0].code).toBe('OK_LEVEL');
   });
 
   it('price-action / context', async () => {

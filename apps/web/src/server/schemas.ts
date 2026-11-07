@@ -7,17 +7,21 @@ export const MAX_BODY_BYTES = 64 * 1024;
 export const MAX_MARKS = 200;
 export const SYMBOLS = ['BTCUSDT', 'ETHUSDT', 'SOLUSDT'] as const;
 export const TASK_TFS = ['15m', '1h', '4h', '1d'] as const;
-export const MODULES: readonly ModuleId[] = ['market-structure', 'price-action', 'challenge', 'fibonacci', 'elliott'];
+export const MODULES: readonly ModuleId[] = [
+  'market-structure', 'price-action', 'challenge', 'fibonacci', 'elliott',
+  'stage-swings', 'levels', 'limit-entry', 'stop-take', 'combo-level-trade', 'combo-smc-entry',
+];
 
 const SKILLS = [
   'swing', 'structure-labels', 'bos', 'choch', 'internal-external', 'sweep', 'order-block', 'fvg',
   'pa-engulfing', 'pa-pin-bar', 'pa-inside-bar', 'pa-doji', 'pa-star', 'pa-level', 'pa-context',
   'challenge-entry', 'challenge-risk', 'challenge-wait', 'fib-anchor', 'fib-reaction', 'fib-extension', 'premium-discount',
   'ew-impulse', 'ew-correction', 'ew-rules', 'ew-invalidation',
+  'swing-trend', 'level-zone', 'level-reaction', 'limit-placement', 'limit-fill', 'stop-placement', 'take-profit', 'risk-reward',
 ] as const;
 const MARK_KINDS = [
   'swing-high', 'swing-low', 'hh', 'hl', 'lh', 'll', 'bos', 'choch', 'sweep', 'order-block', 'fvg',
-  'level', 'hline', 'trendline', 'pattern', 'position', 'fib-retracement', 'fib-extension', 'ew-impulse', 'ew-zigzag', 'ew-flat',
+  'level', 'zone', 'hline', 'trendline', 'pattern', 'position', 'fib-retracement', 'fib-extension', 'ew-impulse', 'ew-zigzag', 'ew-flat',
 ] as const;
 
 const difficulty = z.enum(['easy', 'medium', 'hard']);
@@ -35,11 +39,18 @@ const nextBase = {
 
 export const NextSchemas = {
   'market-structure': z.object({ ...nextBase, mode: z.enum(['mark', 'question']), tf }).strict(),
-  'price-action': z.object({ ...nextBase, taskType: z.enum(['find-pattern', 'draw-level', 'context']), tf }).strict(),
+  'price-action': z.object({ ...nextBase, taskType: z.enum(['find-pattern', 'context']), tf }).strict(),
   challenge: z.object(nextBase).strict(),
   fibonacci: z.object({ ...nextBase, taskType: z.enum(['grid', 'reaction', 'extension']), tf }).strict(),
   // tf из списка сложности проверяется при выборе (UNKNOWN_TIMEFRAME); без tf - по seed. focus на тип задания не влияет (ELLIOTT.md §19).
   elliott: z.object({ ...nextBase, tf: tf.optional() }).strict(),
+  // курс по ступеням (CURRICULUM_STAGES.md §11.1); tf вне списка сложности -> 400 UNKNOWN_TIMEFRAME при выборе
+  'stage-swings': z.object({ ...nextBase, taskType: z.enum(['sw-mark', 'sw-trend']), tf }).strict(),
+  levels: z.object({ ...nextBase, taskType: z.enum(['lv-strongest', 'lv-zone', 'lv-reaction']), tf }).strict(),
+  'limit-entry': z.object({ ...nextBase, tf: tf.optional() }).strict(),
+  'stop-take': z.object({ ...nextBase, tf: tf.optional() }).strict(),
+  'combo-level-trade': z.object({ ...nextBase, tf: tf.optional() }).strict(),
+  'combo-smc-entry': z.object({ ...nextBase, tf: tf.optional() }).strict(),
 } as const;
 
 export type NextRequest =
@@ -47,7 +58,13 @@ export type NextRequest =
   | ({ module: 'price-action' } & z.infer<(typeof NextSchemas)['price-action']>)
   | ({ module: 'challenge' } & z.infer<(typeof NextSchemas)['challenge']>)
   | ({ module: 'fibonacci' } & z.infer<(typeof NextSchemas)['fibonacci']>)
-  | ({ module: 'elliott' } & z.infer<(typeof NextSchemas)['elliott']>);
+  | ({ module: 'elliott' } & z.infer<(typeof NextSchemas)['elliott']>)
+  | ({ module: 'stage-swings' } & z.infer<(typeof NextSchemas)['stage-swings']>)
+  | ({ module: 'levels' } & z.infer<(typeof NextSchemas)['levels']>)
+  | ({ module: 'limit-entry' } & z.infer<(typeof NextSchemas)['limit-entry']>)
+  | ({ module: 'stop-take' } & z.infer<(typeof NextSchemas)['stop-take']>)
+  | ({ module: 'combo-level-trade' } & z.infer<(typeof NextSchemas)['combo-level-trade']>)
+  | ({ module: 'combo-smc-entry' } & z.infer<(typeof NextSchemas)['combo-smc-entry']>);
 
 export const AnchorSchema = z.object({ time: z.number().int().finite(), price: z.number().finite() }).strict();
 export const UserMarkSchema = z
@@ -125,7 +142,35 @@ export const ElliottAnswerSchema = z
   .strict();
 export type ElliottAnswerApi = z.infer<typeof ElliottAnswerSchema>;
 
+/** Метка `zone` (CURRICULUM_STAGES.md §3.5): ровно 2 якоря с разными положительными ценами. */
+const zoneMark = UserMarkSchema.superRefine((m, ctx) => {
+  const [a, b] = m.anchors;
+  if (m.kind !== 'zone' || m.anchors.length !== 2 || !a || !b || a.price === b.price || a.price <= 0 || b.price <= 0) {
+    ctx.addIssue({ code: 'custom', path: ['anchors'], message: 'ZONE_MARK_INVALID' });
+  }
+});
+export const LimitOrderSchema = z
+  .object({ price, type: z.enum(['near-edge', 'middle', 'far-edge', 'front-run']), frontK: z.number().finite().nullable() })
+  .strict()
+  .superRefine((o, ctx) => {
+    const ok = o.frontK !== null && o.frontK >= 0.05 && o.frontK <= 0.5;
+    if (o.type === 'front-run' ? !ok : o.frontK !== null) ctx.addIssue({ code: 'custom', path: ['frontK'], message: 'LIMIT_TYPE_INVALID' });
+  });
+const comboAnswer = <K extends 'combo-level-trade' | 'combo-smc-entry'>(kind: K) =>
+  z.object({ kind: z.literal(kind), zone: zoneMark, limit: LimitOrderSchema, sl: price, tp: price }).strict();
+
 export const AnswerSchema = z.discriminatedUnion('kind', [
+  // Устарело: «Проведи уровень» переехало в ступень 2 (lv-strongest); схема оставлена для совместимости типов клиента.
+  z.object({ kind: z.literal('pa-level'), price }).strict(),
+  z.object({ kind: z.literal('sw-mark'), marks: marksField }).strict(),
+  z.object({ kind: z.literal('sw-trend'), questionId: z.string().min(1).max(64), optionId: z.enum(['up', 'down', 'range']) }).strict(),
+  z.object({ kind: z.literal('lv-strongest'), price }).strict(),
+  z.object({ kind: z.literal('lv-zone'), zone: zoneMark }).strict(),
+  z.object({ kind: z.literal('lv-reaction'), optionId: z.string().min(1).max(8) }).strict(),
+  z.object({ kind: z.literal('limit-entry'), limit: LimitOrderSchema }).strict(),
+  z.object({ kind: z.literal('stop-take'), sl: price, tp: price }).strict(),
+  comboAnswer('combo-level-trade'),
+  comboAnswer('combo-smc-entry'),
   ElliottAnswerSchema,
   z.object({ kind: z.literal('fib-grid'), mark: fibMark('fib-retracement', 2) }).strict(),
   z
@@ -144,7 +189,6 @@ export const AnswerSchema = z.discriminatedUnion('kind', [
   z.object({ kind: z.literal('ms-mark'), marks: marksField }).strict(),
   z.object({ kind: z.literal('ms-question'), questionId: z.string().min(1).max(64), optionId: z.string().min(1).max(64) }).strict(),
   z.object({ kind: z.literal('pa-find'), marks: marksField }).strict(),
-  z.object({ kind: z.literal('pa-level'), price }).strict(),
   z
     .object({
       kind: z.literal('pa-context'),
@@ -158,6 +202,7 @@ export const AnswerSchema = z.discriminatedUnion('kind', [
 ]);
 export type Answer = z.infer<typeof AnswerSchema>;
 export type ChallengeAnswer = z.infer<typeof ChallengeAnswerSchema>;
+export type CurAnswer = Extract<Answer, { kind: 'sw-mark' | 'sw-trend' | 'lv-strongest' | 'lv-zone' | 'lv-reaction' | 'limit-entry' | 'stop-take' | 'combo-level-trade' | 'combo-smc-entry' }>;
 export type FibAnswer = Extract<Answer, { kind: 'fib-grid' | 'fib-reaction' | 'fib-extension' }>;
 
 export const GradeSchema = z.object({ taskToken: z.string().min(10).max(4096), answer: AnswerSchema }).strict();
@@ -167,6 +212,7 @@ const BUSINESS_CODES = new Set([
   'SL_REQUIRED', 'TP_REQUIRED', 'SL_WRONG_SIDE', 'TP_WRONG_SIDE', 'ENTRY_MISMATCH', 'WAIT_HAS_POSITION_FIELDS',
   'FIB_ANCHORS_COUNT', 'FIB_CONFLUENCE_INVALID',
   'EW_ANCHORS_COUNT', 'EW_SCENARIO_UNKNOWN', 'EW_INVALIDATION_INVALID',
+  'ZONE_MARK_INVALID', 'ZONE_SIDE_MISMATCH', 'LIMIT_WRONG_SIDE', 'LIMIT_TYPE_INVALID', 'OPTION_UNKNOWN',
 ]);
 
 /** zod-issue -> ValidationIssueCode контракта (API_CONTRACTS §1.1). */

@@ -76,7 +76,7 @@ describe('elliott/next', () => {
     expect(JSON.stringify(t)).not.toMatch(/2026-0[5-9]/);
     expect(JSON.stringify(t.payload)).not.toContain('algo:ew-');
     expect(typeof t.taskToken).toBe('string');
-    expect(t.algoVersion).toBe('1.3.0');
+    expect(t.algoVersion).toBe('2.0.0');
   });
 
   it('medium и hard: kind определяется сложностью, focus на тип не влияет', async () => {

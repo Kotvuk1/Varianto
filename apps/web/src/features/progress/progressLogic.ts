@@ -12,7 +12,10 @@ import type { Attempt, ModuleId, SkillStat } from '@/storage';
 export { MIN_SAMPLE };
 export type Trend = 'up' | 'flat' | 'down';
 
-const MODULE_ORDER: ModuleId[] = ['market-structure', 'price-action', 'challenge', 'fibonacci', 'elliott'];
+const MODULE_ORDER: ModuleId[] = [
+  'stage-swings', 'levels', 'limit-entry', 'stop-take', 'market-structure', 'price-action', 'fibonacci', 'elliott',
+  'combo-level-trade', 'combo-smc-entry', 'challenge',
+];
 const asCore = (s: SkillStat) => s as unknown as CoreSkillStat;
 
 export function moduleOfSkill(skill: string): ModuleId {

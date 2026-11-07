@@ -4,6 +4,7 @@ import { makePriceFormatter } from '@/chart/priceFormat';
 import { Annotated } from '@/features/guide';
 import { GradeGlyph } from './GradeGlyph';
 import { placeOf, renderBlock } from './format';
+import { AskAi } from './AskAi';
 
 export interface FeedbackViewProps {
   feedback: Feedback;
@@ -21,6 +22,8 @@ export interface FeedbackViewProps {
   hideVerdict?: boolean;
   /** Свой текст блока раздела «Что понято верно» (терминал: без знаменателя эталона). */
   understoodText?: (b: FeedbackBlock) => string;
+  /** Модуль для контекста «Спросить ИИ» (по умолчанию market-structure). */
+  aiModule?: string;
   className?: string;
 }
 
@@ -59,6 +62,7 @@ export function FeedbackView({
   understoodText,
   verdictExtra,
   footer,
+  aiModule = 'market-structure',
   className,
 }: FeedbackViewProps) {
   const text = (b: FeedbackBlock) => renderBlock(b.templateKey, b.params, fmtPrice);
@@ -161,6 +165,7 @@ export function FeedbackView({
           <Annotated text={text(feedback.principle)} />
         </p>
       </Section>
+      <AskAi feedback={feedback} module={aiModule} fmtPrice={fmtPrice} />
       {footer}
     </div>
   );

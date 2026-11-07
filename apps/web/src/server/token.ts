@@ -13,7 +13,10 @@ const DEV_SECRET = 'trading-lab-DEV-ONLY-signing-secret-do-not-use-in-production
 
 const HeaderSchema = z
   .object({
-    module: z.enum(['market-structure', 'price-action', 'challenge', 'fibonacci', 'elliott']),
+    module: z.enum([
+      'market-structure', 'price-action', 'challenge', 'fibonacci', 'elliott',
+      'stage-swings', 'levels', 'limit-entry', 'stop-take', 'combo-level-trade', 'combo-smc-entry',
+    ]),
     symbol: z.enum(['BTCUSDT', 'ETHUSDT', 'SOLUSDT']),
     difficulty: z.enum(['easy', 'medium', 'hard']),
     algoVersion: z.string(),

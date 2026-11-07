@@ -28,11 +28,9 @@ import {
   gradeFibExtension,
   gradeFibGrid,
   gradeFibReaction,
-  gradeLevel,
   gradeMarks,
   gradeMsQuestion,
   htfClosedAt,
-  levelToMark,
   msConceptsFor,
   msParamsFor,
   mulberry32,
@@ -42,7 +40,6 @@ import {
   pickContextTask,
   pickFibTask,
   pickFindPattern,
-  pickLevelTask,
   randInt,
   rebuildMsQuestion,
   resolveTrade,
@@ -50,7 +47,6 @@ import {
   selectMsQuestionTask,
   sliceAt,
   FIND_WINDOW,
-  LEVEL_TOLERANCE_PCT,
   type Candle,
   type ChallengeFacts,
   type Difficulty,
@@ -70,7 +66,7 @@ import {
 import { z } from 'zod';
 import { ArchiveError } from '@tl/market-data';
 import { ApiError, validationError } from './errors';
-import { SYMBOLS, type Answer, type ChallengeAnswer, type ElliottAnswerApi, type FibAnswer, type GradeRequest, type NextRequest } from './schemas';
+import { SYMBOLS, type Answer, type ChallengeAnswer, type CurAnswer, type ElliottAnswerApi, type FibAnswer, type GradeRequest, type NextRequest } from './schemas';
 import {
   CHALLENGE_FUTURE_MS,
   ChallengeZone,
@@ -86,6 +82,15 @@ import {
 } from './sources';
 import { open, seal, taskIdFor } from './token';
 import { shiftCandle, shiftMark, shiftTimes } from './shift';
+import { SEGMENT_EXTRA, TICK, pickSegment, rangeOf, rngOf, sameSeries, toSeed, withPartial } from './common';
+import {
+  CUR_PARAM_SCHEMAS,
+  buildLevels,
+  buildStageSwings,
+  buildTradeTask,
+  gradeCurTask,
+  type CurParams,
+} from './curriculum';
 import { buildElliott, gradeElliottTask, ElliottParamsSchema } from './elliott';
 
 export { shiftMark };
@@ -114,8 +119,6 @@ const MAX_TRIES = 12;
 /** Сбои источника не тратят MAX_TRIES, но ограничены числом и общим бюджетом времени. */
 const MAX_SOURCE_FAILURES = 3;
 const NEXT_BUDGET_MS = 20_000;
-const TICK: Record<TaskSymbol, number> = { BTCUSDT: 0.1, ETHUSDT: 0.01, SOLUSDT: 0.01 };
-const SEGMENT_EXTRA = 300;
 const ZONE_MS = 15 * DAY_MS;
 const BASE_MS = 15 * 60_000;
 
@@ -136,7 +139,6 @@ const ParamsSchema = z.discriminatedUnion('kind', [
   z.object({ kind: z.literal('ms-mark'), tf: z.string(), focus: z.array(z.string()).optional(), windowSize: z.number().int().min(1).max(500) }),
   z.object({ kind: z.literal('ms-question'), tf: z.string(), questionId: z.string(), focus: z.array(z.string()).optional() }),
   z.object({ kind: z.literal('pa-find'), tf: z.string(), target: z.string() }),
-  z.object({ kind: z.literal('pa-level'), tf: z.string(), levelType: z.enum(['support', 'resistance']), evalDifficulty: z.enum(['easy', 'medium', 'hard']) }),
   z.object({ kind: z.literal('pa-context'), tf: z.string(), patternType: z.string(), direction: z.enum(['bull', 'bear']) }),
   z.object({ kind: z.literal('challenge'), defaultTf: z.string(), entry: z.number() }),
   FibParams('fib-grid').extend({ window: z.object({ fromTime: z.number(), toTime: z.number() }) }),
@@ -148,6 +150,7 @@ const ParamsSchema = z.discriminatedUnion('kind', [
     directionHint: z.enum(['bull', 'bear']).nullable(),
   }),
   ElliottParamsSchema,
+  ...CUR_PARAM_SCHEMAS,
 ]);
 type Params = z.infer<typeof ParamsSchema>;
 
@@ -179,52 +182,11 @@ export interface Draft {
   relative?: boolean;
 }
 
-const toSeed = (n: number) => n >>> 0;
-const rngOf = (seed: number, salt: number) => mulberry32((seed ^ salt) | 0);
-
 function symbolFor(req: { symbol?: TaskSymbol }, baseSeed: number): TaskSymbol {
   return req.symbol ?? SYMBOLS[randInt(rngOf(baseSeed, 0x51b0), SYMBOLS.length)]!;
 }
 
-function rangeOf(deps: ServerDeps): { from: UtcMs; to: UtcMs } {
-  const cutoff = cutoffOf(deps.now());
-  const r = deps.range ?? { from: ARCHIVE_START, to: cutoff };
-  return { from: r.from, to: Math.min(r.to, cutoff) };
-}
-
-/** Детерминированный по seed отрезок [from, to) из `len` свечей tf внутри доступного диапазона. */
-function pickSegment(deps: ServerDeps, seed: number, tf: TaskTimeframe, len: number, minLen: number): { from: UtcMs; to: UtcMs } | null {
-  const step = TIMEFRAME_MS[tf];
-  const r = rangeOf(deps);
-  const from = Math.ceil(r.from / step) * step;
-  const to = Math.floor(r.to / step) * step;
-  const available = Math.floor((to - from) / step);
-  const n = Math.min(len, available);
-  if (n < minLen) return null;
-  const start = randInt(rngOf(seed, 0x5eed), available - n + 1);
-  return { from: from + start * step, to: from + (start + n) * step };
-}
-
-const isoOf = (c: Candle) => c.openTime;
-
-/** Совпадают ли ряды, увиденные генератором и восстановленные при grade. */
-function sameSeries(a: readonly Candle[], b: readonly Candle[]): boolean {
-  return a.length === b.length && a.length > 0 && isoOf(a[0]!) === isoOf(b[0]!) && isoOf(a[a.length - 1]!) === isoOf(b[b.length - 1]!);
-}
-
-export async function withPartial(
-  deps: ServerDeps,
-  symbol: string,
-  tf: TaskTimeframe,
-  visible: Candle[],
-  T: UtcMs,
-): Promise<Candle[] | null> {
-  const bucket = floorTo(T, TIMEFRAME_MS[tf]);
-  if (bucket === T) return visible;
-  const minutes = await loadMinutes(deps.loader, symbol, bucket, T);
-  if (!minutes) return null; // пропуск 1m: сценарий отбраковывается (ADR-0006 п.5)
-  return sliceAt({ [tf]: visible, '1m': minutes }, T)[tf] ?? visible;
-}
+export { withPartial } from './common';
 
 // ------------------------------------------------------------------ next
 
@@ -248,6 +210,11 @@ export async function nextTask(module: ModuleId, req: NextRequest, deps: ServerD
       else if (req.module === 'price-action') draft = await buildPa(req, symbol, seed, deps);
       else if (req.module === 'fibonacci') draft = await buildFib(req, symbol, seed, deps, (T) => excluded.has(idOf(T)), attempt);
       else if (req.module === 'elliott') draft = await buildElliott(req, symbol, seed, deps, rangeOf(deps), (T) => excluded.has(idOf(T)), attempt, started + budget);
+      else if (req.module === 'stage-swings') draft = await buildStageSwings(req, symbol, seed, deps, (T) => excluded.has(idOf(T)));
+      else if (req.module === 'levels') draft = await buildLevels(req, symbol, seed, deps, (T) => excluded.has(idOf(T)));
+      else if (
+        req.module === 'limit-entry' || req.module === 'stop-take' || req.module === 'combo-level-trade' || req.module === 'combo-smc-entry'
+      ) draft = await buildTradeTask(req, symbol, seed, deps, (T) => excluded.has(idOf(T)));
       else draft = await buildChallenge(req, symbol, seed, deps);
     } catch (e) {
       // not_found файла - период непригоден (обычная отбраковка); недоступность источника - не «ситуация не подошла».
@@ -410,28 +377,6 @@ async function buildPa(req: PaReq, symbol: TaskSymbol, seed: number, deps: Serve
         target: pick.target,
         window: { fromTime: visible[window.fromIndex]!.openTime, toTime: visible[window.toIndex]!.openTime },
       },
-    };
-  }
-
-  if (req.taskType === 'draw-level') {
-    const pick = pickLevelTask(base);
-    if (!pick) return null;
-    const visible = await loadClosedBefore(deps.loader, symbol, tf, pick.T);
-    if (visible.length !== depth) return null;
-    const evalDifficulty = pick.relaxedTo ?? difficulty;
-    try {
-      gradeLevel(visible, pick.levelType, 0.0001, evalDifficulty); // эталон должен восстанавливаться
-    } catch {
-      return null;
-    }
-    return {
-      T: pick.T,
-      seed,
-      shiftMs: 0,
-      tf,
-      params: { kind: 'pa-level', tf, levelType: pick.levelType, evalDifficulty },
-      series: { [tf]: visible },
-      payload: { kind: 'pa-level', tf, levelType: pick.levelType, tolerancePct: LEVEL_TOLERANCE_PCT },
     };
   }
 
@@ -625,6 +570,8 @@ export interface TaskReplay {
   tf: TaskTimeframe;
   candles: Candle[];
   exitIndex: number | null;
+  /** Индекс свечи исполнения лимитки в `candles` (ступень 3, комбо); null - не исполнилась. */
+  fillIndex?: number | null;
 }
 
 export interface GradeResultApi {
@@ -679,7 +626,7 @@ export async function gradeTask(module: ModuleId, req: GradeRequest, deps: Serve
 
   const symbol = header.symbol;
   const T = sealed.T;
-  const ctx = { deps, symbol, T, difficulty: header.difficulty };
+  const ctx = { deps, symbol, T, difficulty: header.difficulty, seed: sealed.seed };
   let core: Core;
   let tf: TaskTimeframe | null;
   switch (params.kind) {
@@ -694,10 +641,6 @@ export async function gradeTask(module: ModuleId, req: GradeRequest, deps: Serve
     case 'pa-find':
       tf = params.tf as TaskTimeframe;
       core = await gradePaFind(ctx, params, answer as Extract<Answer, { kind: 'pa-find' }>);
-      break;
-    case 'pa-level':
-      tf = params.tf as TaskTimeframe;
-      core = await gradePaLevel(ctx, params, answer as Extract<Answer, { kind: 'pa-level' }>);
       break;
     case 'pa-context':
       tf = params.tf as TaskTimeframe;
@@ -719,10 +662,23 @@ export async function gradeTask(module: ModuleId, req: GradeRequest, deps: Serve
       tf = params.tf as TaskTimeframe;
       core = await gradeElliottTask(ctx, params, answer as ElliottAnswerApi, sealed.shiftMs, TICK[symbol]);
       break;
+    case 'sw-mark':
+    case 'sw-trend':
+    case 'lv-strongest':
+    case 'lv-zone':
+    case 'lv-reaction':
+    case 'limit-entry':
+    case 'stop-take':
+    case 'combo-level-trade':
+    case 'combo-smc-entry':
+      tf = params.tf as TaskTimeframe;
+      core = await gradeCurTask(ctx, params as CurParams, answer as CurAnswer, sealed.shiftMs);
+      break;
   }
 
   const feedback = buildFeedback({
     module,
+    taskKind: params.kind,
     verdict: core.verdict,
     score: core.score,
     errors: core.errors,
@@ -761,6 +717,8 @@ export interface GradeCtx {
   symbol: TaskSymbol;
   T: UtcMs;
   difficulty: Difficulty;
+  /** seed задания из токена (questionId sw-trend). */
+  seed: number;
 }
 
 async function visibleFor(c: GradeCtx, tf: TaskTimeframe): Promise<Candle[]> {
@@ -832,20 +790,6 @@ async function gradePaFind(c: GradeCtx, p: Extract<Params, { kind: 'pa-find' }>,
     reference: algo.required,
     detail: { kind: 'pa-find', marks: markGradeOf(g) },
     toleranceCandles: g.toleranceCandles,
-  };
-}
-
-async function gradePaLevel(c: GradeCtx, p: Extract<Params, { kind: 'pa-level' }>, a: Extract<Answer, { kind: 'pa-level' }>): Promise<Core> {
-  const visible = await visibleFor(c, p.tf as TaskTimeframe);
-  const g = gradeLevel(visible, p.levelType, a.price, p.evalDifficulty);
-  return {
-    verdict: g.verdict,
-    score: g.score,
-    skillOutcomes: g.skillOutcomes,
-    errors: g.errors,
-    reference: [levelToMark(g.reference, visible)],
-    detail: g.detail,
-    ok: g.ok as Core['ok'],
   };
 }
 
