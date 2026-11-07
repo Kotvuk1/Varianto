@@ -8,7 +8,12 @@ async function toFeedback(page: Page) {
   // Набор инструментов зависит от задания: берём первый инструмент доступной группы.
   await page.getByRole('button', { name: 'Пробои', exact: true }).click();
   await page.getByRole('toolbar', { name: 'Пробои' }).getByRole('button').first().click();
-  await tapCandle(page, 20);
+  // Касаемся нескольких свечей, пока метка не встанет (положение зависит от задания).
+  for (const k of [20, 40, 60, 10]) {
+    await tapCandle(page, k);
+    if ((await page.getByTestId('chart').getAttribute('data-mark-count')) !== '0') break;
+  }
+  await expect(page.getByTestId('chart')).not.toHaveAttribute('data-mark-count', '0');
   await checkAndSeeResult(page);
 }
 
