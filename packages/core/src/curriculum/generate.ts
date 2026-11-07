@@ -344,8 +344,9 @@ export function pickComboLevelTask(inp: ZonePickInput): ComboLevelPick | null {
   for (let a = 1; a <= max; a++) {
     const d = draw(inp, rng, limit);
     if (!d) continue;
-    const r = pickZoneReference(candidateZones(d.set, role, MAX_DIST_TRADE), inp.difficulty === 'easy' ? 2 : 3);
-    if (!r || r.ref.dist < 1 || r.ref.role === 'inside') continue;
+    // кандидаты как при оценке (levelsContext, до 5 ATR): эталон обязан совпасть; зона сделки - 1 <= dist <= 4
+    const r = pickZoneReference(candidateZones(d.set, role, MAX_DIST_LEVELS), inp.difficulty === 'easy' ? 2 : 3);
+    if (!r || r.ref.dist < 1 || r.ref.dist > MAX_DIST_TRADE || r.ref.role === 'inside') continue;
     const refSide = sideOfRole(r.ref.role as LevelRole);
     const res = resolveZoneReaction(inp.candles, d.iT, r.ref, refSide, d.set.A, limit);
     if (res.kind !== want || res.incomplete) continue;

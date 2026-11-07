@@ -44,7 +44,7 @@ export const COMBO_REQUIREMENTS: Readonly<Record<ComboModule, readonly StageId[]
 export interface StageAttempt {
   module: string;
   createdAt: UtcMs;
-  grade?: { skillOutcomes?: readonly SkillOutcome[] | undefined } | null;
+  grade?: { skillOutcomes?: readonly { skill: string; correct: number; total: number }[] | undefined } | null;
 }
 
 export type StageStatus = 'not-started' | 'in-progress' | 'passed';
@@ -67,7 +67,7 @@ export interface StageProgress {
 
 function stagesOf(a: StageAttempt): StageDef[] {
   const outcomes = a.grade?.skillOutcomes ?? [];
-  return STAGE_IDS.map((id) => STAGES[id]).filter((s) => s.modules.includes(a.module as ModuleId) && outcomes.some((o) => s.core.includes(o.skill)));
+  return STAGE_IDS.map((id) => STAGES[id]).filter((s) => s.modules.includes(a.module as ModuleId) && outcomes.some((o) => (s.core as readonly string[]).includes(o.skill)));
 }
 
 /**
@@ -84,8 +84,8 @@ export function computeStageProgress(attemptsAsc: readonly StageAttempt[]): Reco
       const s = st[def.id];
       s.attempts++;
       for (const o of a.grade?.skillOutcomes ?? []) {
-        if (!def.core.includes(o.skill)) continue;
-        win[def.id][o.skill] = [...(win[def.id][o.skill] ?? []), isOutcomeOk(o)].slice(-WINDOW_N);
+        if (!(def.core as readonly string[]).includes(o.skill)) continue;
+        win[def.id][o.skill] = [...(win[def.id][o.skill] ?? []), isOutcomeOk(o as SkillOutcome)].slice(-WINDOW_N);
       }
       const windows = Object.values(win[def.id]);
       const all = windows.flat();

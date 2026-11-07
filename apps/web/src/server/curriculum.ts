@@ -71,6 +71,7 @@ import {
   type UtcMs,
   type ZoneInfo,
 } from '@tl/core';
+import { ArchiveError } from '@tl/market-data';
 import { z } from 'zod';
 import { ApiError, validationError } from './errors';
 import { SEGMENT_EXTRA, TICK, pickSegment, rngOf, sameSeries, withPartial } from './common';
@@ -253,6 +254,11 @@ export async function buildStageSwings(req: Req<'stage-swings'>, symbol: TaskSym
 // ------------------------------------------------------------------ next: ступень 2
 
 export async function buildLevels(req: Req<'levels'>, symbol: TaskSymbol, seed: number, deps: ServerDeps, isExcludedId: (T: UtcMs) => boolean): Promise<Draft | null> {
+  if (req.taskType !== 'lv-reaction') return buildLevelsOnce(req, symbol, seed, deps, isExcludedId);
+  return overSegments(seed, deps, (sd) => buildLevelsOnce(req, symbol, sd, deps, isExcludedId));
+}
+
+async function buildLevelsOnce(req: Req<'levels'>, symbol: TaskSymbol, seed: number, deps: ServerDeps, isExcludedId: (T: UtcMs) => boolean): Promise<Draft | null> {
   const { difficulty, taskType } = req;
   const tf = pickTf(req, (taskType === 'lv-reaction' ? CUR_TFS.reaction : CUR_TFS.levels)[difficulty], seed);
   const limit = TIME_LIMIT_CANDLES[tf];
@@ -265,7 +271,8 @@ export async function buildLevels(req: Req<'levels'>, symbol: TaskSymbol, seed: 
     seed,
     tick: TICK[symbol],
     ...base(deps, difficulty),
-    isExcluded: (T: UtcMs) => (deps.gridStepMs !== undefined && T % deps.gridStepMs !== 0) || isExcludedId(T),
+    // relative-задания: T на границе свечи ТФ (будущее начинается ровно с T, формирующейся свечи нет)
+    isExcluded: (T: UtcMs) => T % TIMEFRAME_MS[tf] !== 0 || (deps.gridStepMs !== undefined && T % deps.gridStepMs !== 0) || isExcludedId(T),
     maxT: data.segTo,
   };
 
@@ -359,17 +366,24 @@ const zoneForPayload = (z: ZoneInfo, shiftMs: number): ZoneInfo => ({ ...z, last
 type TradeReq = Req<'limit-entry'> | Req<'stop-take'> | Req<'combo-level-trade'> | Req<'combo-smc-entry'>;
 
 /** Перебирает сегменты архива (разные сегменты по seed), пока не найдётся ситуация; грейд и правила отбора не меняются. */
-export async function buildTradeTask(req: TradeReq, symbol: TaskSymbol, seed: number, deps: ServerDeps, isExcludedId: (T: UtcMs) => boolean): Promise<Draft | null> {
-  const tf = pickTf(req, CUR_TFS.trade[req.difficulty], seed);
-  const fixed = { ...req, tf } as TradeReq;
+async function overSegments(seed: number, deps: ServerDeps, once: (seed: number) => Promise<Draft | null>): Promise<Draft | null> {
   const budget = Math.min(deps.nextBudgetMs ?? TRADE_BUDGET_MS, TRADE_BUDGET_MS);
   const started = Date.now();
   for (let k = 0; k < TRADE_SEGMENTS; k++) {
     if (k > 0 && Date.now() - started > budget) break;
-    const d = await buildTradeOnce(fixed, symbol, (seed + k * 0x9e3779b1) >>> 0, deps, isExcludedId);
-    if (d) return d;
+    try {
+      const d = await once((seed + k * 0x9e3779b1) >>> 0);
+      if (d) return d;
+    } catch (e) {
+      if (!(e instanceof ArchiveError && e.code === 'not_found')) throw e; // месяца нет в архиве - сегмент непригоден
+    }
   }
   return null;
+}
+
+export async function buildTradeTask(req: TradeReq, symbol: TaskSymbol, seed: number, deps: ServerDeps, isExcludedId: (T: UtcMs) => boolean): Promise<Draft | null> {
+  const fixed = { ...req, tf: pickTf(req, CUR_TFS.trade[req.difficulty], seed) } as TradeReq;
+  return overSegments(seed, deps, (sd) => buildTradeOnce(fixed, symbol, sd, deps, isExcludedId));
 }
 
 async function buildTradeOnce(
@@ -392,7 +406,8 @@ async function buildTradeOnce(
     seed,
     tick: TICK[symbol],
     ...base(deps, difficulty),
-    isExcluded: (T: UtcMs) => (deps.gridStepMs !== undefined && T % deps.gridStepMs !== 0) || isExcludedId(T),
+    // relative-задания: T на границе свечи ТФ (будущее начинается ровно с T, формирующейся свечи нет)
+    isExcluded: (T: UtcMs) => T % TIMEFRAME_MS[tf] !== 0 || (deps.gridStepMs !== undefined && T % deps.gridStepMs !== 0) || isExcludedId(T),
     maxT: data.segTo,
   };
   const easy = difficulty === 'easy';
