@@ -142,12 +142,13 @@ describe('шаблоны курса: нет неподставленных пл�
         const blk = huntBlocks(side, sl, sc.slFull, play.hunt, ref);
         check('stop-take', 'stop-take', { ...sc, score: sc.quality / 100, errors: [...sc.errors, ...blk.errors], ok: [...sc.ok, ...blk.ok] }, verdictParamsOf({ kind: play.outcome.result, ...play.outcome }) as never);
       }
-      // принудительный вынос: стопы внутри размаха свечи выноса
-      for (const sl of [ref.Pl + dir * -0.1 * ref.A, ref.Pl - dir * 0.3 * ref.A, ref.Pl - dir * 0.1 * ref.A]) {
-        if (side === 'SHORT' && iso.startsWith('2026-09-26')) {
-          const play = await playStopTake(ref, 85142, 84160, h1[f]!.closeTime + 1, '1h', 72, p);
-          const bl = huntBlocks(side, sl, false, play.hunt, ref);
-          check('stop-take/hunt', 'stop-take', { verdict: 'partial', score: 0.8, errors: bl.errors, ok: [], skillOutcomes: [] }, verdictParamsOf({ kind: 'sl', ...play.outcome }) as never);
+      // принудительный вынос ST-2: стоп по правилам (OK_STOP_HUNT_RULES) и без запаса (STOP_HUNTED)
+      if (iso.startsWith('2026-09-26')) {
+        for (const sl of [85142, 85100]) {
+          const sc = scoreStopTake(ref, sl, 84160);
+          const play = await playStopTake(ref, sl, 84160, h1[f]!.closeTime + 1, '1h', 72, p);
+          const bl = huntBlocks(side, sl, sc.slFull, play.hunt, ref);
+          check('stop-take/hunt', 'stop-take', { ...sc, score: sc.quality / 100, errors: [...sc.errors, ...bl.errors], ok: [...sc.ok, ...bl.ok] }, verdictParamsOf({ kind: 'sl', ...play.outcome }) as never);
         }
       }
     }
@@ -194,7 +195,8 @@ describe('шаблоны курса: нет неподставленных пл�
         check('combo-smc-entry', 'combo-smc-entry', { ...g, score: g.quality / 100, errors: [...g.errors, ...play.blocks.errors], ok: [...g.ok, ...play.blocks.ok] }, verdictParamsOf(play.outcome as never) as never);
       }
     }
-    check('combo-smc-entry/off', 'combo-smc-entry', gradeComboSmc(c, v4.visible, { zone: zm(83000, 83500), limit: lim(83500, 'near-edge'), sl: 82500, tp: 85000 }) as never);
+    const off = gradeComboSmc(c, v4.visible, { zone: zm(83000, 83500), limit: lim(83500, 'near-edge'), sl: 82500, tp: 85000 });
+    check('combo-smc-entry/off', 'combo-smc-entry', { ...off, score: off.quality / 100 }, { outcomeText: CUR_OUTCOME_TEXT_RU['not-filled'], outcomeTime: 0, r: 0 });
   });
 
   it('итог: ни одного неподставленного плейсхолдера, покрыты все новые коды', () => {
