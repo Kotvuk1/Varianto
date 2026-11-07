@@ -39,8 +39,9 @@ describe('слабые места', () => {
   });
   it('группировка по модулям, порядок MS / PA / Challenge', () => {
     const g = groupByModule([...stats, stat('pa-doji', rep(6, true)), stat('challenge-wait', rep(5, false))]);
-    expect(g.map((x) => x.module)).toEqual(['market-structure', 'price-action', 'challenge']);
-    expect(g[0]!.skills.map((s) => s.skill)).toEqual(['choch', 'swing', 'bos', 'fvg']);
+    expect(g.map((x) => x.module)).toEqual(['stage-swings', 'market-structure', 'price-action', 'challenge']);
+    expect(g[0]!.skills.map((s) => s.skill)).toEqual(['swing']); // swing — ступень 1
+    expect(g[1]!.skills.map((s) => s.skill)).toEqual(['choch', 'bos', 'fvg']);
   });
 });
 
@@ -62,7 +63,8 @@ describe('тренд и тренировка', () => {
   it('ссылки с focus для разных модулей', () => {
     expect(trainTarget(stat('choch', rep(6, false))).href).toBe('/learn/market-structure/session?mode=mark&difficulty=easy&focus=choch');
     expect(trainTarget(stat('pa-pin-bar', rep(6, false))).href).toBe('/learn/price-action/session?type=find-pattern&difficulty=easy&focus=pa-pin-bar');
-    expect(trainTarget(stat('pa-level', rep(6, false))).href).toContain('type=draw-level');
+    expect(trainTarget(stat('pa-level', rep(6, false))).href).toBe('/learn/levels/session?type=lv-strongest&difficulty=easy');
+    expect(trainTarget(stat('limit-placement', rep(6, false))).href).toBe('/learn/limit-entry/session?difficulty=easy');
     expect(trainTarget(stat('challenge-wait', rep(6, false))).href).toBe('/learn/challenge/session?difficulty=easy&focus=challenge-wait');
     // Fibonacci: тип задания по навыку (FIBONACCI.md §10), без focus
     expect(trainTarget(stat('fib-reaction', rep(6, false))).href).toBe('/learn/fibonacci/session?type=reaction&difficulty=easy');

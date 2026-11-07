@@ -101,7 +101,10 @@ interface Mark {
 ### 2.2 Расширения контрактов (предложение — фиксируются при реализации в `@tl/core`)
 
 ```ts
-type ModuleId = 'market-structure' | 'price-action' | 'challenge' | 'fibonacci' | 'elliott';   // 'fibonacci' (ALGO_VERSION 1.2.0), 'elliott' (новое, ALGO_VERSION 1.3.0, EW_ALGO_VERSION 1.0.0)
+type ModuleId = 'market-structure' | 'price-action' | 'challenge' | 'fibonacci' | 'elliott'
+  | 'stage-swings' | 'levels' | 'limit-entry' | 'stop-take' | 'combo-level-trade' | 'combo-smc-entry';   // курс по ступеням: CURRICULUM_STAGES.md §11, ALGO_VERSION 2.0.0, CUR_ALGO_VERSION 1.0.0
+// SkillId += 'swing-trend' | 'level-zone' | 'level-reaction' | 'limit-placement' | 'limit-fill' | 'stop-placement' | 'take-profit' | 'risk-reward'; MarkKind += 'zone' (2 якоря: верх, низ)
+// Типы: packages/core/src/curriculum/{zone,limit,stoptake,combo,levels-grade,swings}.ts (ZoneInfo, LimitOrder, CurPart, ComboAnswer); API: apps/web/src/server/{schemas,curriculum}.ts   // 'fibonacci' (ALGO_VERSION 1.2.0), 'elliott' (новое, ALGO_VERSION 1.3.0, EW_ALGO_VERSION 1.0.0)
 type TaskTimeframe = '15m' | '1h' | '4h' | '1d';               // FR-DATA-05
 type TaskSymbol = 'BTCUSDT' | 'ETHUSDT' | 'SOLUSDT';           // FR-DATA-03
 type Difficulty = 'easy' | 'medium' | 'hard';
@@ -184,9 +187,12 @@ interface NextBase {
 }
 type NextRequest =
   | (NextBase & { module: 'market-structure'; mode: 'mark' | 'question'; tf: TaskTimeframe })
-  | (NextBase & { module: 'price-action'; taskType: 'find-pattern' | 'draw-level' | 'context'; tf: TaskTimeframe })
+  | (NextBase & { module: 'price-action'; taskType: 'find-pattern' | 'context'; tf: TaskTimeframe })   // 'draw-level' удалён (2.0.0): задание переехало в levels/lv-strongest
   | (NextBase & { module: 'challenge' })      // ТФ выбирается пользователем в UI; сервер отдаёт все четыре
   | (NextBase & { module: 'fibonacci'; taskType: 'grid' | 'reaction' | 'extension'; tf: TaskTimeframe });   // (новое) FIBONACCI.md §9.2; series — только запрошенный tf, 500 закрытых свечей (1d — 365)
+  | (NextBase & { module: 'stage-swings'; taskType: 'sw-mark' | 'sw-trend'; tf: TaskTimeframe })        // (новое) CURRICULUM_STAGES.md §2; absolute
+  | (NextBase & { module: 'levels'; taskType: 'lv-strongest' | 'lv-zone' | 'lv-reaction'; tf: TaskTimeframe })   // §3; lv-reaction — relative, без 1d
+  | (NextBase & { module: 'limit-entry' | 'stop-take' | 'combo-level-trade' | 'combo-smc-entry'; tf?: TaskTimeframe })   // §5-§8; relative; tf из списка сложности (1d недоступен), иначе по seed; вне списка — 400 UNKNOWN_TIMEFRAME
   | (NextBase & { module: 'elliott'; tf?: TaskTimeframe });   // (новое) ELLIOTT.md §12.2; tf из списка сложности (easy 1h/4h, medium/hard 15m/1h/4h), иначе по seed (вне списка — 400 UNKNOWN_TIMEFRAME); kind задания определяется сложностью, focus на него не влияет (§19); series — только tf задания, 500 закрытых свечей
 ```
 `module` в теле дублирует путь и должен совпадать с ним (иначе 400).
@@ -201,7 +207,7 @@ interface TaskEnvelope<P extends TaskPayload = TaskPayload> {
   symbol: TaskSymbol;
   algoVersion: string;
   expiresAt: UtcMs;              // = exp токена
-  timeline: { mode: 'relative' | 'absolute' };   // challenge, fib-reaction, fib-extension, elliott — 'relative'; fib-grid — 'absolute'
+  timeline: { mode: 'relative' | 'absolute' };   // challenge, fib-reaction, fib-extension, elliott, lv-reaction, limit-entry, stop-take, комбо — 'relative'; fib-grid, sw-*, lv-strongest, lv-zone — 'absolute'
   decisionTime: UtcMs;           // T на шкале задания
   series: Partial<Record<TaskTimeframe, Candle[]>>;   // времена на шкале задания; closeTime < T, плюс частичная свеча старших ТФ (closed=false)
   payload: P;
@@ -379,6 +385,21 @@ const ChallengeAnswer = z.object({
 });
 ```
 Проверка сторон: LONG — SL ниже входа, TP выше; SHORT — наоборот (FR-TC-08). `entry` сверяется с `entryPrice` из токена с допуском в один tick **(предложение)**.
+
+### 4.3 Ответы курса (CURRICULUM_STAGES.md §11.3; схемы — apps/web/src/server/schemas.ts)
+
+```ts
+type Answer = /* … */
+  | { kind: 'sw-mark'; marks: Mark[] }
+  | { kind: 'sw-trend'; questionId: string; optionId: 'up' | 'down' | 'range' }
+  | { kind: 'lv-strongest'; price: number }
+  | { kind: 'lv-zone'; zone: Mark }                      // kind 'zone', 2 якоря
+  | { kind: 'lv-reaction'; optionId: string }            // 'z1'…'z3' | 'none'
+  | { kind: 'limit-entry'; limit: LimitOrder }           // { price, type: 'near-edge'|'middle'|'far-edge'|'front-run', frontK: number|null }
+  | { kind: 'stop-take'; sl: number; tp: number }
+  | { kind: 'combo-level-trade' | 'combo-smc-entry'; zone: Mark; limit: LimitOrder; sl: number; tp: number };
+```
+Validation 400: `ZONE_MARK_INVALID`, `ZONE_SIDE_MISMATCH`, `LIMIT_WRONG_SIDE`, `LIMIT_TYPE_INVALID`, `OPTION_UNKNOWN`, `SL_WRONG_SIDE`, `TP_WRONG_SIDE`. `GradeResult.replay` расширен `fillIndex?: number | null` (индекс исполнения лимитки в `replay.candles`). Исполнение лимитки — проход цены на ≥ 1 тик (§20). Шаблоны вердикта: `feedback.verdict.limit.*` (ступень 3), `feedback.verdict.trade.*` (ступень 4, комбо; параметры `score`, `outcomeText`, `outcomeTime`, `r`). Старые токены ALGO_VERSION 1.x отклоняются как `token_expired`.
 
 ## 5. Результат проверки и разбор
 

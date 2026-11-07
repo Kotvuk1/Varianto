@@ -29,7 +29,6 @@ import {
   gradeMarks,
   gradeSwTrend,
   hlineMark,
-  htfClosedBefore,
   huntBlocks,
   levelHints,
   levelsContext,
@@ -52,7 +51,6 @@ import {
   selectSwTrendTask,
   smcContext,
   swTrendHints,
-  swTrendN,
   swingTrend,
   validateLimitOrder,
   validateStopTake,
@@ -559,9 +557,9 @@ function asValidation<T>(f: () => T): T {
 const mismatch500 = (what: string) => new Error(`CUR_REFERENCE_MISMATCH:${what}`); // сервер не смог воспроизвести эталон: 500 + лог, не оценка
 
 /** Метка-зона пользователя: время якорей на шкале задания должно попадать в видимый ряд. */
-function checkZoneAnchors(m: { anchors: { time: number }[] }, visible: readonly Candle[], shift: number, path: string): void {
+function checkZoneAnchors(m: { anchors: { time: number }[] }, visible: readonly Candle[], shift: number, path: string, T: UtcMs): void {
   const from = visible[0]!.openTime;
-  const to = visible[visible.length - 1]!.closeTime;
+  const to = T; // до момента решения: на сетке 15m последняя показанная свеча может быть формирующейся
   for (const a of m.anchors) if (a.time + shift < from || a.time + shift > to) throw validationError('ZONE_MARK_INVALID', path);
 }
 
@@ -659,7 +657,7 @@ export async function gradeCurTask(c: GradeCtx, p: CurParams, a: CurAnswer, shif
         return wrap({ g, shift: 0, reference: refMarks, detail: { kind: 'lv-strongest', ...g.detail } });
       }
       const ans = a as Extract<CurAnswer, { kind: 'lv-zone' }>;
-      checkZoneAnchors(ans.zone, visible, 0, 'answer.zone.anchors');
+      checkZoneAnchors(ans.zone, visible, 0, 'answer.zone.anchors', T);
       const { ub, ut } = asValidation(() => zoneFromMark(ans.zone as Mark));
       const g = gradeLvZone(ctx, ub, ut);
       return wrap({ g, shift: 0, reference: refMarks, detail: { kind: 'lv-zone', ...g.detail } });
@@ -773,12 +771,11 @@ export async function gradeCurTask(c: GradeCtx, p: CurParams, a: CurAnswer, shif
     case 'combo-smc-entry': {
       const ans = a as Extract<CurAnswer, { kind: 'combo-level-trade' | 'combo-smc-entry' }>;
       const answer: ComboAnswer = { zone: ans.zone as Mark, limit: ans.limit, sl: ans.sl, tp: ans.tp };
-      checkZoneAnchors(ans.zone, visible, shift, 'answer.zone.anchors');
+      checkZoneAnchors(ans.zone, visible, shift, 'answer.zone.anchors', T);
       // зона/якоря на шкале задания -> реальное время не нужно: оцениваются только цены
       const unshiftedZone = { ...ans.zone, anchors: ans.zone.anchors.map((x) => ({ ...x, time: x.time + shift })) } as Mark;
       answer.zone = unshiftedZone;
       const fut = await future();
-      const all = [...visible, ...fut];
       const reference: Mark[] = [];
       let g: ReturnType<typeof gradeComboLevel> | ReturnType<typeof gradeComboSmc>;
       let A: number;

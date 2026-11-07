@@ -38,8 +38,8 @@ describe('параметры по ступеням и сложностям (CURR
     expect(msWindowProfile('easy')).toEqual({ windowMin: 120, windowMax: 150, requiredMin: 2, requiredMax: 8 });
     expect(msWindowProfile('medium')).toEqual({ windowMin: 40, windowMax: 80, requiredMin: 3, requiredMax: 10 });
     expect(msWindowProfile('hard')).toEqual({ windowMin: 40, windowMax: 80, requiredMin: 4, requiredMax: 12 });
-    expect(msQuestionWindow('easy')).toBe(150);
-    expect(msQuestionWindow('hard')).toBe(150);
+    expect(msQuestionWindow()).toBe(150);
+    expect(msQuestionWindow()).toBe(150);
     expect(msConceptsFor('easy')).toEqual(['bos', 'choch']);
     expect(msConceptsFor('medium', ['sweep'])).toEqual(['bos', 'choch', 'sweep']);
     expect(msConceptsFor('hard', ['fvg'])).toEqual(['bos', 'choch', 'internal-external', 'fvg']);

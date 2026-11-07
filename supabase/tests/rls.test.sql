@@ -88,6 +88,10 @@ insert into public.attempts (module, task_id, task_token_payload, answer, grade,
   values ('fibonacci', 'fib1', '{}', '{}', '{"verdict":"correct"}', '1.2.0', true, '2026-11-04');
 insert into public.attempts (module, task_id, task_token_payload, answer, grade, algo_version, correct, local_day)
   values ('elliott', 'ew1', '{}', '{}', '{"verdict":"correct"}', '1.3.0', true, '2026-11-05');
+-- 0005: модули курса допустимы
+insert into public.attempts (module, task_id, task_token_payload, answer, grade, algo_version, correct, local_day)
+  select m, 'cur-' || m, '{}', '{}', '{"verdict":"correct"}', '2.0.0', true, '2026-11-07'
+  from unnest(array['stage-swings','levels','limit-entry','stop-take','combo-level-trade','combo-smc-entry']) as m;
 select pg_temp.expect_error($q$insert into public.attempts (module, task_id, task_token_payload, answer, grade, algo_version, correct, local_day)
   values ('chess','x','{}','{}','{}','1',true,'2026-11-05')$q$);
 reset role;

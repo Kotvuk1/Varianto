@@ -70,7 +70,7 @@ export function msWindowSize(difficulty: Difficulty, stage: MsStage = 'smc'): nu
 }
 
 /** Окно вопросов режима «Вопрос» (§9.1): 150 на всех сложностях ступени 5. */
-export function msQuestionWindow(_difficulty?: Difficulty): number {
+export function msQuestionWindow(): number {
   return 150;
 }
 
@@ -380,7 +380,7 @@ export function buildMsQuestion(
   const params = msQuestionParams();
   const r = analyzeStructure(visible, params, { tf });
   const n = visible.length;
-  const from = Math.max(0, n - msQuestionWindow(difficulty));
+  const from = Math.max(0, n - msQuestionWindow());
   const rng = mulberry32((Math.imul(seed | 0, 31) + MS_QUESTION_TEMPLATES.indexOf(template) * 0x9e3779b1) | 0);
   const questionId = `${template}:${seed}`;
   const ext = r.events.filter((e) => e.scope === 'external' && e.breakIndex >= from);
@@ -608,7 +608,7 @@ export function selectMsQuestionTask(inp: MsSelectInput):
   | { T: UtcMs; visible: Candle[]; visibleFrom: number; question: MsQuestion; attempts: number }
   | null {
   const rng = mulberry32(inp.seed);
-  const W = msQuestionWindow(inp.difficulty);
+  const W = msQuestionWindow();
   const max = inp.maxAttempts ?? MS_MAX_ATTEMPTS;
   const params = msQuestionParams();
   for (let a = 1; a <= max; a++) {

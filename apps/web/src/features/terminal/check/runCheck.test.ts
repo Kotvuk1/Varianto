@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { analyzeStructure, msParamsFor, toMarks, type Candle, type Mark } from '@tl/core';
+import { analyzeStructure, toMarks, type Candle, type Mark } from '@tl/core';
 import { conceptsFor, RANGE_TAIL_CANDLES, runCheck } from './runCheck';
 
 // Реальные свечи BTCUSDT 1h (data.binance.vision), сентябрь 2026.
@@ -14,7 +14,7 @@ const candles: Candle[] = readFileSync(resolve(process.cwd(), '../../fixtures/kl
     return { openTime: t, closeTime: ct, open: o, high: h, low: lo, close: c, volume: v, quoteVolume: qv, trades: n, closed: true };
   });
 
-const r = analyzeStructure(candles, msParamsFor('medium'), { tf: '1h' });
+const r = analyzeStructure(candles, { nExt: 5, nInt: 3, sweepHoldK: 3, fvgMinAtr: 0.5, obDisplacementAtr: 1.2 }, { tf: '1h' }); // параметры терминала (до 2.0.0 совпадали с msParamsFor('medium'))
 const algoMarks = toMarks(r);
 const choch = algoMarks.find((m) => m.kind === 'choch' && m.scope === 'external' && m.anchors[0]!.time > candles[40]!.openTime)!;
 const internalChoch = algoMarks.find((m) => m.kind === 'choch' && m.scope === 'internal')!;

@@ -1,11 +1,13 @@
 import { expect, test, type Page } from '@playwright/test';
-import { checkAndSeeResult, openSession, selectTool, tapCandle } from './ms.helpers';
+import { checkAndSeeResult, openSession, tapCandle } from './ms.helpers';
 
 test.describe.configure({ timeout: 180_000 });
 
 async function toFeedback(page: Page) {
   await openSession(page, '/learn/market-structure/session?mode=mark&difficulty=easy&tf=1h&symbol=BTCUSDT');
-  await selectTool(page, 'Swing High', 'Свинги');
+  // Набор инструментов зависит от задания: берём первый инструмент доступной группы.
+  await page.getByRole('button', { name: 'Пробои', exact: true }).click();
+  await page.getByRole('toolbar', { name: 'Пробои' }).getByRole('button').first().click();
   await tapCandle(page, 20);
   await checkAndSeeResult(page);
 }

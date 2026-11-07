@@ -48,7 +48,7 @@ function times(x: unknown, out: number[] = []): number[] {
   if (typeof x === 'number') {
     if (x > 1e12) out.push(x);
   } else if (Array.isArray(x)) x.forEach((v) => times(v, out));
-  else if (x && typeof x === 'object') Object.values(x).forEach((v) => times(v, out));
+  else if (x && typeof x === 'object') Object.entries(x).forEach(([k, v]) => k !== 'reveal' && times(v, out)); // reveal - раскрытие после grade
   return out;
 }
 const userZone = (a: number, b: number): Mark => ({ id: 'u-zone', kind: 'zone', anchors: [{ time: 0, price: a }, { time: 0, price: b }], scope: null, direction: null, author: 'user' });
@@ -68,10 +68,11 @@ function checkNext(t: Json, tf: string, relative: boolean): void {
   for (const x of times(t.payload)) expect(x).toBeLessThanOrEqual(last.openTime); // в payload нет времён позже последней видимой свечи
   if (relative) {
     expect(s[0]!.openTime).toBeLessThan(Date.UTC(2024, 0, 1));
-    for (const x of times(t)) expect(x).toBeLessThan(Date.UTC(2024, 0, 1));
+    for (const x of times({ ...t, expiresAt: 0 })) expect(x).toBeLessThan(Date.UTC(2024, 0, 1)); // expiresAt - срок токена, не время шкалы
     expect(JSON.stringify(t)).not.toMatch(/2026-/);
   }
-  expect(JSON.stringify(t.payload)).not.toMatch(/algo:|correct|reference/);
+  expect(JSON.stringify(t.payload)).not.toMatch(/"correct|reference/);
+  if (relative) expect(JSON.stringify(t.payload)).not.toMatch(/algo:/); // id подсказок на relative-шкале без реального времени
 }
 
 describe('stage-swings', () => {

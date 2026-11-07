@@ -6,7 +6,6 @@ import {
   buildFeedback,
   closedOnly,
   gradeMarks,
-  msParamsFor,
   type Candle,
   type Feedback,
   type FeedbackBlock,
@@ -65,6 +64,9 @@ export function conceptsFor(marks: readonly Mark[]): SkillId[] {
   return [...set];
 }
 
+/** Параметры структуры терминала: внешний N = 5 и внутренний N = 3 (до ALGO_VERSION 2.0.0 совпадали с msParamsFor('medium'); MS medium теперь без внутреннего слоя). */
+const TERMINAL_STRUCTURE = { nExt: 5, nInt: 3, sweepHoldK: 3, fvgMinAtr: 0.5, obDisplacementAtr: 1.2 };
+
 export type CheckOutcome = { ok: true; result: CheckResult } | { ok: false; reason: 'no-marks' | 'no-concepts' | 'no-candles' };
 
 /**
@@ -85,7 +87,7 @@ export function runCheck(candles: readonly Candle[], tf: Timeframe, userMarks: r
   let lastIdx = closed.findIndex((c) => c.openTime >= lastT);
   if (lastIdx < 0) lastIdx = closed.length - 1;
   const window = { fromIndex: from, toIndex: Math.min(closed.length - 1, Math.max(from, lastIdx) + RANGE_TAIL_CANDLES) };
-  const r = analyzeStructure(closed, msParamsFor('medium'), { tf });
+  const r = analyzeStructure(closed, TERMINAL_STRUCTURE, { tf });
   // Внутренняя (internal) структура: пробои (BOS/CHoCH) обязательны наравне с внешними - иначе BOS на месте
   // внутреннего CHoCH нельзя разобрать; остальные внутренние объекты допустимы, но не обязательны.
   // Только типы меток, поставленные пользователем (BOS и CHoCH различаются только вместе).

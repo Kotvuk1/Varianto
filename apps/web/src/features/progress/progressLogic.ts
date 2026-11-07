@@ -94,6 +94,13 @@ export function trainTarget(stat: Pick<SkillStat, 'skill' | 'recent' | 'accuracy
     q.set('difficulty', difficulty);
     return { module: 'elliott', href: `/learn/elliott/session?${q}` };
   }
+  if (gen.module !== 'challenge') {
+    // курс по ступеням (CURRICULUM_STAGES.md §10.4): экраны ступеней — /learn/<модуль>/session
+    if ('taskType' in gen) q.set('type', gen.taskType);
+    q.set('difficulty', difficulty);
+    if (gen.module === 'stage-swings') q.set('focus', stat.skill);
+    return { module: gen.module, href: `/learn/${gen.module}/session?${q}` };
+  }
   q.set('difficulty', difficulty);
   q.set('focus', stat.skill);
   return { module: 'challenge', href: `/learn/challenge/session?${q}` };
